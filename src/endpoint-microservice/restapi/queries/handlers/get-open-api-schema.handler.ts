@@ -1,0 +1,402 @@
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
+import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
+import { JsonSchemaType } from 'src/endpoint-microservice/shared/types/json-schema-type';
+import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
+
+@QueryHandler(GetOpenApiSchemaQuery)
+export class GetOpenApiSchemaHandler
+  implements IQueryHandler<GetOpenApiSchemaQuery>
+{
+  public constructor(
+    private readonly internalCoreApi: InternalCoreApiService,
+  ) {}
+
+  public execute({ data }: GetOpenApiSchemaQuery): Promise<OpenApiSchema> {
+    return this.getOpenApiSchema(data.revisionId);
+  }
+
+  private async getOpenApiSchema(revisionId: string) {
+    const schemas = await this.getSchemas(revisionId);
+    const isDraftRevision = await this.getIsDraftRevision(revisionId);
+
+    const openApiJson: OpenApiSchema = {
+      openapi: '3.0.2',
+      info: {
+        version: `${revisionId}`,
+        title: '',
+      },
+      servers: [],
+      paths: {},
+      components: {
+        securitySchemes: {
+          'access-token': {
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            type: 'http',
+          },
+        },
+        schemas: {},
+      },
+    };
+
+    for (const schemaRow of schemas) {
+      openApiJson.paths[`/${schemaRow.id}`] = {
+        get: {
+          security: [
+            {
+              'access-token': [],
+            },
+          ],
+          tags: [schemaRow.id],
+          parameters: [
+            {
+              name: 'first',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'integer',
+                minimum: 1,
+                default: 100,
+              },
+            },
+            {
+              name: 'after',
+              in: 'query',
+              required: false,
+              schema: {
+                type: 'string',
+              },
+            },
+          ],
+          responses: {
+            '200': {
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['edges', 'pageInfo', 'totalCount'],
+                    properties: {
+                      edges: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          required: ['cursor', 'node'],
+                          properties: {
+                            cursor: { type: 'string' },
+                            node: {
+                              type: 'object',
+                              required: [
+                                'id',
+                                'versionId',
+                                'createdAt',
+                                'readonly',
+                              ],
+                              properties: {
+                                id: { type: 'string' },
+                                versionId: { type: 'string' },
+                                createdAt: { type: 'string' },
+                                readonly: { type: 'boolean' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                      pageInfo: {
+                        type: 'object',
+                        required: [
+                          'startCursor',
+                          'endCursor',
+                          'hasNextPage',
+                          'hasPreviousPage',
+                        ],
+                        properties: {
+                          startCursor: { type: 'string' },
+                          endCursor: { type: 'string' },
+                          hasNextPage: { type: 'boolean' },
+                          hasPreviousPage: { type: 'boolean' },
+                        },
+                      },
+                      totalCount: { type: 'number', minimum: 0 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      openApiJson.paths[`/${schemaRow.id}/{id}`] = {
+        get: {
+          security: [
+            {
+              'access-token': [],
+            },
+          ],
+          tags: [schemaRow.id],
+          parameters: [
+            {
+              name: 'id',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': {
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: `#/components/schemas/${schemaRow.id}`,
+                  },
+                },
+              },
+            },
+          },
+        },
+        ...(isDraftRevision
+          ? {
+              post: {
+                security: [
+                  {
+                    'access-token': [],
+                  },
+                ],
+                tags: [schemaRow.id],
+                parameters: [
+                  {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                      type: 'string',
+                    },
+                  },
+                ],
+                requestBody: {
+                  required: true,
+                  content: {
+                    'application/json': {
+                      schema: {
+                        $ref: `#/components/schemas/${schemaRow.id}`,
+                      },
+                    },
+                  },
+                },
+                responses: {
+                  '200': {
+                    content: {
+                      'application/json': {
+                        schema: {
+                          $ref: `#/components/schemas/${schemaRow.id}`,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              put: {
+                security: [
+                  {
+                    'access-token': [],
+                  },
+                ],
+                tags: [schemaRow.id],
+                parameters: [
+                  {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                      type: 'string',
+                    },
+                  },
+                ],
+                requestBody: {
+                  required: true,
+                  content: {
+                    'application/json': {
+                      schema: {
+                        $ref: `#/components/schemas/${schemaRow.id}`,
+                      },
+                    },
+                  },
+                },
+                responses: {
+                  '200': {
+                    content: {
+                      'application/json': {
+                        schema: {
+                          $ref: `#/components/schemas/${schemaRow.id}`,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              delete: {
+                security: [
+                  {
+                    'access-token': [],
+                  },
+                ],
+                tags: [schemaRow.id],
+                parameters: [
+                  {
+                    name: 'id',
+                    in: 'path',
+                    required: true,
+                    schema: { type: 'string' },
+                  },
+                ],
+                responses: {
+                  '200': {
+                    content: {
+                      'application/json': {
+                        schema: {
+                          type: 'boolean',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            }
+          : {}),
+      };
+
+      const tableReferencesBy = await this.internalCoreApi
+        .tableReferencesBy({
+          revisionId,
+          tableId: schemaRow.id,
+          first: 100,
+        })
+        .then((result) => result.edges.map((edge) => edge.node));
+
+      for (const tableReferenceBy of tableReferencesBy) {
+        openApiJson.paths[
+          `/${schemaRow.id}/{id}/references-by/${tableReferenceBy.id}`
+        ] = {
+          get: {
+            security: [
+              {
+                'access-token': [],
+              },
+            ],
+            tags: [schemaRow.id],
+            parameters: [
+              {
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: {
+                  type: 'string',
+                },
+              },
+              {
+                name: 'first',
+                in: 'query',
+                required: true,
+                schema: {
+                  type: 'integer',
+                  minimum: 1,
+                  default: 100,
+                },
+              },
+              {
+                name: 'after',
+                in: 'query',
+                required: false,
+                schema: {
+                  type: 'string',
+                },
+              },
+            ],
+            responses: {
+              '200': {
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      required: ['edges', 'pageInfo', 'totalCount'],
+                      properties: {
+                        edges: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            required: ['cursor', 'node'],
+                            properties: {
+                              cursor: { type: 'string' },
+                              node: {
+                                type: 'object',
+                                required: [
+                                  'id',
+                                  'versionId',
+                                  'createdAt',
+                                  'readonly',
+                                ],
+                                properties: {
+                                  id: { type: 'string' },
+                                  versionId: { type: 'string' },
+                                  createdAt: { type: 'string' },
+                                  readonly: { type: 'boolean' },
+                                },
+                              },
+                            },
+                          },
+                        },
+                        pageInfo: {
+                          type: 'object',
+                          required: [
+                            'startCursor',
+                            'endCursor',
+                            'hasNextPage',
+                            'hasPreviousPage',
+                          ],
+                          properties: {
+                            startCursor: { type: 'string' },
+                            endCursor: { type: 'string' },
+                            hasNextPage: { type: 'boolean' },
+                            hasPreviousPage: { type: 'boolean' },
+                          },
+                        },
+                        totalCount: { type: 'number', minimum: 0 },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      }
+
+      openApiJson.components.schemas[schemaRow.id] =
+        schemaRow.data as JsonSchemaType;
+    }
+
+    return openApiJson;
+  }
+
+  private async getIsDraftRevision(revisionId: string) {
+    const result = await this.internalCoreApi.revision(revisionId);
+
+    return result.isDraft;
+  }
+
+  private async getSchemas(revisionId: string) {
+    // TODO schema, 1000
+    const result = await this.internalCoreApi.rows({
+      revisionId,
+      tableId: 'schema',
+      first: 1000,
+    });
+
+    const nodes = result.edges.map((edge) => edge.node);
+
+    nodes.sort((a, b) => a.id.localeCompare(b.id));
+
+    return nodes;
+  }
+}
