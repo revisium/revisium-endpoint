@@ -2,14 +2,25 @@
   "name": "@revisium/endpoint",
   "version": "0.9.0",
   "description": "Revisium is a tool (UI/API) inspired by JSON (JSON Schema) and Git, designed to provide a flexible and low-level headless CMS solution.",
-  "private": true,
+  "private": false,
   "homepage": "https://revisium.io",
   "license": "Apache-2.0",
   "author": "Anton Kashirov",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/revisium/revisium-endpoint.git"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "generate:api": "npx swagger-typescript-api -p http://localhost:8080/-/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --unwrap-response-data",
     "prisma:generate": "npx prisma generate",
     "build": "nest build",
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
