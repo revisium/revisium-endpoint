@@ -20,7 +20,6 @@
     "prisma:generate": "npx prisma generate",
     "build": "nest build",
     "prepublishOnly": "npm run build",
-    "prepare": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
