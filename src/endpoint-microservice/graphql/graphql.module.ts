@@ -6,9 +6,10 @@ import { GRAPHQL_COMMANDS } from 'src/endpoint-microservice/graphql/commands/han
 import { GraphqlEndpointController } from 'src/endpoint-microservice/graphql/graphql-endpoint.controller';
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 import { GRAPHQL_QUERIES } from 'src/endpoint-microservice/graphql/queries/handlers';
+import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 
 @Module({
-  imports: [CqrsModule, DatabaseModule, CoreApiModule],
+  imports: [CqrsModule, DatabaseModule, CoreApiModule, MetricsModule],
   providers: [GraphqlEndpointService, ...GRAPHQL_COMMANDS, ...GRAPHQL_QUERIES],
   controllers: [GraphqlEndpointController],
 })

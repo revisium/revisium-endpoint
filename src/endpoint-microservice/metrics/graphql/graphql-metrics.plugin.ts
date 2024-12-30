@@ -47,12 +47,8 @@ export class GraphqlMetricsPlugin implements ApolloServerPlugin {
   }
 }
 
-function getLabels(context: {
-  request: { operationName?: string };
-  operation?: { operation: string };
-}) {
+function getLabels(context: { operation?: { operation: string } }) {
   return {
-    operationName: context.request.operationName,
     operation: context.operation?.operation,
   };
 }

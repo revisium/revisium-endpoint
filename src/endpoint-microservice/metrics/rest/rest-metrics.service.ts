@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import * as client from 'prom-client';
+import { Histogram, Counter, register } from 'prom-client';
 import {
-  REST_ENDPOINT_REQUEST_DURATION_SECONDS,
-  REST_ENDPOINT_REQUEST_ERRORS_TOTAL,
-  REST_ENDPOINT_REQUESTS_TOTAL,
+  REST_REQUEST_DURATION_SECONDS,
+  REST_REQUEST_ERRORS_TOTAL,
+  REST_REQUESTS_TOTAL,
 } from 'src/endpoint-microservice/metrics/rest/constants';
 
 type Labels = {
@@ -14,23 +14,29 @@ type Labels = {
 
 @Injectable()
 export class RestMetricsService {
-  private readonly requestDurationSecondsHistogram = new client.Histogram({
-    name: REST_ENDPOINT_REQUEST_DURATION_SECONDS,
-    help: 'Duration of REST API requests in seconds',
-    labelNames: ['method', 'route', 'status'],
-  });
+  private readonly requestDurationSecondsHistogram =
+    (register.getSingleMetric(REST_REQUEST_DURATION_SECONDS) as Histogram) ||
+    new Histogram({
+      name: REST_REQUEST_DURATION_SECONDS,
+      help: 'Duration of REST API requests in seconds',
+      labelNames: ['method', 'route', 'status'],
+    });
 
-  private readonly requestTotalCounter = new client.Counter({
-    name: REST_ENDPOINT_REQUESTS_TOTAL,
-    help: 'Total number of REST API requests',
-    labelNames: ['method', 'route', 'status'],
-  });
+  private readonly requestTotalCounter =
+    (register.getSingleMetric(REST_REQUESTS_TOTAL) as Counter) ||
+    new Counter({
+      name: REST_REQUESTS_TOTAL,
+      help: 'Total number of REST API requests',
+      labelNames: ['method', 'route', 'status'],
+    });
 
-  private readonly requestErrorsTotalCounter = new client.Counter({
-    name: REST_ENDPOINT_REQUEST_ERRORS_TOTAL,
-    help: 'Total number of errors encountered during REST API request processing',
-    labelNames: ['method', 'route', 'status'],
-  });
+  private readonly requestErrorsTotalCounter =
+    (register.getSingleMetric(REST_REQUEST_ERRORS_TOTAL) as Counter) ||
+    new Counter({
+      name: REST_REQUEST_ERRORS_TOTAL,
+      help: 'Total number of errors encountered during REST API request processing',
+      labelNames: ['method', 'route', 'status'],
+    });
 
   constructor() {}
 

@@ -7,11 +7,14 @@ import {
   Post,
   Req,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { NextFunction, Request, Response } from 'express';
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
+import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 
+@UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
 @Controller(
   'endpoint/graphql/:organizationId/:projectName/:branchName/:postfix',
