@@ -7,6 +7,7 @@ import { RequestHandler } from 'express';
 import { GraphQLSchema } from 'graphql/type';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
+import { GraphqlMetricsPlugin } from 'src/endpoint-microservice/metrics/graphql/graphql-metrics.plugin';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
 
 @Injectable()
@@ -20,8 +21,9 @@ export class GraphqlEndpointService {
   private startedEndpointIds: string[] = [];
 
   constructor(
-    private prisma: PrismaService,
-    private queryBus: QueryBus,
+    private readonly prisma: PrismaService,
+    private readonly queryBus: QueryBus,
+    private readonly graphqlMetricsPlugin: GraphqlMetricsPlugin,
   ) {}
 
   public getEndpointMiddleware(
@@ -115,6 +117,7 @@ export class GraphqlEndpointService {
       schema: graphqlSchema,
       introspection: true,
       plugins: [
+        this.graphqlMetricsPlugin,
         ApolloServerPluginLandingPageLocalDefault({
           document: `query ExampleQuery {
   ${table} {

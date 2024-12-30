@@ -1,11 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
+import { AppModule } from 'src/app.module';
 import { DEFAULT_PORT } from 'src/endpoint-microservice/shared/default-port';
 
 async function bootstrap() {
-  const app = await NestFactory.create(EndpointMicroserviceModule);
+  const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
 

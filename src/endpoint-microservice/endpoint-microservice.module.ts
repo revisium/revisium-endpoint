@@ -8,6 +8,7 @@ import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/inter
 import { DatabaseModule } from 'src/endpoint-microservice/database/database.module';
 import { EndpointListenerController } from 'src/endpoint-microservice/endpoint-listener.controller';
 import { GraphqlModule } from 'src/endpoint-microservice/graphql/graphql.module';
+import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 import { RestapiModule } from 'src/endpoint-microservice/restapi/restapi.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { RestapiModule } from 'src/endpoint-microservice/restapi/restapi.module'
     GraphqlModule,
     RestapiModule,
     CoreApiModule,
+    MetricsModule,
   ],
   controllers: [EndpointListenerController],
   providers: [...ENDPOINT_COMMANDS],

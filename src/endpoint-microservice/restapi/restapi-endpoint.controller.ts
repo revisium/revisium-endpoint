@@ -11,12 +11,15 @@ import {
   Query,
   Req,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
 
+@UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
 @Controller()
 export class RestapiEndpointController {

@@ -1,10 +1,20 @@
-import { Controller, Get, HttpStatus, Param, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Req,
+  Res,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 
 const MAX_DOC_EXPANSION = 1;
 
+@UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
 @Controller()
 export class SwaggerEndpointController {
