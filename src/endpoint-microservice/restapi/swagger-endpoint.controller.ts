@@ -45,7 +45,7 @@ export class SwaggerEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
-    const url = `/endpoint/openapi/${encodeURIComponent(organizationId)}/${encodeURIComponent(projectName)}/${encodeURIComponent(branchName)}/${postfix}/openapi.json`;
+    const url = `/endpoint/openapi/${encodeURIComponent(organizationId)}/${encodeURIComponent(projectName)}/${encodeURIComponent(branchName)}/${encodeURIComponent(postfix)}/openapi.json`;
     res.send(`
     
 <!DOCTYPE html>
