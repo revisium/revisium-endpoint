@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "generate:api": "npx swagger-typescript-api -p http://localhost:8080/-/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --unwrap-response-data",
+    "generate:api": "npx swagger-typescript-api -p http://localhost:8080/-/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --disable-throw-on-error",
     "prisma:generate": "npx prisma generate",
     "build": "nest build",
     "prepublishOnly": "npm run build",

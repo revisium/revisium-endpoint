@@ -116,6 +116,12 @@ export class GraphqlEndpointService {
     const server = new ApolloServer({
       schema: graphqlSchema,
       introspection: true,
+      formatError: (error) => {
+        if (error.extensions?.stacktrace) {
+          error.extensions.stacktrace = [];
+        }
+        return error;
+      },
       plugins: [
         this.graphqlMetricsPlugin,
         ApolloServerPluginLandingPageLocalDefault({

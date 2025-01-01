@@ -19,10 +19,21 @@ export interface LoginResponse {
 }
 
 export interface CreateUserDto {
-  email?: string;
-  username?: string;
+  username: string;
   roleId: 'systemAdmin' | 'systemFullApiRead' | 'systemUser';
   password: string;
+  email?: string;
+}
+
+export interface UpdatePasswordDto {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UserModel {
+  id: string;
+  username?: string;
+  email?: string;
 }
 
 export interface ProjectModel {
@@ -55,11 +66,6 @@ export interface CreateProjectDto {
   projectName: string;
   /** @default "master" */
   branchName?: string;
-}
-
-export interface UserModel {
-  id: string;
-  username?: string;
 }
 
 export interface RoleModel {
@@ -111,6 +117,10 @@ export interface BranchesConnection {
   edges: BranchModelEdgeType[];
   totalCount: number;
   pageInfo: PageInfo;
+}
+
+export interface UpdateProjectDto {
+  isPublic: boolean;
 }
 
 export interface UsersProjectModel {
@@ -272,6 +282,22 @@ export interface UpdateRowResponse {
   previousVersionTableId?: string;
   row?: RowModel;
   previousVersionRowId?: string;
+}
+
+export interface GoogleOauth {
+  available: boolean;
+  clientId?: string;
+}
+
+export interface GithubOauth {
+  available: boolean;
+  clientId?: string;
+}
+
+export interface ConfigurationResponse {
+  availableEmailSignUp: boolean;
+  google: GoogleOauth;
+  github: GithubOauth;
 }
 
 export interface ProjectsParams {
@@ -530,7 +556,7 @@ export class HttpClient<SecurityDataType = unknown> {
     baseUrl,
     cancelToken,
     ...params
-  }: FullRequestParams): Promise<T> => {
+  }: FullRequestParams): Promise<HttpResponse<T, E>> => {
     const secureParams =
       ((typeof secure === 'boolean' ? secure : this.baseApiParams.secure) &&
         this.securityWorker &&
@@ -574,15 +600,14 @@ export class HttpClient<SecurityDataType = unknown> {
         this.abortControllers.delete(cancelToken);
       }
 
-      if (!response.ok) throw data;
-      return data.data;
+      return data;
     });
   };
 }
 
 /**
  * @title Revisium API
- * @version 0.8.2
+ * @version 0.9.4
  * @contact
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
@@ -620,6 +645,42 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       body: data,
       secure: true,
       type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Auth
+   * @name UpdatePassword
+   * @request PUT:/-/api/auth/password
+   * @secure
+   */
+  updatePassword = (data: UpdatePasswordDto, params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/-/api/auth/password`,
+      method: 'PUT',
+      body: data,
+      secure: true,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags User
+   * @name Me
+   * @request GET:/-/api/user/me
+   * @secure
+   */
+  me = (params: RequestParams = {}) =>
+    this.request<UserModel, any>({
+      path: `/-/api/user/me`,
+      method: 'GET',
+      secure: true,
       format: 'json',
       ...params,
     });
@@ -756,6 +817,25 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       path: `/-/api/organization/${organizationId}/projects/${projectName}`,
       method: 'DELETE',
       secure: true,
+      format: 'json',
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Project
+   * @name UpdateProject
+   * @request PUT:/-/api/organization/{organizationId}/projects/{projectName}
+   * @secure
+   */
+  updateProject = (organizationId: string, projectName: string, data: UpdateProjectDto, params: RequestParams = {}) =>
+    this.request<boolean, any>({
+      path: `/-/api/organization/${organizationId}/projects/${projectName}`,
+      method: 'PUT',
+      body: data,
+      secure: true,
+      type: ContentType.Json,
       format: 'json',
       ...params,
     });
@@ -1510,19 +1590,18 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       ...params,
     });
 
-  health = {
-    /**
-     * No description
-     *
-     * @tags health
-     * @name HealthControllerGet
-     * @request GET:/health
-     */
-    healthControllerGet: (params: RequestParams = {}) =>
-      this.request<void, any>({
-        path: `/health`,
-        method: 'GET',
-        ...params,
-      }),
-  };
+  /**
+   * No description
+   *
+   * @tags Configuration
+   * @name GetConfiguration
+   * @request GET:/-/api/configuration
+   */
+  getConfiguration = (params: RequestParams = {}) =>
+    this.request<ConfigurationResponse, any>({
+      path: `/-/api/configuration`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
 }

@@ -33,12 +33,8 @@ export class EndpointMicroserviceModule implements OnApplicationBootstrap {
   public async onApplicationBootstrap() {
     // TODO wait for REST API
     setImmediate(async () => {
-      try {
-        await this.internalCoreApiService.initApi();
-        await this.commandBus.execute(new RunAllEndpointsCommand());
-      } catch (e) {
-        console.error(e);
-      }
+      await this.internalCoreApiService.initApi();
+      await this.commandBus.execute(new RunAllEndpointsCommand());
     });
   }
 }

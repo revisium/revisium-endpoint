@@ -42,8 +42,6 @@ export class RestapiEndpointController {
     req: Request,
     @Res() res: Response,
   ) {
-    console.log('req', req.headers);
-
     const endpointMiddleware =
       this.restapiEndpointService.getEndpointMiddleware(
         organizationId,

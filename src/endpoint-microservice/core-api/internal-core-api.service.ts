@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
 import {
@@ -29,20 +29,19 @@ export class InternalCoreApiService extends Api<unknown> {
   }
 
   public async initApi() {
-    try {
-      const isBuild = this.configService.get('IS_BUILD') === 'true';
+    const isBuild = this.configService.get('IS_BUILD') === 'true';
 
-      const loginDto = isBuild
-        ? await this.getLoginDtoInBuildMode()
-        : this.getLoginDtoInCloudMode();
+    const loginDto = isBuild
+      ? await this.getLoginDtoInBuildMode()
+      : this.getLoginDtoInCloudMode();
 
-      const result = await this.login(loginDto);
+    const { data, error } = await this.login(loginDto);
 
-      this.token = result.accessToken;
-    } catch (error) {
-      console.error(error);
-      throw error;
+    if (error) {
+      throw new HttpException(error, error.statusCode);
     }
+
+    this.token = data.accessToken;
   }
 
   protected mergeRequestParams(

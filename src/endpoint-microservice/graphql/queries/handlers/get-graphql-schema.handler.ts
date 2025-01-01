@@ -1,4 +1,6 @@
+import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -172,7 +174,7 @@ export class GetGraphqlSchemaHandler
           data: { type: this.getTableInput(safetyTableId) },
         },
         resolve: async (_, { data }: InputType, context: ContextType) => {
-          return this.proxyCoreApi.rows(
+          const { data: dataResponse, error } = await this.proxyCoreApi.rows(
             {
               revisionId,
               tableId: rowSchema.id,
@@ -181,6 +183,14 @@ export class GetGraphqlSchemaHandler
             },
             { headers: context.headers },
           );
+
+          if (error) {
+            throw new GraphQLError(error.message, {
+              extensions: { code: error.error, originalError: error },
+            });
+          }
+
+          return dataResponse;
         },
       };
     }
@@ -272,13 +282,17 @@ export class GetGraphqlSchemaHandler
 
   private async getSchemas(revisionId: string) {
     // TODO schema, 1000
-    const result = await this.internalCoreApi.rows({
+    const { data, error } = await this.internalCoreApi.rows({
       revisionId,
       tableId: 'schema',
       first: 1000,
     });
 
-    return result.edges.map((edge) => edge.node) as GetJsonSchemasReturnType;
+    if (error) {
+      throw new HttpException(error, error.statusCode);
+    }
+
+    return data.edges.map((edge) => edge.node) as GetJsonSchemasReturnType;
   }
 }
 
