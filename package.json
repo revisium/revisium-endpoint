@@ -18,7 +18,7 @@
   "scripts": {
     "generate:api": "npx swagger-typescript-api -p http://localhost:8080/-/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --disable-throw-on-error",
     "prisma:generate": "npx prisma generate",
-    "build": "nest build",
+    "build": "nest build && tsc-alias -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -78,6 +78,7 @@
     "ts-jest": "^29.1.2",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.2"
   },
