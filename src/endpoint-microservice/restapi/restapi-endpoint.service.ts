@@ -1,13 +1,12 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { paginatedExcludeDataFromRowModel } from 'src/endpoint-microservice/core-api/utils/transformFromPrismaToRowModel';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
+import { EndpointMiddleware } from 'src/endpoint-microservice/restapi/endpoint-middleware.interface';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
-import { IPaginatedType } from 'src/endpoint-microservice/shared/types/pagination.interface';
 
 @Injectable()
 export class RestapiEndpointService {
@@ -20,43 +19,7 @@ export class RestapiEndpointService {
       revisionId: string;
       countTables: number;
       openApiJson: object;
-      getRow: (
-        headers: Record<string, string>,
-        tableId: string,
-        rowId: string,
-      ) => Promise<object>;
-      deleteRow: (
-        headers: Record<string, string>,
-        tableId: string,
-        rowId: string,
-      ) => Promise<boolean>;
-      updateRow: (
-        headers: Record<string, string>,
-        tableId: string,
-        rowId: string,
-        data: object,
-      ) => Promise<object>;
-      createRow: (
-        headers: Record<string, string>,
-        tableId: string,
-        rowId: string,
-        data: object,
-      ) => Promise<object>;
-      getRows: (
-        headers: Record<string, string>,
-        tableId: string,
-        first: number,
-        after: string | undefined,
-      ) => Promise<IPaginatedType<Omit<RowModel, 'data'>>>;
-      getRowReferencesBy: (
-        headers: Record<string, string>,
-        tableId: string,
-        rowId: string,
-        referenceByTableId: string,
-        first: number,
-        after: string | undefined,
-      ) => Promise<IPaginatedType<Omit<RowModel, 'data'>>>;
-    }
+    } & EndpointMiddleware
   >();
   private startedEndpointIds: string[] = [];
 
@@ -136,27 +99,37 @@ export class RestapiEndpointService {
         revisionId: revision.id,
       }),
       getRow: async (headers, tableId, rowId) => {
-        const { data } = await this.proxyCoreApi.row(
+        const { data, error } = await this.proxyCoreApi.row(
           revision.id,
           tableId,
           rowId,
           { headers },
         );
 
-        if (!data) {
-          throw new HttpException(`Not found ${rowId}`, HttpStatus.NOT_FOUND);
+        if (error) {
+          throw new HttpException(error, error.statusCode);
         }
 
         return data;
       },
       deleteRow: async (headers, tableId, rowId) => {
-        await this.proxyCoreApi.deleteRow(revision.id, tableId, rowId, {
-          headers,
-        });
+        const { error } = await this.proxyCoreApi.deleteRow(
+          revision.id,
+          tableId,
+          rowId,
+          {
+            headers,
+          },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
         return true;
       },
       updateRow: async (headers, tableId, rowId, data) => {
-        await this.proxyCoreApi.updateRow(
+        const { data: responseData, error } = await this.proxyCoreApi.updateRow(
           revision.id,
           tableId,
           rowId,
@@ -165,37 +138,46 @@ export class RestapiEndpointService {
           },
           { headers },
         );
-        return data;
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return responseData.row.data;
       },
       createRow: async (headers, tableId, rowId, data) => {
-        try {
-          return await this.proxyCoreApi
-            .createRow(
-              revision.id,
-              tableId,
-              {
-                rowId,
-                data,
-              },
-              { headers },
-            )
-            .then((result) => result.row.data);
-        } catch (e) {
-          console.error(e);
+        const { data: responseData, error } = await this.proxyCoreApi.createRow(
+          revision.id,
+          tableId,
+          {
+            rowId,
+            data,
+          },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
         }
+
+        return responseData.row.data;
       },
       getRows: async (headers, tableId, first, after) => {
-        return this.proxyCoreApi
-          .rows(
-            {
-              revisionId: revision.id,
-              tableId,
-              first,
-              after,
-            },
-            { headers: headers },
-          )
-          .then((result) => paginatedExcludeDataFromRowModel(result));
+        const { data, error } = await this.proxyCoreApi.rows(
+          {
+            revisionId: revision.id,
+            tableId,
+            first,
+            after,
+          },
+          { headers: headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return paginatedExcludeDataFromRowModel(data);
       },
       getRowReferencesBy: async (
         headers,
@@ -205,19 +187,23 @@ export class RestapiEndpointService {
         first,
         after,
       ) => {
-        return this.proxyCoreApi
-          .rowReferencesBy(
-            {
-              revisionId: revision.id,
-              tableId,
-              rowId,
-              referenceByTableId,
-              first,
-              after,
-            },
-            { headers },
-          )
-          .then((result) => paginatedExcludeDataFromRowModel(result));
+        const { data, error } = await this.proxyCoreApi.rowReferencesBy(
+          {
+            revisionId: revision.id,
+            tableId,
+            rowId,
+            referenceByTableId,
+            first,
+            after,
+          },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return paginatedExcludeDataFromRowModel(data);
       },
     });
 
@@ -267,8 +253,16 @@ export class RestapiEndpointService {
   }
 
   private async getCountTables(revisionId: string) {
-    const result = await this.internalCoreApi.tables({ revisionId, first: 0 });
-    return result.totalCount;
+    const { data, error } = await this.internalCoreApi.tables({
+      revisionId,
+      first: 0,
+    });
+
+    if (error) {
+      throw new HttpException(error, error.statusCode);
+    }
+
+    return data.totalCount;
   }
 
   private async generateOpenApiJson({

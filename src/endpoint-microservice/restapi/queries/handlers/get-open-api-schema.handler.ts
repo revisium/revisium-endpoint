@@ -1,3 +1,4 @@
+import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
@@ -266,13 +267,17 @@ export class GetOpenApiSchemaHandler
           : {}),
       };
 
-      const tableReferencesBy = await this.internalCoreApi
-        .tableReferencesBy({
-          revisionId,
-          tableId: schemaRow.id,
-          first: 100,
-        })
-        .then((result) => result.edges.map((edge) => edge.node));
+      const { data, error } = await this.internalCoreApi.tableReferencesBy({
+        revisionId,
+        tableId: schemaRow.id,
+        first: 100,
+      });
+
+      if (error) {
+        throw new HttpException(error, error.statusCode);
+      }
+
+      const tableReferencesBy = data.edges.map((edge) => edge.node);
 
       for (const tableReferenceBy of tableReferencesBy) {
         openApiJson.paths[
@@ -380,20 +385,28 @@ export class GetOpenApiSchemaHandler
   }
 
   private async getIsDraftRevision(revisionId: string) {
-    const result = await this.internalCoreApi.revision(revisionId);
+    const { data, error } = await this.internalCoreApi.revision(revisionId);
 
-    return result.isDraft;
+    if (error) {
+      throw new HttpException(error, error.statusCode);
+    }
+
+    return data.isDraft;
   }
 
   private async getSchemas(revisionId: string) {
     // TODO schema, 1000
-    const result = await this.internalCoreApi.rows({
+    const { error, data } = await this.internalCoreApi.rows({
       revisionId,
       tableId: 'schema',
       first: 1000,
     });
 
-    const nodes = result.edges.map((edge) => edge.node);
+    if (error) {
+      throw new HttpException(error, error.statusCode);
+    }
+
+    const nodes = data.edges.map((edge) => edge.node);
 
     nodes.sort((a, b) => a.id.localeCompare(b.id));
 
