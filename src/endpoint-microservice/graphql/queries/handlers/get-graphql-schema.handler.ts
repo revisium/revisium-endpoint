@@ -1,4 +1,4 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, Logger } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { GraphQLError } from 'graphql/error';
 import {
@@ -58,6 +58,8 @@ const DEFAULT_FIRST = 100;
 export class GetGraphqlSchemaHandler
   implements IQueryHandler<GetGraphqlSchemaQuery>
 {
+  private readonly logger = new Logger(GetGraphqlSchemaHandler.name);
+
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly proxyCoreApi: ProxyCoreApiService,
@@ -185,6 +187,8 @@ export class GetGraphqlSchemaHandler
           );
 
           if (error) {
+            this.logger.error(error);
+
             throw new GraphQLError(error.message, {
               extensions: { code: error.error, originalError: error },
             });
