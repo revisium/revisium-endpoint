@@ -267,6 +267,12 @@ export interface UpdateTableResponse {
   previousVersionTableId: string;
 }
 
+export interface ErrorModel {
+  statusCode: number;
+  message: string;
+  error: string;
+}
+
 export interface RemoveRowResponse {
   branch: BranchModel;
   table?: TableModel;
@@ -1459,7 +1465,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @secure
    */
   row = (revisionId: string, tableId: string, rowId: string, params: RequestParams = {}) =>
-    this.request<RowModel, any>({
+    this.request<RowModel, ErrorModel>({
       path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}`,
       method: 'GET',
       secure: true,
@@ -1604,4 +1610,150 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       format: 'json',
       ...params,
     });
+
+  health = {
+    /**
+     * No description
+     *
+     * @tags health
+     * @name Liveness
+     * @request GET:/health/liveness
+     */
+    liveness: (params: RequestParams = {}) =>
+      this.request<
+        {
+          /** @example "ok" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        },
+        {
+          /** @example "error" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"redis":{"status":"down","message":"Could not connect"}} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"},"redis":{"status":"down","message":"Could not connect"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        }
+      >({
+        path: `/health/liveness`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags health
+     * @name Readiness
+     * @request GET:/health/readiness
+     */
+    readiness: (params: RequestParams = {}) =>
+      this.request<
+        {
+          /** @example "ok" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        },
+        {
+          /** @example "error" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"redis":{"status":"down","message":"Could not connect"}} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"},"redis":{"status":"down","message":"Could not connect"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        }
+      >({
+        path: `/health/readiness`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+  };
 }

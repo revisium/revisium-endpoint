@@ -46,6 +46,7 @@
     "@nestjs/platform-express": "^10.3.3",
     "@nestjs/schedule": "^4.0.1",
     "@nestjs/swagger": "^7.4.2",
+    "@nestjs/terminus": "^10.2.3",
     "@prisma/client": "^5.10.2",
     "bcrypt": "^5.1.1",
     "graphql": "^16.8.1",
