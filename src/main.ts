@@ -35,6 +35,7 @@ async function bootstrap() {
 
   const port = config.get('PORT') || DEFAULT_PORT;
 
+  app.enableShutdownHooks();
   await app.listen(port);
 }
 
