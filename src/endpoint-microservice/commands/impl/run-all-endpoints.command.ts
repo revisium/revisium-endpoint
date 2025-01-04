@@ -1,3 +1,1 @@
-export class RunAllEndpointsCommand {
-  public constructor() {}
-}
+export class RunAllEndpointsCommand {}
