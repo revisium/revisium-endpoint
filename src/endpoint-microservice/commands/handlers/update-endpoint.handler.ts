@@ -11,8 +11,8 @@ export class UpdateEndpointHandler
   implements ICommandHandler<UpdateEndpointCommand>
 {
   constructor(
-    protected prisma: PrismaService,
-    private commandBus: CommandBus,
+    protected readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
   ) {
     super(prisma);
   }

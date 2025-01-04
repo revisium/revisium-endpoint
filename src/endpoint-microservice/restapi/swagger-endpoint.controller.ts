@@ -18,7 +18,9 @@ const MAX_DOC_EXPANSION = 1;
 @ApiExcludeController()
 @Controller()
 export class SwaggerEndpointController {
-  constructor(private restapiEndpointService: RestapiEndpointService) {}
+  constructor(
+    private readonly restapiEndpointService: RestapiEndpointService,
+  ) {}
 
   // TODO avoid unpkg.com
 

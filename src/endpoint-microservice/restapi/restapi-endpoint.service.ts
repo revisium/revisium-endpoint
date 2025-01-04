@@ -12,7 +12,7 @@ import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-s
 export class RestapiEndpointService {
   private readonly logger = new Logger(RestapiEndpointService.name);
 
-  private map = new Map<
+  private readonly map = new Map<
     string,
     {
       endpointId: string;

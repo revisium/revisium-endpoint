@@ -14,7 +14,7 @@ import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeader
 export class GraphqlEndpointService {
   private readonly logger = new Logger(GraphqlEndpointService.name);
 
-  private map = new Map<
+  private readonly map = new Map<
     string,
     { middleware: RequestHandler; apollo: ApolloServer; endpointId: string }
   >();
