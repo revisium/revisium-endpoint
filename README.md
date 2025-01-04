@@ -1,6 +1,6 @@
 # @revisium/endpoint
 
-![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=revisium_revisium-endpoint&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=revisium_revisium-endpoint)
 
 **Status: Experimental and Not Production-Ready**
 
