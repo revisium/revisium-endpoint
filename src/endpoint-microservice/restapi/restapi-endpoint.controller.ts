@@ -23,7 +23,9 @@ import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeader
 @ApiExcludeController()
 @Controller()
 export class RestapiEndpointController {
-  constructor(private restapiEndpointService: RestapiEndpointService) {}
+  constructor(
+    private readonly restapiEndpointService: RestapiEndpointService,
+  ) {}
 
   @Get(
     '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId',

@@ -10,7 +10,7 @@ import {
 
 @Controller()
 export class EndpointListenerController {
-  constructor(private commandBus: CommandBus) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @EventPattern('endpoint_created')
   public handleEndpointCreated(endpointId: string) {

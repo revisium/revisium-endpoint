@@ -6,7 +6,7 @@ import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restap
 export class CreateRestapiEndpointHandler
   implements ICommandHandler<CreateRestapiEndpointCommand>
 {
-  public constructor(private service: RestapiEndpointService) {}
+  public constructor(private readonly service: RestapiEndpointService) {}
 
   public async execute({
     endpointId,

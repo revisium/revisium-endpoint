@@ -11,8 +11,8 @@ export class CreateEndpointHandler
   implements ICommandHandler<CreateEndpointCommand>
 {
   constructor(
-    protected prisma: PrismaService,
-    private commandBus: CommandBus,
+    protected readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
   ) {
     super(prisma);
   }

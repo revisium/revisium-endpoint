@@ -6,7 +6,7 @@ import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphq
 export class CreateGraphqlEndpointHandler
   implements ICommandHandler<CreateGraphqlEndpointCommand>
 {
-  public constructor(private service: GraphqlEndpointService) {}
+  public constructor(private readonly service: GraphqlEndpointService) {}
 
   public async execute({
     endpointId,

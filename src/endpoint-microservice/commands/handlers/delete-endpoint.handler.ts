@@ -11,8 +11,8 @@ export class DeleteEndpointHandler
   implements ICommandHandler<DeleteEndpointCommand>
 {
   constructor(
-    protected prisma: PrismaService,
-    private commandBus: CommandBus,
+    protected readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
   ) {
     super(prisma);
   }

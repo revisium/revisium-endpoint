@@ -9,8 +9,8 @@ export class RunAllEndpointsHandler
   implements ICommandHandler<RunAllEndpointsCommand>
 {
   constructor(
-    private prisma: PrismaService,
-    private commandBus: CommandBus,
+    private readonly prisma: PrismaService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   public async execute(): Promise<void> {
