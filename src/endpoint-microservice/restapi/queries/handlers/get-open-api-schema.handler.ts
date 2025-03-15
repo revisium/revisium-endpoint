@@ -267,7 +267,7 @@ export class GetOpenApiSchemaHandler
           : {}),
       };
 
-      const { data, error } = await this.internalCoreApi.tableReferencesBy({
+      const { data, error } = await this.internalCoreApi.tableForeignKeysBy({
         revisionId,
         tableId: schemaRow.id,
         first: 100,
@@ -277,11 +277,11 @@ export class GetOpenApiSchemaHandler
         throw new HttpException(error, error.statusCode);
       }
 
-      const tableReferencesBy = data.edges.map((edge) => edge.node);
+      const tableForeignKeysBy = data.edges.map((edge) => edge.node);
 
-      for (const tableReferenceBy of tableReferencesBy) {
+      for (const tableForeignKeyBy of tableForeignKeysBy) {
         openApiJson.paths[
-          `/${schemaRow.id}/{id}/references-by/${tableReferenceBy.id}`
+          `/${schemaRow.id}/{id}/foreign-keys-by/${tableForeignKeyBy.id}`
         ] = {
           get: {
             security: [
