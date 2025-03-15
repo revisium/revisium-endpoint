@@ -218,9 +218,9 @@ export class RestapiEndpointController {
   }
 
   @Get(
-    '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId/:rowId/references-by/:referenceByTableId',
+    '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId/:rowId/foreign-keys-by/:foreignKeyByTableId',
   )
-  async getRowReferencesBy(
+  async getRowForeignKeysBy(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
@@ -230,8 +230,8 @@ export class RestapiEndpointController {
     tableId: string,
     @Param('rowId')
     rowId: string,
-    @Param('referenceByTableId')
-    referenceByTableId: string,
+    @Param('foreignKeyByTableId')
+    foreignKeyByTableId: string,
     @Query('first', ParseIntPipe) first: number,
     @Query('after') after: string | undefined,
     @Req()
@@ -250,11 +250,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
-    const result = await endpointMiddleware.getRowReferencesBy(
+    const result = await endpointMiddleware.getRowForeignKeysBy(
       parseHeaders(req.headers),
       tableId,
       rowId,
-      referenceByTableId,
+      foreignKeyByTableId,
       first,
       after,
     );

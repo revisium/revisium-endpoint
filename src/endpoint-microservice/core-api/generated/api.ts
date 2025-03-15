@@ -290,6 +290,17 @@ export interface UpdateRowResponse {
   previousVersionRowId?: string;
 }
 
+export interface RenameRowDto {
+  nextRowId: string;
+}
+
+export interface RenameRowResponse {
+  table?: TableModel;
+  previousVersionTableId?: string;
+  row?: RowModel;
+  previousVersionRowId?: string;
+}
+
 export interface GoogleOauth {
   available: boolean;
   clientId?: string;
@@ -366,7 +377,7 @@ export interface RowsParams {
   tableId: string;
 }
 
-export interface TableReferencesByParams {
+export interface TableForeignKeysByParams {
   /** @default 100 */
   first: number;
   after?: string;
@@ -374,7 +385,7 @@ export interface TableReferencesByParams {
   tableId: string;
 }
 
-export interface TableReferencesToParams {
+export interface TableForeignKeysToParams {
   /** @default 100 */
   first: number;
   after?: string;
@@ -382,8 +393,8 @@ export interface TableReferencesToParams {
   tableId: string;
 }
 
-export interface RowReferencesByParams {
-  referenceByTableId: string;
+export interface RowForeignKeysByParams {
+  foreignKeyByTableId: string;
   /** @default 100 */
   first: number;
   after?: string;
@@ -392,8 +403,8 @@ export interface RowReferencesByParams {
   rowId: string;
 }
 
-export interface RowReferencesToParams {
-  referenceToTableId: string;
+export interface RowForeignKeysToParams {
+  foreignKeyToTableId: string;
   /** @default 100 */
   first: number;
   after?: string;
@@ -613,7 +624,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 0.9.4
+ * @version 0.10.0-alpha.1
  * @contact
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
@@ -1390,13 +1401,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Table
-   * @name TableCountReferencesBy
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/count-references-by
+   * @name TableCountForeignKeysBy
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/count-foreign-keys-by
    * @secure
    */
-  tableCountReferencesBy = (revisionId: string, tableId: string, params: RequestParams = {}) =>
+  tableCountForeignKeysBy = (revisionId: string, tableId: string, params: RequestParams = {}) =>
     this.request<number, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/count-references-by`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/count-foreign-keys-by`,
       method: 'GET',
       secure: true,
       format: 'json',
@@ -1407,13 +1418,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Table
-   * @name TableReferencesBy
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/references-by
+   * @name TableForeignKeysBy
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/foreign-keys-by
    * @secure
    */
-  tableReferencesBy = ({ revisionId, tableId, ...query }: TableReferencesByParams, params: RequestParams = {}) =>
+  tableForeignKeysBy = ({ revisionId, tableId, ...query }: TableForeignKeysByParams, params: RequestParams = {}) =>
     this.request<TablesConnection, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/references-by`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/foreign-keys-by`,
       method: 'GET',
       query: query,
       secure: true,
@@ -1425,13 +1436,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Table
-   * @name TableCountReferencesTo
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/count-references-to
+   * @name TableCountForeignKeysTo
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/count-foreign-keys-to
    * @secure
    */
-  tableCountReferencesTo = (revisionId: string, tableId: string, params: RequestParams = {}) =>
+  tableCountForeignKeysTo = (revisionId: string, tableId: string, params: RequestParams = {}) =>
     this.request<number, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/count-references-to`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/count-foreign-keys-to`,
       method: 'GET',
       secure: true,
       format: 'json',
@@ -1442,16 +1453,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Table
-   * @name TableReferencesTo
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/references-to
+   * @name TableForeignKeysTo
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/foreign-keys-to
    * @secure
    */
-  tableReferencesTo = ({ revisionId, tableId, ...query }: TableReferencesToParams, params: RequestParams = {}) =>
+  tableForeignKeysTo = ({ revisionId, tableId, ...query }: TableForeignKeysToParams, params: RequestParams = {}) =>
     this.request<TablesConnection, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/references-to`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/foreign-keys-to`,
       method: 'GET',
       query: query,
       secure: true,
+      format: 'json',
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Table
+   * @name RenameTable
+   * @request PATCH:/-/api/revision/{revisionId}/tables/{tableId}/rename
+   * @secure
+   */
+  renameTable = (revisionId: string, tableId: string, data: UpdateTableDto, params: RequestParams = {}) =>
+    this.request<UpdateTableResponse, any>({
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rename`,
+      method: 'PATCH',
+      body: data,
+      secure: true,
+      type: ContentType.Json,
       format: 'json',
       ...params,
     });
@@ -1513,13 +1543,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Row
-   * @name RowCountReferencesBy
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/count-references-by
+   * @name RowCountForeignKeysBy
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/count-foreign-keys-by
    * @secure
    */
-  rowCountReferencesBy = (revisionId: string, tableId: string, rowId: string, params: RequestParams = {}) =>
+  rowCountForeignKeysBy = (revisionId: string, tableId: string, rowId: string, params: RequestParams = {}) =>
     this.request<number, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/count-references-by`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/count-foreign-keys-by`,
       method: 'GET',
       secure: true,
       format: 'json',
@@ -1530,13 +1560,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Row
-   * @name RowReferencesBy
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/references-by
+   * @name RowForeignKeysBy
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/foreign-keys-by
    * @secure
    */
-  rowReferencesBy = ({ revisionId, tableId, rowId, ...query }: RowReferencesByParams, params: RequestParams = {}) =>
+  rowForeignKeysBy = ({ revisionId, tableId, rowId, ...query }: RowForeignKeysByParams, params: RequestParams = {}) =>
     this.request<RowsConnection, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/references-by`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/foreign-keys-by`,
       method: 'GET',
       query: query,
       secure: true,
@@ -1548,13 +1578,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Row
-   * @name RowCountReferencesTo
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/count-references-to
+   * @name RowCountForeignKeysTo
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/count-foreign-keys-to
    * @secure
    */
-  rowCountReferencesTo = (revisionId: string, tableId: string, rowId: string, params: RequestParams = {}) =>
+  rowCountForeignKeysTo = (revisionId: string, tableId: string, rowId: string, params: RequestParams = {}) =>
     this.request<number, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/count-references-to`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/count-foreign-keys-to`,
       method: 'GET',
       secure: true,
       format: 'json',
@@ -1565,16 +1595,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Row
-   * @name RowReferencesTo
-   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/references-to
+   * @name RowForeignKeysTo
+   * @request GET:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/foreign-keys-to
    * @secure
    */
-  rowReferencesTo = ({ revisionId, tableId, rowId, ...query }: RowReferencesToParams, params: RequestParams = {}) =>
+  rowForeignKeysTo = ({ revisionId, tableId, rowId, ...query }: RowForeignKeysToParams, params: RequestParams = {}) =>
     this.request<RowsConnection, any>({
-      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/references-to`,
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/foreign-keys-to`,
       method: 'GET',
       query: query,
       secure: true,
+      format: 'json',
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Row
+   * @name RenameRow
+   * @request PATCH:/-/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/rename
+   * @secure
+   */
+  renameRow = (revisionId: string, tableId: string, rowId: string, data: RenameRowDto, params: RequestParams = {}) =>
+    this.request<RenameRowResponse, any>({
+      path: `/-/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}/rename`,
+      method: 'PATCH',
+      body: data,
+      secure: true,
+      type: ContentType.Json,
       format: 'json',
       ...params,
     });

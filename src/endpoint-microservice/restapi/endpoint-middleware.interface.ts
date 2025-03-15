@@ -30,11 +30,11 @@ export interface EndpointMiddleware {
     first: number,
     after: string | undefined,
   ): Promise<IPaginatedType<Omit<RowModel, 'data'>>>;
-  getRowReferencesBy(
+  getRowForeignKeysBy(
     headers: Record<string, string>,
     tableId: string,
     rowId: string,
-    referenceByTableId: string,
+    foreignKeyByTableId: string,
     first: number,
     after: string | undefined,
   ): Promise<IPaginatedType<Omit<RowModel, 'data'>>>;

@@ -179,20 +179,20 @@ export class RestapiEndpointService {
 
         return paginatedExcludeDataFromRowModel(data);
       },
-      getRowReferencesBy: async (
+      getRowForeignKeysBy: async (
         headers,
         tableId,
         rowId,
-        referenceByTableId,
+        foreignKeyByTableId,
         first,
         after,
       ) => {
-        const { data, error } = await this.proxyCoreApi.rowReferencesBy(
+        const { data, error } = await this.proxyCoreApi.rowForeignKeysBy(
           {
             revisionId: revision.id,
             tableId,
             rowId,
-            referenceByTableId,
+            foreignKeyByTableId,
             first,
             after,
           },
