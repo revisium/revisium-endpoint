@@ -17,6 +17,7 @@ import { printSchema } from 'graphql/utilities';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
+import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import {
   JsonSchemaObjectType,
   JsonSchemaType,
@@ -288,7 +289,7 @@ export class GetGraphqlSchemaHandler
     // TODO schema, 1000
     const { data, error } = await this.internalCoreApi.rows({
       revisionId,
-      tableId: 'schema',
+      tableId: SystemTables.Schema,
       first: 1000,
     });
 
