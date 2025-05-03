@@ -3,7 +3,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres", "metrics"]
+  previewFeatures = ["fullTextSearchPostgres", "metrics", "typedSql"]
   binaryTargets   = ["linux-arm64-openssl-1.1.x", "linux-arm64-openssl-3.0.x", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "native", "darwin", "darwin-arm64", "windows"]
   engineType      = "binary"
 }
@@ -61,8 +61,9 @@ model Permission {
 }
 
 model Organization {
-  id       String    @id
-  projects Project[]
+  id        String    @id
+  createdId String    @unique
+  projects  Project[]
 
   userOrganizations UserOrganization[]
 }
@@ -151,24 +152,42 @@ enum EndpointType {
   REST_API
 }
 
+model EndpointVersion {
+  id       String       @id
+  type     EndpointType
+  version  Int          @default(1)
+  endpoint Endpoint[]
+
+  @@unique([type, version])
+}
+
 model Endpoint {
   id         String       @id
   createdAt  DateTime     @default(now())
   type       EndpointType
   revisionId String
-  revision   Revision     @relation(fields: [revisionId], references: [id], onDelete: Cascade)
   isDeleted  Boolean      @default(false)
+
+  versionId String
+  version   EndpointVersion @relation(fields: [versionId], references: [id])
+
+  revision Revision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
 
   @@unique([revisionId, type])
 }
 
 model Table {
-  versionId String     @id
+  versionId String @id
   createdId String
-  createdAt DateTime   @default(now())
-  readonly  Boolean    @default(false)
-  system    Boolean    @default(false)
   id        String
+
+  readonly Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  system Boolean @default(false)
+
   revisions Revision[]
   rows      Row[]
 
@@ -176,16 +195,21 @@ model Table {
 }
 
 model Row {
-  versionId  String   @id
-  createdId  String
-  createdAt  DateTime @default(now())
-  readonly   Boolean  @default(false)
-  id         String
-  tables     Table[]
+  versionId String @id
+  createdId String
+  id        String
+
+  readonly Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
   data       Json
-  meta       Json     @default("{}")
+  meta       Json   @default("{}")
   hash       String
   schemaHash String
+
+  tables Table[]
 
   @@index([data], type: Gin)
   @@index([id])
