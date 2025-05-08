@@ -228,31 +228,29 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     Object.entries(schema.properties)
       .filter((property) => !isEmptyObject(property[1]))
-      .forEach(([key, itemSchema]) => {
-        if (getSafetyName(key, 'field') !== key) {
-          // TODO
-        } else {
-          if (itemSchema.type === 'string') {
-            fields[key] = { type: new GraphQLNonNull(GraphQLString) };
-          } else if (itemSchema.type === 'number') {
-            fields[key] = { type: new GraphQLNonNull(GraphQLFloat) };
-          } else if (itemSchema.type === 'boolean') {
-            fields[key] = { type: new GraphQLNonNull(GraphQLBoolean) };
-          } else if (itemSchema.type === 'object') {
-            fields[key] = {
-              type: new GraphQLNonNull(
-                this.getObjectSchema(`${name}_${key}`, itemSchema),
+      .forEach(([key2, itemSchema]) => {
+        const safetyKey = getSafetyName(key2, 'INVALID_FIELD_NAME');
+
+        if (itemSchema.type === 'string') {
+          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLString) };
+        } else if (itemSchema.type === 'number') {
+          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLFloat) };
+        } else if (itemSchema.type === 'boolean') {
+          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLBoolean) };
+        } else if (itemSchema.type === 'object') {
+          fields[safetyKey] = {
+            type: new GraphQLNonNull(
+              this.getObjectSchema(`${name}_${safetyKey}`, itemSchema),
+            ),
+          };
+        } else if (itemSchema.type === 'array') {
+          fields[safetyKey] = {
+            type: new GraphQLNonNull(
+              new GraphQLList(
+                this.getArrayItems(`${name}_${safetyKey}`, itemSchema.items),
               ),
-            };
-          } else if (itemSchema.type === 'array') {
-            fields[key] = {
-              type: new GraphQLNonNull(
-                new GraphQLList(
-                  this.getArrayItems(`${name}_${key}`, itemSchema.items),
-                ),
-              ),
-            };
-          }
+            ),
+          };
         }
       });
 

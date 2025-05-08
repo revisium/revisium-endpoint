@@ -13,7 +13,7 @@ export const isEmptyObject = (schema: JsonSchema): boolean => {
 };
 
 const startName = /[_a-zA-Z]/;
-const containName = /^[_a-zA-Z0-9]+$/;
+const containName = /^\w+$/;
 
 export const getSafetyName = (name: string, prefix: string): string => {
   if (!startName.test(name[0])) {
@@ -21,7 +21,7 @@ export const getSafetyName = (name: string, prefix: string): string => {
   }
 
   if (!containName.test(name)) {
-    return getSafetyName(name.replace(/[^_a-zA-Z0-9]/g, '_'), prefix);
+    return getSafetyName(name.replace(/\W/g, '_'), prefix);
   }
 
   return name;

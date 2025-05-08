@@ -96,7 +96,7 @@ export const getObjectSchema = (
 ): JsonObjectSchema => ({
   type: 'object',
   additionalProperties: false,
-  required: Object.keys(properties).sort(),
+  required: Object.keys(properties).sort((a, b) => a.localeCompare(b)),
   properties,
 });
 

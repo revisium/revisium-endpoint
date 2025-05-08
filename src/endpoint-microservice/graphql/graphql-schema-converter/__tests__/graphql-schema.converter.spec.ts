@@ -118,6 +118,24 @@ describe('GraphQL Schema Converter', () => {
     await check(schema, 'invalid-table-name.graphql.text');
   });
 
+  it('invalid field name', async () => {
+    const table: ConverterTable = {
+      id: 'user',
+      versionId: '1',
+      schema: getObjectSchema({
+        ['--name']: getObjectSchema({
+          nestedField: getStringSchema(),
+        }),
+      }),
+    };
+
+    const schema = await converter.convert({
+      tables: [table],
+      revisionId,
+    });
+    await check(schema, 'invalid-field-name.graphql.text');
+  });
+
   it('empty object', async () => {
     const user: ConverterTable = {
       id: 'user',
