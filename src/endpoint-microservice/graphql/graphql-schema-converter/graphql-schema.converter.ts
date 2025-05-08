@@ -140,6 +140,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getListResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
     return async (
       _: unknown,
       { data }: { data: { first?: number; after?: string } },
@@ -147,7 +149,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     ) => {
       const { data: response, error } = await this.proxyCoreApi.rows(
         {
-          revisionId: this.context.revisionId,
+          revisionId,
           tableId: table.id,
           first: data?.first || DEFAULT_FIRST,
           after: data?.after,
