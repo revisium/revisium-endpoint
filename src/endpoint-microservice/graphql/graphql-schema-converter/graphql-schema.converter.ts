@@ -93,10 +93,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createListField(table: ConverterTable, name: string) {
-    const ConnectionType = this.getTableConnection(table, name);
+    const ConnectionType = this.getListConnection(table, name);
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getTableInput(name) } },
+      args: { data: { type: this.getListArgs(name) } },
       resolve: this.getListResolver(table),
     };
   }
@@ -117,7 +117,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private getTableConnection(data: ConverterTable, safetyTableId: string) {
+  private getListConnection(data: ConverterTable, safetyTableId: string) {
     return new GraphQLObjectType({
       name: `${safetyTableId}Connection`,
       fields: {
@@ -134,7 +134,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getTableInput(name: string) {
+  private getListArgs(name: string) {
     return new GraphQLInputObjectType({
       name: `Get${name}Input`,
       fields: {
@@ -164,17 +164,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         data: {
-          type: this.getRootSchema(`Data${safetyTableId}`, data.schema),
+          type: this.getSchema(`Data${safetyTableId}`, data.schema),
         },
       }),
     });
   }
 
-  private getRootSchema(
-    name: string,
-    schema: JsonSchema,
-    postfix: string = '',
-  ) {
+  private getSchema(name: string, schema: JsonSchema, postfix: string = '') {
     switch (schema.type) {
       case 'string':
         return new GraphQLNonNull(GraphQLString);
@@ -189,7 +185,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       case 'array':
         return new GraphQLNonNull(
           new GraphQLList(
-            this.getRootSchema(`${name}${postfix}`, schema.items, '_Items'),
+            this.getSchema(`${name}${postfix}`, schema.items, '_Items'),
           ),
         );
       default:
@@ -201,43 +197,18 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     name: string,
     schema: JsonObjectSchema,
   ): GraphQLObjectType {
-    const fields = {};
-
-    Object.entries(schema.properties)
-      .filter((property) => !isEmptyObject(property[1]))
-      .forEach(([key, itemSchema]) => {
-        const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
-
-        if (itemSchema.type === 'string') {
-          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLString) };
-        } else if (itemSchema.type === 'number') {
-          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLFloat) };
-        } else if (itemSchema.type === 'boolean') {
-          fields[safetyKey] = { type: new GraphQLNonNull(GraphQLBoolean) };
-        } else if (itemSchema.type === 'object') {
-          fields[safetyKey] = {
-            type: new GraphQLNonNull(
-              this.getObjectSchema(`${name}_${safetyKey}`, itemSchema),
-            ),
-          };
-        } else if (itemSchema.type === 'array') {
-          fields[safetyKey] = {
-            type: new GraphQLNonNull(
-              new GraphQLList(
-                this.getRootSchema(
-                  `${name}_${safetyKey}`,
-                  itemSchema.items,
-                  '_Items',
-                ),
-              ),
-            ),
-          };
-        }
-      });
-
     return new GraphQLObjectType({
       name,
-      fields: () => fields,
+      fields: () =>
+        Object.entries(schema.properties).reduce(
+          (fields, [key, itemSchema]) => {
+            const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
+            const type = this.getSchema(`${name}_${safetyKey}`, itemSchema);
+            fields[safetyKey] = { type };
+            return fields;
+          },
+          {} as Record<string, any>,
+        ),
     });
   }
 
