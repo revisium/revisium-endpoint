@@ -6,6 +6,11 @@ export type ConverterTable = {
   schema: JsonSchema;
 };
 
+export type ConverterContextType = {
+  tables: ConverterTable[];
+  revisionId: string;
+};
+
 export interface Converter<Target> {
-  convert(tables: ConverterTable[]): Promise<Target>;
+  convert(context: ConverterContextType): Promise<Target>;
 }

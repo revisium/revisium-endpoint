@@ -1,16 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLSchema } from 'graphql/type';
 import { join } from 'path';
 import { printSchema } from 'graphql/utilities';
 import { getObjectSchema, getStringSchema } from 'src/__tests__/schema.mocks';
-import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema.converter';
 import * as fs from 'node:fs/promises';
+import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
 
 describe('GraphQL Schema Converter', () => {
   it('empty schema', async () => {
-    const schema = await converter.convert([]);
-    expect(printSchema(schema)).toBe('');
+    const schema = await converter.convert({
+      tables: [],
+      revisionId,
+    });
+
+    await check(schema, 'empty.graphql.text');
   });
 
   it('simple schema', async () => {
@@ -22,8 +28,11 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schema = await converter.convert([table]);
-    await check(schema, 'simple-user.graphql');
+    const schema = await converter.convert({
+      tables: [table],
+      revisionId,
+    });
+    await check(schema, 'simple-user.graphql.text');
   });
 
   async function check(schema: GraphQLSchema, schemaPath: string) {
@@ -35,12 +44,23 @@ describe('GraphQL Schema Converter', () => {
     expect(printSchema(schema)).toBe(file);
   }
 
+  const revisionId = '1';
   let converter: GraphQLSchemaConverter;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GraphQLSchemaConverter],
-    }).compile();
+      providers: [
+        GraphQLSchemaConverter,
+        ProxyCoreApiService,
+        {
+          provide: AsyncLocalStorage,
+          useValue: new AsyncLocalStorage(),
+        },
+      ],
+    })
+      .overrideProvider(ProxyCoreApiService)
+      .useValue({})
+      .compile();
 
     converter = module.get(GraphQLSchemaConverter);
   });

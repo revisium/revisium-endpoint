@@ -1,5 +1,9 @@
-import { HttpException, Logger } from '@nestjs/common';
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
@@ -9,75 +13,57 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLObjectTypeConfig,
-  GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
 } from 'graphql/type';
-import { printSchema } from 'graphql/utilities';
-import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
+import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
-import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
-import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
-import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
+import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
+import {
+  InputType,
+  ServiceType,
+  ContextType,
+  PageInfo,
+  DateTimeType,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
+import {
+  getSafetyName,
+  isEmptyObject,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils';
+import {
+  ConverterContextType,
+  Converter,
+  ConverterTable,
+} from 'src/endpoint-microservice/shared/converter';
 import {
   JsonObjectSchema,
   JsonSchema,
 } from 'src/endpoint-microservice/shared/types/schema.types';
 
-export type GetJsonSchemasReturnType = {
-  id: string;
-  versionId: string;
-  data: JsonSchema;
-}[];
+@Injectable()
+export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
+  private readonly logger = new Logger(GraphQLSchemaConverter.name);
 
-type InputType = { data?: { first?: number; after?: string } };
-type ContextType = { headers: Record<string, string> };
-
-const DateTimeType = new GraphQLScalarType({
-  name: 'DataTime',
-});
-
-const PageInfo = new GraphQLObjectType({
-  name: 'PageInfo',
-  fields: {
-    startCursor: { type: GraphQLString },
-    endCursor: { type: GraphQLString },
-    hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-    hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-  },
-});
-
-const ServiceType = new GraphQLObjectType({
-  name: '_Service',
-  fields: {
-    sdl: { type: GraphQLString },
-  },
-});
-
-const DEFAULT_FIRST = 100;
-
-@QueryHandler(GetGraphqlSchemaQuery)
-export class GetGraphqlSchemaHandler
-  implements IQueryHandler<GetGraphqlSchemaQuery>
-{
-  private readonly logger = new Logger(GetGraphqlSchemaHandler.name);
-
-  public constructor(
-    private readonly internalCoreApi: InternalCoreApiService,
+  constructor(
+    private readonly asyncLocalStorage: AsyncLocalStorage<ConverterContextType>,
     private readonly proxyCoreApi: ProxyCoreApiService,
-    private readonly converter: GraphQLSchemaConverter,
   ) {}
 
-  public async execute({
-    data,
-  }: GetGraphqlSchemaQuery): Promise<GraphQLSchema> {
+  public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
+    return this.asyncLocalStorage.run(context, async () => {
+      const schema = await this.createSchema();
+      return lexicographicSortSchema(schema);
+    });
+  }
+
+  private async createSchema(): Promise<GraphQLSchema> {
     let cachedSdl: string = undefined;
 
     const schema = new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
         fields: {
-          ...(await this.getQueryFields(data)),
+          ...(await this.getQueryFields()),
           _service: {
             type: ServiceType,
             resolve: () => {
@@ -95,42 +81,53 @@ export class GetGraphqlSchemaHandler
     return schema;
   }
 
-  private getNodeType(
-    data: GetJsonSchemasReturnType[number],
-    safetyTableId: string,
-  ) {
-    return new GraphQLObjectType({
-      name: safetyTableId,
-      fields: () => ({
-        versionId: { type: new GraphQLNonNull(GraphQLString) },
-        id: { type: new GraphQLNonNull(GraphQLString) },
-        createdAt: { type: new GraphQLNonNull(DateTimeType) },
-        data: {
-          type: this.getRootSchema(`Data${safetyTableId}`, data.data),
+  private async getQueryFields(): Promise<
+    GraphQLObjectTypeConfig<any, any>['fields']
+  > {
+    const mapper: GraphQLObjectTypeConfig<any, any>['fields'] = {};
+
+    for (const rowSchema of this.context.tables) {
+      if (isEmptyObject(rowSchema.schema)) {
+        continue;
+      }
+
+      const safetyTableId = getSafetyName(rowSchema.id, 'INVALID_TABLE_NAME');
+
+      mapper[safetyTableId] = {
+        type: new GraphQLNonNull(
+          this.getTableConnection(rowSchema, safetyTableId),
+        ),
+        args: {
+          data: { type: this.getTableInput(safetyTableId) },
         },
-      }),
-    });
+        resolve: async (_, { data }: InputType, context: ContextType) => {
+          const { data: dataResponse, error } = await this.proxyCoreApi.rows(
+            {
+              revisionId: this.context.revisionId,
+              tableId: rowSchema.id,
+              first: data?.first || DEFAULT_FIRST,
+              after: data?.after,
+            },
+            { headers: context.headers },
+          );
+
+          if (error) {
+            this.logger.error(error);
+
+            throw new GraphQLError(error.message, {
+              extensions: { code: error.error, originalError: error },
+            });
+          }
+
+          return dataResponse;
+        },
+      };
+    }
+
+    return mapper;
   }
 
-  private getEdgeType(
-    data: GetJsonSchemasReturnType[number],
-    safetyTableId: string,
-  ) {
-    return new GraphQLObjectType({
-      name: `${safetyTableId}Edge`,
-      fields: {
-        node: {
-          type: new GraphQLNonNull(this.getNodeType(data, safetyTableId)),
-        },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
-      },
-    });
-  }
-
-  private getTableConnection(
-    data: GetJsonSchemasReturnType[number],
-    safetyTableId: string,
-  ) {
+  private getTableConnection(data: ConverterTable, safetyTableId: string) {
     return new GraphQLObjectType({
       name: `${safetyTableId}Connection`,
       fields: {
@@ -157,52 +154,30 @@ export class GetGraphqlSchemaHandler
     });
   }
 
-  private async getQueryFields({
-    revisionId,
-  }: GetGraphqlSchemaQuery['data']): Promise<
-    GraphQLObjectTypeConfig<any, any>['fields']
-  > {
-    const mapper: GraphQLObjectTypeConfig<any, any>['fields'] = {};
-
-    for (const rowSchema of await this.getSchemas(revisionId)) {
-      if (isEmptyObject(rowSchema.data)) {
-        continue;
-      }
-
-      const safetyTableId = getSafetyName(rowSchema.id, 'INVALID_TABLE_NAME');
-
-      mapper[safetyTableId] = {
-        type: new GraphQLNonNull(
-          this.getTableConnection(rowSchema, safetyTableId),
-        ),
-        args: {
-          data: { type: this.getTableInput(safetyTableId) },
+  private getEdgeType(data: ConverterTable, safetyTableId: string) {
+    return new GraphQLObjectType({
+      name: `${safetyTableId}Edge`,
+      fields: {
+        node: {
+          type: new GraphQLNonNull(this.getNodeType(data, safetyTableId)),
         },
-        resolve: async (_, { data }: InputType, context: ContextType) => {
-          const { data: dataResponse, error } = await this.proxyCoreApi.rows(
-            {
-              revisionId,
-              tableId: rowSchema.id,
-              first: data?.first || DEFAULT_FIRST,
-              after: data?.after,
-            },
-            { headers: context.headers },
-          );
+        cursor: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    });
+  }
 
-          if (error) {
-            this.logger.error(error);
-
-            throw new GraphQLError(error.message, {
-              extensions: { code: error.error, originalError: error },
-            });
-          }
-
-          return dataResponse;
+  private getNodeType(data: ConverterTable, safetyTableId: string) {
+    return new GraphQLObjectType({
+      name: safetyTableId,
+      fields: () => ({
+        versionId: { type: new GraphQLNonNull(GraphQLString) },
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        createdAt: { type: new GraphQLNonNull(DateTimeType) },
+        data: {
+          type: this.getRootSchema(`Data${safetyTableId}`, data.schema),
         },
-      };
-    }
-
-    return mapper;
+      }),
+    });
   }
 
   private getRootSchema(name: string, schema: JsonSchema) {
@@ -287,45 +262,15 @@ export class GetGraphqlSchemaHandler
     });
   }
 
-  private async getSchemas(revisionId: string) {
-    // TODO schema, 1000
-    const { data, error } = await this.internalCoreApi.rows({
-      revisionId,
-      tableId: SystemTables.Schema,
-      first: 1000,
-    });
+  private get context(): ConverterContextType {
+    const context = this.asyncLocalStorage.getStore();
 
-    if (error) {
-      throw new HttpException(error, error.statusCode);
+    if (!context) {
+      throw new InternalServerErrorException(
+        'GraphQLSchemaConverterContext not found. It appears that an attempt was made to access a context outside of AsyncLocalStorage.run.',
+      );
     }
 
-    return data.edges.map((edge) => edge.node) as GetJsonSchemasReturnType;
+    return context;
   }
 }
-
-const isEmptyObject = (schema: JsonSchema): boolean => {
-  if (schema.type === 'object' && !Object.keys(schema.properties).length) {
-    return true;
-  }
-
-  if (schema.type === 'array') {
-    return isEmptyObject(schema.items);
-  }
-
-  return false;
-};
-
-const startName = /[_a-zA-Z]/;
-const containName = /^[_a-zA-Z0-9]+$/;
-
-const getSafetyName = (name: string, prefix: string): string => {
-  if (!startName.test(name[0])) {
-    return getSafetyName(`${prefix}_${name}`, prefix);
-  }
-
-  if (!containName.test(name)) {
-    return getSafetyName(name.replace(/[^_a-zA-Z0-9]/g, '_'), prefix);
-  }
-
-  return name;
-};
