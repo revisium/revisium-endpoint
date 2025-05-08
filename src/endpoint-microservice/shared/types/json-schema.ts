@@ -13,15 +13,15 @@ export type JsonSchemaObjectType = {
   type: 'object';
   additionalProperties: false;
   required: string[];
-  properties: Record<string, JsonSchemaType>;
+  properties: Record<string, JsonSchema>;
 };
 
 export type JsonArraySchema = {
   type: 'array';
-  items: JsonSchemaType;
+  items: JsonSchema;
 };
 
-export type JsonSchemaType =
+export type JsonSchema =
   | JsonSchemaObjectType
   | JsonArraySchema
   | JsonSchemaUnionPrimitives;

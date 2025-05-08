@@ -16,17 +16,18 @@ import {
 import { printSchema } from 'graphql/utilities';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import {
   JsonSchemaObjectType,
-  JsonSchemaType,
-} from 'src/endpoint-microservice/shared/types/json-schema-type';
+  JsonSchema,
+} from 'src/endpoint-microservice/shared/types/json-schema';
 
 export type GetJsonSchemasReturnType = {
   id: string;
   versionId: string;
-  data: JsonSchemaType;
+  data: JsonSchema;
 }[];
 
 type InputType = { data?: { first?: number; after?: string } };
@@ -64,6 +65,7 @@ export class GetGraphqlSchemaHandler
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly proxyCoreApi: ProxyCoreApiService,
+    private readonly converter: GraphQLSchemaConverter,
   ) {}
 
   public async execute({
@@ -203,7 +205,7 @@ export class GetGraphqlSchemaHandler
     return mapper;
   }
 
-  private getRootSchema(name: string, schema: JsonSchemaType) {
+  private getRootSchema(name: string, schema: JsonSchema) {
     switch (schema.type) {
       case 'object':
         return new GraphQLNonNull(this.getObjectSchema(name, schema));
@@ -222,7 +224,7 @@ export class GetGraphqlSchemaHandler
     }
   }
 
-  private getArrayItems(name: string, schema: JsonSchemaType) {
+  private getArrayItems(name: string, schema: JsonSchema) {
     switch (schema.type) {
       case 'string':
         return new GraphQLNonNull(GraphQLString);
@@ -301,7 +303,7 @@ export class GetGraphqlSchemaHandler
   }
 }
 
-const isEmptyObject = (schema: JsonSchemaType): boolean => {
+const isEmptyObject = (schema: JsonSchema): boolean => {
   if (schema.type === 'object' && !Object.keys(schema.properties).length) {
     return true;
   }
