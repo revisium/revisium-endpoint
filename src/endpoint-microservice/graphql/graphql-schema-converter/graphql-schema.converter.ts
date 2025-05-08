@@ -21,7 +21,6 @@ import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-
 import {
   ContextType,
   DateTimeType,
-  PageInfo,
   ServiceType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
@@ -37,6 +36,10 @@ import {
   JsonObjectSchema,
   JsonSchema,
 } from 'src/endpoint-microservice/shared/types/schema.types';
+import {
+  capitalize,
+  pluralize,
+} from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 @Injectable()
 export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
@@ -84,19 +87,40 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       .filter((table) => !isEmptyObject(table.schema))
       .reduce(
         (fields, table) => {
-          const safeName = getSafetyName(table.id, 'INVALID_TABLE_NAME');
-          fields[`${safeName}`] = this.createListField(table, safeName);
+          const lowerCasedTableId = table.id.toLowerCase();
+          const safeName = getSafetyName(
+            lowerCasedTableId,
+            'INVALID_TABLE_NAME',
+          );
+
+          const pluralName = pluralize(safeName);
+          const capitalizedSafeName = capitalize(safeName); // TODO check unique insensitivity
+          const pluralCapitalizedSafeName = pluralize(capitalizedSafeName);
+
+          fields[pluralName] = this.createListField(
+            table,
+            capitalizedSafeName,
+            pluralCapitalizedSafeName,
+          );
           return fields;
         },
         {} as Record<string, any>,
       );
   }
 
-  private createListField(table: ConverterTable, name: string) {
-    const ConnectionType = this.getListConnection(table, name);
+  private createListField(
+    table: ConverterTable,
+    safetyTableId,
+    pluralSafetyTableId: string,
+  ) {
+    const ConnectionType = this.getListConnection(
+      table,
+      safetyTableId,
+      pluralSafetyTableId,
+    );
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(name) } },
+      args: { data: { type: this.getListArgs(pluralSafetyTableId) } },
       resolve: this.getListResolver(table),
     };
   }
@@ -121,18 +145,24 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private getListConnection(data: ConverterTable, safetyTableId: string) {
+  private getListConnection(
+    data: ConverterTable,
+    safetyTableId: string,
+    pluralSafetyTableId: string,
+  ) {
     return new GraphQLObjectType({
-      name: `${safetyTableId}Connection`,
+      name: `${this.projectName}${pluralSafetyTableId}Connection`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
             new GraphQLList(
-              new GraphQLNonNull(this.getEdgeType(data, safetyTableId)),
+              new GraphQLNonNull(
+                this.getEdgeType(data, safetyTableId, pluralSafetyTableId),
+              ),
             ),
           ),
         },
-        pageInfo: { type: new GraphQLNonNull(PageInfo) },
+        pageInfo: { type: new GraphQLNonNull(this.getPageInfoType()) },
         totalCount: { type: new GraphQLNonNull(GraphQLFloat) },
       },
     });
@@ -140,7 +170,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private getListArgs(name: string) {
     return new GraphQLInputObjectType({
-      name: `Get${name}Input`,
+      name: `${this.projectName}Get${name}Input`,
       fields: {
         first: { type: GraphQLFloat },
         after: { type: GraphQLString },
@@ -148,27 +178,52 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getEdgeType(data: ConverterTable, safetyTableId: string) {
+  private getPageInfoType() {
     return new GraphQLObjectType({
-      name: `${safetyTableId}Edge`,
+      name: `${this.projectName}PageInfo`,
+      fields: {
+        startCursor: { type: GraphQLString },
+        endCursor: { type: GraphQLString },
+        hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+        hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+      },
+    });
+  }
+
+  private getEdgeType(
+    data: ConverterTable,
+    safetyTableId: string,
+    pluralSafetyTableId: string,
+  ) {
+    return new GraphQLObjectType({
+      name: `${this.projectName}${pluralSafetyTableId}Edge`,
       fields: {
         node: {
-          type: new GraphQLNonNull(this.getNodeType(data, safetyTableId)),
+          type: new GraphQLNonNull(
+            this.getNodeType(data, safetyTableId, pluralSafetyTableId),
+          ),
         },
         cursor: { type: new GraphQLNonNull(GraphQLString) },
       },
     });
   }
 
-  private getNodeType(data: ConverterTable, safetyTableId: string) {
+  private getNodeType(
+    data: ConverterTable,
+    safetyTableId: string,
+    pluralSafetyTableId: string,
+  ) {
     return new GraphQLObjectType({
-      name: safetyTableId,
+      name: `${this.projectName}${pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         data: {
-          type: this.getSchema(`Data${safetyTableId}`, data.schema),
+          type: this.getSchema(
+            `${this.projectName}${safetyTableId}`,
+            data.schema,
+          ),
         },
       }),
     });
@@ -189,7 +244,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       case 'array':
         return new GraphQLNonNull(
           new GraphQLList(
-            this.getSchema(`${name}${postfix}`, schema.items, '_Items'),
+            this.getSchema(`${name}${postfix}`, schema.items, 'Items'),
           ),
         );
       default:
@@ -207,13 +262,24 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         Object.entries(schema.properties).reduce(
           (fields, [key, itemSchema]) => {
             const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
-            const type = this.getSchema(`${name}_${safetyKey}`, itemSchema);
+            const capitalizedSafetyKey = capitalize(safetyKey); // TODO check unique insensitivity
+            const type = this.getSchema(
+              `${name}${capitalizedSafetyKey}`,
+              itemSchema,
+            );
             fields[safetyKey] = { type };
             return fields;
           },
           {} as Record<string, any>,
         ),
     });
+  }
+
+  private get projectName() {
+    return getSafetyName(
+      capitalize(this.context.projectName),
+      'INVALID_PROJECT_NAME',
+    );
   }
 
   private toGraphQLError(err: any): GraphQLError {

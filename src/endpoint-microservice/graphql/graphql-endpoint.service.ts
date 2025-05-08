@@ -82,6 +82,7 @@ export class GraphqlEndpointService {
     );
     const apollo = await this._run({
       projectId: branch.projectId,
+      projectName: branch.project.name,
       endpointId,
       isDraft: revision.isDraft,
       revisionId: revision.id,
@@ -103,6 +104,7 @@ export class GraphqlEndpointService {
 
   private async _run(options: {
     projectId: string;
+    projectName: string;
     endpointId: string;
     isDraft: boolean;
     revisionId: string;

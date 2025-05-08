@@ -1,40 +1,40 @@
 scalar DataTime
 
-input GetuserInput {
+input ProjectGetUsersInput {
   after: String
   first: Float
 }
 
-type PageInfo {
+type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
 }
 
-type Query {
-  _service: _Service
-  user(data: GetuserInput): userConnection!
+type ProjectUsersConnection {
+  edges: [ProjectUsersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
 }
 
-type _Service {
-  sdl: String
+type ProjectUsersEdge {
+  cursor: String!
+  node: ProjectUsersNode!
 }
 
-type user {
+type ProjectUsersNode {
   createdAt: DataTime!
   data: [String!]!
   id: String!
   versionId: String!
 }
 
-type userConnection {
-  edges: [userEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Float!
+type Query {
+  _service: _Service
+  users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 
-type userEdge {
-  cursor: String!
-  node: user!
+type _Service {
+  sdl: String
 }

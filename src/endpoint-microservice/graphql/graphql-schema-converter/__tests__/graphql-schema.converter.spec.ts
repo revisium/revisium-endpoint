@@ -46,6 +46,23 @@ describe('GraphQL Schema Converter', () => {
     await check(schema, 'simple-user.graphql.text');
   });
 
+  it('lower case for table', async () => {
+    const table: ConverterTable = {
+      id: 'USER',
+      versionId: '1',
+      schema: getObjectSchema({
+        name: getStringSchema(),
+      }),
+    };
+
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
+    await check(schema, 'simple-user.graphql.text');
+  });
+
   it('few tables', async () => {
     const user: ConverterTable = {
       id: 'user',
@@ -117,6 +134,24 @@ describe('GraphQL Schema Converter', () => {
       }),
     );
     await check(schema, 'complex.graphql.text');
+  });
+
+  it('invalid project id', async () => {
+    const table: ConverterTable = {
+      id: 'user',
+      versionId: '1',
+      schema: getObjectSchema({
+        name: getStringSchema(),
+      }),
+    };
+
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+        projectId: '1',
+      }),
+    );
+    await check(schema, 'invalid-table-name.graphql.text');
   });
 
   it('invalid table name', async () => {
@@ -269,6 +304,7 @@ describe('GraphQL Schema Converter', () => {
     return {
       tables: [],
       projectId: '1',
+      projectName: 'project',
       endpointId: '1',
       isDraft: false,
       revisionId: '1',

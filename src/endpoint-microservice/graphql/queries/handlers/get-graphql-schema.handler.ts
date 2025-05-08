@@ -31,6 +31,7 @@ export class GetGraphqlSchemaHandler
 
     return this.converter.convert({
       projectId: data.projectId,
+      projectName: data.projectName,
       endpointId: data.endpointId,
       isDraft: data.isDraft,
       revisionId: data.revisionId,

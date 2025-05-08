@@ -1,33 +1,33 @@
-type DataINVALID_TABLE_NAME____user {
-  name: String!
-}
-
 scalar DataTime
 
-input GetINVALID_TABLE_NAME____userInput {
+input ProjectGetInvalid_table_name____usersInput {
   after: String
   first: Float
 }
 
-type INVALID_TABLE_NAME____user {
+type ProjectInvalid_table_name____user {
+  name: String!
+}
+
+type ProjectInvalid_table_name____usersConnection {
+  edges: [ProjectInvalid_table_name____usersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectInvalid_table_name____usersEdge {
+  cursor: String!
+  node: ProjectInvalid_table_name____usersNode!
+}
+
+type ProjectInvalid_table_name____usersNode {
   createdAt: DataTime!
-  data: DataINVALID_TABLE_NAME____user!
+  data: ProjectInvalid_table_name____user!
   id: String!
   versionId: String!
 }
 
-type INVALID_TABLE_NAME____userConnection {
-  edges: [INVALID_TABLE_NAME____userEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Float!
-}
-
-type INVALID_TABLE_NAME____userEdge {
-  cursor: String!
-  node: INVALID_TABLE_NAME____user!
-}
-
-type PageInfo {
+type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
@@ -35,7 +35,7 @@ type PageInfo {
 }
 
 type Query {
-  INVALID_TABLE_NAME____user(data: GetINVALID_TABLE_NAME____userInput): INVALID_TABLE_NAME____userConnection!
+  INVALID_TABLE_NAME____users(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____usersConnection!
   _service: _Service
 }
 
