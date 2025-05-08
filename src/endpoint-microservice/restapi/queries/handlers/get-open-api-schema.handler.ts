@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import { JsonSchemaType } from 'src/endpoint-microservice/shared/types/json-schema-type';
+import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 
 @QueryHandler(GetOpenApiSchemaQuery)
@@ -379,7 +379,7 @@ export class GetOpenApiSchemaHandler
       }
 
       openApiJson.components.schemas[schemaRow.id] =
-        schemaRow.data as JsonSchemaType;
+        schemaRow.data as JsonSchema;
     }
 
     return openApiJson;

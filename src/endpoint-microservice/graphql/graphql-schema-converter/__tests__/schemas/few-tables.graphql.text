@@ -1,0 +1,72 @@
+scalar DataTime
+
+type Datapost {
+  title: String!
+}
+
+type Datauser {
+  name: String!
+}
+
+input GetpostInput {
+  after: String
+  first: Float
+}
+
+input GetuserInput {
+  after: String
+  first: Float
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type Query {
+  _service: _Service
+  post(data: GetpostInput): postConnection!
+  user(data: GetuserInput): userConnection!
+}
+
+type _Service {
+  sdl: String
+}
+
+type post {
+  createdAt: DataTime!
+  data: Datapost!
+  id: String!
+  versionId: String!
+}
+
+type postConnection {
+  edges: [postEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Float!
+}
+
+type postEdge {
+  cursor: String!
+  node: post!
+}
+
+type user {
+  createdAt: DataTime!
+  data: Datauser!
+  id: String!
+  versionId: String!
+}
+
+type userConnection {
+  edges: [userEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Float!
+}
+
+type userEdge {
+  cursor: String!
+  node: user!
+}
