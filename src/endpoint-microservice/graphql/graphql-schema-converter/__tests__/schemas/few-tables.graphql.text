@@ -1,72 +1,72 @@
 scalar DataTime
 
-type Datapost {
-  title: String!
-}
-
-type Datauser {
-  name: String!
-}
-
-input GetpostInput {
+input ProjectGetPostsInput {
   after: String
   first: Float
 }
 
-input GetuserInput {
+input ProjectGetUsersInput {
   after: String
   first: Float
 }
 
-type PageInfo {
+type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
 }
 
+type ProjectPost {
+  title: String!
+}
+
+type ProjectPostsConnection {
+  edges: [ProjectPostsEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectPostsEdge {
+  cursor: String!
+  node: ProjectPostsNode!
+}
+
+type ProjectPostsNode {
+  createdAt: DataTime!
+  data: ProjectPost!
+  id: String!
+  versionId: String!
+}
+
+type ProjectUser {
+  name: String!
+}
+
+type ProjectUsersConnection {
+  edges: [ProjectUsersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectUsersEdge {
+  cursor: String!
+  node: ProjectUsersNode!
+}
+
+type ProjectUsersNode {
+  createdAt: DataTime!
+  data: ProjectUser!
+  id: String!
+  versionId: String!
+}
+
 type Query {
   _service: _Service
-  post(data: GetpostInput): postConnection!
-  user(data: GetuserInput): userConnection!
+  posts(data: ProjectGetPostsInput): ProjectPostsConnection!
+  users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 
 type _Service {
   sdl: String
-}
-
-type post {
-  createdAt: DataTime!
-  data: Datapost!
-  id: String!
-  versionId: String!
-}
-
-type postConnection {
-  edges: [postEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Float!
-}
-
-type postEdge {
-  cursor: String!
-  node: post!
-}
-
-type user {
-  createdAt: DataTime!
-  data: Datauser!
-  id: String!
-  versionId: String!
-}
-
-type userConnection {
-  edges: [userEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Float!
-}
-
-type userEdge {
-  cursor: String!
-  node: user!
 }

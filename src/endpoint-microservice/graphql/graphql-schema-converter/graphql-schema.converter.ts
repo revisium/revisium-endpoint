@@ -21,9 +21,11 @@ import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-
 import {
   ContextType,
   DateTimeType,
+  getPageInfoType,
   ServiceType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
+  getProjectName,
   getSafetyName,
   isEmptyObject,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils';
@@ -41,20 +43,32 @@ import {
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
+interface GraphQLSchemaConverterContext extends ConverterContextType {
+  pageInfo: GraphQLObjectType;
+}
+
 @Injectable()
 export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private readonly logger = new Logger(GraphQLSchemaConverter.name);
 
   constructor(
-    private readonly asyncLocalStorage: AsyncLocalStorage<ConverterContextType>,
+    private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly proxyCoreApi: ProxyCoreApiService,
   ) {}
 
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
-    return this.asyncLocalStorage.run(context, async () => {
-      const schema = await this.createSchema();
-      return lexicographicSortSchema(schema);
-    });
+    const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
+      ...context,
+      pageInfo: getPageInfoType(getProjectName(context.projectName)),
+    };
+
+    return this.asyncLocalStorage.run(
+      graphQLSchemaConverterContext,
+      async () => {
+        const schema = await this.createSchema();
+        return lexicographicSortSchema(schema);
+      },
+    );
   }
 
   private async createSchema(): Promise<GraphQLSchema> {
@@ -162,7 +176,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             ),
           ),
         },
-        pageInfo: { type: new GraphQLNonNull(this.getPageInfoType()) },
+        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
         totalCount: { type: new GraphQLNonNull(GraphQLFloat) },
       },
     });
@@ -174,18 +188,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       fields: {
         first: { type: GraphQLFloat },
         after: { type: GraphQLString },
-      },
-    });
-  }
-
-  private getPageInfoType() {
-    return new GraphQLObjectType({
-      name: `${this.projectName}PageInfo`,
-      fields: {
-        startCursor: { type: GraphQLString },
-        endCursor: { type: GraphQLString },
-        hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-        hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
       },
     });
   }
@@ -276,10 +278,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private get projectName() {
-    return getSafetyName(
-      capitalize(this.context.projectName),
-      'INVALID_PROJECT_NAME',
-    );
+    return getProjectName(this.context.projectName);
   }
 
   private toGraphQLError(err: any): GraphQLError {
@@ -289,7 +288,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private get context(): ConverterContextType {
+  private get context(): GraphQLSchemaConverterContext {
     const context = this.asyncLocalStorage.getStore();
 
     if (!context) {
