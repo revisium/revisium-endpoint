@@ -228,8 +228,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     Object.entries(schema.properties)
       .filter((property) => !isEmptyObject(property[1]))
-      .forEach(([key2, itemSchema]) => {
-        const safetyKey = getSafetyName(key2, 'INVALID_FIELD_NAME');
+      .forEach(([key, itemSchema]) => {
+        const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
 
         if (itemSchema.type === 'string') {
           fields[safetyKey] = { type: new GraphQLNonNull(GraphQLString) };
