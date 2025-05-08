@@ -1,7 +1,16 @@
 scalar DataTime
 
+type Datapost {
+  title: String!
+}
+
 type Datauser {
   name: String!
+}
+
+input GetpostInput {
+  after: String
+  first: Float
 }
 
 input GetuserInput {
@@ -18,11 +27,30 @@ type PageInfo {
 
 type Query {
   _service: _Service
+  post(data: GetpostInput): postConnection!
   user(data: GetuserInput): userConnection!
 }
 
 type _Service {
   sdl: String
+}
+
+type post {
+  createdAt: DataTime!
+  data: Datapost!
+  id: String!
+  versionId: String!
+}
+
+type postConnection {
+  edges: [postEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Float!
+}
+
+type postEdge {
+  cursor: String!
+  node: post!
 }
 
 type user {

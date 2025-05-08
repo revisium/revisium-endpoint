@@ -1,7 +1,28 @@
 scalar DataTime
 
 type Datauser {
-  name: String!
+  address: Datauser_address!
+  adult: Boolean!
+  age: Float!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [Datauser_posts_Items!]!
+}
+
+type Datauser_address {
+  city: String!
+  nestedAddress: Datauser_address_nestedAddress!
+  zipCode: Float!
+}
+
+type Datauser_address_nestedAddress {
+  zipCode: String!
+}
+
+type Datauser_posts_Items {
+  id: String!
+  title: String!
 }
 
 input GetuserInput {
