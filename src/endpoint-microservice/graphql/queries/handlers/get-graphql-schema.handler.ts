@@ -21,13 +21,13 @@ import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import {
   JsonObjectSchema,
-  SchemaTypes,
+  JsonSchema,
 } from 'src/endpoint-microservice/shared/types/schema.types';
 
 export type GetJsonSchemasReturnType = {
   id: string;
   versionId: string;
-  data: SchemaTypes;
+  data: JsonSchema;
 }[];
 
 type InputType = { data?: { first?: number; after?: string } };
@@ -205,7 +205,7 @@ export class GetGraphqlSchemaHandler
     return mapper;
   }
 
-  private getRootSchema(name: string, schema: SchemaTypes) {
+  private getRootSchema(name: string, schema: JsonSchema) {
     switch (schema.type) {
       case 'object':
         return new GraphQLNonNull(this.getObjectSchema(name, schema));
@@ -224,7 +224,7 @@ export class GetGraphqlSchemaHandler
     }
   }
 
-  private getArrayItems(name: string, schema: SchemaTypes) {
+  private getArrayItems(name: string, schema: JsonSchema) {
     switch (schema.type) {
       case 'string':
         return new GraphQLNonNull(GraphQLString);
@@ -303,7 +303,7 @@ export class GetGraphqlSchemaHandler
   }
 }
 
-const isEmptyObject = (schema: SchemaTypes): boolean => {
+const isEmptyObject = (schema: JsonSchema): boolean => {
   if (schema.type === 'object' && !Object.keys(schema.properties).length) {
     return true;
   }
