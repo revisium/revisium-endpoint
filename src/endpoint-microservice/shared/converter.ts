@@ -8,7 +8,10 @@ export type ConverterTable = {
 
 export type ConverterContextType = {
   tables: ConverterTable[];
+  projectId: string;
+  endpointId: string;
   revisionId: string;
+  isDraft: boolean;
 };
 
 export interface Converter<Target> {

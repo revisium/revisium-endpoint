@@ -13,14 +13,18 @@ import {
 import * as fs from 'node:fs/promises';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
-import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
+import {
+  ConverterContextType,
+  ConverterTable,
+} from 'src/endpoint-microservice/shared/converter';
 
 describe('GraphQL Schema Converter', () => {
   it('empty schema', async () => {
-    const schema = await converter.convert({
-      tables: [],
-      revisionId,
-    });
+    const schema = await converter.convert(
+      getContext({
+        tables: [],
+      }),
+    );
 
     await check(schema, 'empty.graphql.text');
   });
@@ -34,10 +38,11 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schema = await converter.convert({
-      tables: [table],
-      revisionId,
-    });
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
     await check(schema, 'simple-user.graphql.text');
   });
 
@@ -58,17 +63,19 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schemaUserPost = await converter.convert({
-      tables: [user, post],
-      revisionId,
-    });
+    const schemaUserPost = await converter.convert(
+      getContext({
+        tables: [user, post],
+      }),
+    );
     await check(schemaUserPost, 'few-tables.graphql.text');
 
     //
-    const schemaPostUser = await converter.convert({
-      tables: [post, user],
-      revisionId,
-    });
+    const schemaPostUser = await converter.convert(
+      getContext({
+        tables: [post, user],
+      }),
+    );
     await check(schemaPostUser, 'few-tables.graphql.text');
   });
 
@@ -104,10 +111,11 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schema = await converter.convert({
-      tables: [table],
-      revisionId,
-    });
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
     await check(schema, 'complex.graphql.text');
   });
 
@@ -120,10 +128,11 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schema = await converter.convert({
-      tables: [table],
-      revisionId,
-    });
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
     await check(schema, 'invalid-table-name.graphql.text');
   });
 
@@ -138,10 +147,11 @@ describe('GraphQL Schema Converter', () => {
       }),
     };
 
-    const schema = await converter.convert({
-      tables: [table],
-      revisionId,
-    });
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
     await check(schema, 'invalid-field-name.graphql.text');
   });
 
@@ -160,10 +170,11 @@ describe('GraphQL Schema Converter', () => {
       schema: getObjectSchema({}),
     };
 
-    const schemaUserPost = await converter.convert({
-      tables: [user, post],
-      revisionId,
-    });
+    const schemaUserPost = await converter.convert(
+      getContext({
+        tables: [user, post],
+      }),
+    );
     await check(schemaUserPost, 'empty-object.graphql.text');
   });
 
@@ -175,10 +186,11 @@ describe('GraphQL Schema Converter', () => {
         schema: getStringSchema(),
       };
 
-      const schema = await converter.convert({
-        tables: [table],
-        revisionId,
-      });
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+        }),
+      );
       await check(schema, 'root/string.graphql.text');
     });
 
@@ -189,10 +201,11 @@ describe('GraphQL Schema Converter', () => {
         schema: getNumberSchema(),
       };
 
-      const schema = await converter.convert({
-        tables: [table],
-        revisionId,
-      });
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+        }),
+      );
       await check(schema, 'root/number.graphql.text');
     });
 
@@ -203,10 +216,11 @@ describe('GraphQL Schema Converter', () => {
         schema: getBooleanSchema(),
       };
 
-      const schema = await converter.convert({
-        tables: [table],
-        revisionId,
-      });
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+        }),
+      );
       await check(schema, 'root/boolean.graphql.text');
     });
 
@@ -217,10 +231,12 @@ describe('GraphQL Schema Converter', () => {
         schema: getArraySchema(getStringSchema()),
       };
 
-      const schema = await converter.convert({
-        tables: [table],
-        revisionId,
-      });
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          revisionId,
+        }),
+      );
       await check(schema, 'root/array-string.graphql.text');
     });
 
@@ -237,13 +253,28 @@ describe('GraphQL Schema Converter', () => {
         ),
       };
 
-      const schema = await converter.convert({
-        tables: [table],
-        revisionId,
-      });
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          revisionId,
+        }),
+      );
       await check(schema, 'root/array-array-object.graphql.text');
     });
   });
+
+  function getContext(
+    data: Partial<ConverterContextType>,
+  ): ConverterContextType {
+    return {
+      tables: [],
+      projectId: '1',
+      endpointId: '1',
+      isDraft: false,
+      revisionId: '1',
+      ...data,
+    };
+  }
 
   async function check(schema: GraphQLSchema, schemaPath: string) {
     const file = await fs.readFile(

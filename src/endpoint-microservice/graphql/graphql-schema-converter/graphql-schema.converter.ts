@@ -102,7 +102,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getListResolver(table: ConverterTable) {
-    return async (_: any, { data }: any, ctx: ContextType) => {
+    return async (
+      _: unknown,
+      { data }: { data: { first?: number; after?: string } },
+      ctx: ContextType,
+    ) => {
       const { data: response, error } = await this.proxyCoreApi.rows(
         {
           revisionId: this.context.revisionId,
@@ -189,7 +193,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           ),
         );
       default:
-        throw new Error('Invalid type');
+        this.logger.error(`Unknown schema: ${schema}`);
     }
   }
 
