@@ -1,0 +1,53 @@
+scalar DataTime
+
+input ProjectGetUsersInput {
+  after: String
+  first: Float
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectUser {
+  NAmE: ProjectUserNAmE!
+  naMe: ProjectUsernaMe!
+}
+
+type ProjectUserNAmE {
+  name: String!
+}
+
+type ProjectUsernaMe {
+  name: String!
+}
+
+type ProjectUsersConnection {
+  edges: [ProjectUsersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectUsersEdge {
+  cursor: String!
+  node: ProjectUsersNode!
+}
+
+type ProjectUsersNode {
+  createdAt: DataTime!
+  data: ProjectUser!
+  id: String!
+  versionId: String!
+}
+
+type Query {
+  _service: _Service
+  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+}
+
+type _Service {
+  sdl: String
+}

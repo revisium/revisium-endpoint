@@ -323,6 +323,28 @@ describe('GraphQL Schema Converter', () => {
       );
       await check(schema, 'unique/table-id.graphql.text');
     });
+
+    it('similar table', async () => {
+      const user: ConverterTable = {
+        id: 'uSer',
+        versionId: '1',
+        schema: getObjectSchema({
+          naMe: getObjectSchema({
+            name: getStringSchema(),
+          }),
+          NAmE: getObjectSchema({
+            name: getStringSchema(),
+          }),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user],
+        }),
+      );
+      await check(schema, 'unique/field.graphql.text');
+    });
   });
 
   function getContext(

@@ -268,13 +268,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     name: string,
     schema: JsonObjectSchema,
   ): GraphQLObjectType {
+    const ids = Object.keys(schema.properties);
+
     return new GraphQLObjectType({
       name,
       fields: () =>
         Object.entries(schema.properties).reduce(
           (fields, [key, itemSchema]) => {
             const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
-            const capitalizedSafetyKey = capitalize(safetyKey); // TODO check unique insensitivity
+            const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(
+              ids,
+              safetyKey,
+            )
+              ? safetyKey
+              : capitalize(safetyKey);
             const type = this.getSchema(
               `${name}${capitalizedSafetyKey}`,
               itemSchema,
