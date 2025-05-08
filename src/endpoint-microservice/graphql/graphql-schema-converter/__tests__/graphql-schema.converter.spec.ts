@@ -148,10 +148,10 @@ describe('GraphQL Schema Converter', () => {
     const schema = await converter.convert(
       getContext({
         tables: [table],
-        projectId: '1',
+        projectName: '1',
       }),
     );
-    await check(schema, 'invalid-table-name.graphql.text');
+    await check(schema, 'invalid-project-name.graphql.text');
   });
 
   it('invalid table name', async () => {
