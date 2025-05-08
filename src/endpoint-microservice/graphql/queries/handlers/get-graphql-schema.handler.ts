@@ -13,6 +13,8 @@ export type GetJsonSchemasReturnType = {
   data: JsonSchema;
 }[];
 
+const HARDCODED_LIMIT_FOR_TABLES = 1000;
+
 @QueryHandler(GetGraphqlSchemaQuery)
 export class GetGraphqlSchemaHandler
   implements IQueryHandler<GetGraphqlSchemaQuery>
@@ -28,6 +30,10 @@ export class GetGraphqlSchemaHandler
     const tables = await this.getSchemas(data.revisionId);
 
     return this.converter.convert({
+      projectId: data.projectId,
+      projectName: data.projectName,
+      endpointId: data.endpointId,
+      isDraft: data.isDraft,
       revisionId: data.revisionId,
       tables: tables.map((table) => ({
         id: table.id,
@@ -38,11 +44,10 @@ export class GetGraphqlSchemaHandler
   }
 
   private async getSchemas(revisionId: string) {
-    // TODO schema, 1000
     const { data, error } = await this.internalCoreApi.rows({
       revisionId,
       tableId: SystemTables.Schema,
-      first: 1000,
+      first: HARDCODED_LIMIT_FOR_TABLES,
     });
 
     if (error) {

@@ -12,10 +12,6 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectUser {
-  name: String!
-}
-
 type ProjectUsersConnection {
   edges: [ProjectUsersEdge!]!
   pageInfo: ProjectPageInfo!
@@ -29,7 +25,7 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
-  data: ProjectUser!
+  data: Boolean!
   id: String!
   versionId: String!
 }

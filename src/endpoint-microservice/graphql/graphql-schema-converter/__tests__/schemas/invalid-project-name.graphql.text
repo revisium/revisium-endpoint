@@ -1,0 +1,44 @@
+scalar DataTime
+
+input INVALID_PROJECT_NAME_1GetUsersInput {
+  after: String
+  first: Float
+}
+
+type INVALID_PROJECT_NAME_1PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type INVALID_PROJECT_NAME_1User {
+  name: String!
+}
+
+type INVALID_PROJECT_NAME_1UsersConnection {
+  edges: [INVALID_PROJECT_NAME_1UsersEdge!]!
+  pageInfo: INVALID_PROJECT_NAME_1PageInfo!
+  totalCount: Float!
+}
+
+type INVALID_PROJECT_NAME_1UsersEdge {
+  cursor: String!
+  node: INVALID_PROJECT_NAME_1UsersNode!
+}
+
+type INVALID_PROJECT_NAME_1UsersNode {
+  createdAt: DataTime!
+  data: INVALID_PROJECT_NAME_1User!
+  id: String!
+  versionId: String!
+}
+
+type Query {
+  _service: _Service
+  users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UsersConnection!
+}
+
+type _Service {
+  sdl: String
+}

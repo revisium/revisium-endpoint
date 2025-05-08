@@ -1,4 +1,5 @@
 import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
+import { capitalize } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 export const isEmptyObject = (schema: JsonSchema): boolean => {
   if (schema.type === 'object' && !Object.keys(schema.properties).length) {
@@ -25,4 +26,8 @@ export const getSafetyName = (name: string, prefix: string): string => {
   }
 
   return name;
+};
+
+export const getProjectName = (projectName: string) => {
+  return getSafetyName(capitalize(projectName), 'INVALID_PROJECT_NAME');
 };

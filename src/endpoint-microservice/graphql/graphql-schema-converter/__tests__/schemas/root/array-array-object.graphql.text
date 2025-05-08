@@ -12,7 +12,7 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectUser {
+type ProjectUserItemsItems {
   name: String!
 }
 
@@ -29,7 +29,7 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
-  data: ProjectUser!
+  data: [[ProjectUserItemsItems!]!]!
   id: String!
   versionId: String!
 }

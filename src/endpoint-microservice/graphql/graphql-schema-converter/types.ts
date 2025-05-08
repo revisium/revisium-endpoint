@@ -6,15 +6,17 @@ import {
   GraphQLString,
 } from 'graphql/type';
 
-export const PageInfo = new GraphQLObjectType({
-  name: 'PageInfo',
-  fields: {
-    startCursor: { type: GraphQLString },
-    endCursor: { type: GraphQLString },
-    hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-    hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-  },
-});
+export const getPageInfoType = (projectName: string) => {
+  return new GraphQLObjectType({
+    name: `${projectName}PageInfo`,
+    fields: {
+      startCursor: { type: GraphQLString },
+      endCursor: { type: GraphQLString },
+      hasNextPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+      hasPreviousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+    },
+  });
+};
 
 export const DateTimeType = new GraphQLScalarType({
   name: 'DataTime',

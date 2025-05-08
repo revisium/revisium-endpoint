@@ -47,7 +47,6 @@ export class GraphqlEndpointService {
       throw new Error(`${endpointId} is not started`);
     }
 
-    // TODO
     const [url, item] = [...this.map.entries()].find(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([_, mapValue]) => mapValue.endpointId === endpointId,
@@ -81,7 +80,13 @@ export class GraphqlEndpointService {
       branch.name,
       this.getPostfix(revision),
     );
-    const apollo = await this._run(revision.id);
+    const apollo = await this._run({
+      projectId: branch.projectId,
+      projectName: branch.project.name,
+      endpointId,
+      isDraft: revision.isDraft,
+      revisionId: revision.id,
+    });
 
     this.startedEndpointIds.push(endpointId);
     this.map.set(url, {
@@ -97,15 +102,17 @@ export class GraphqlEndpointService {
     this.logger.log(`started endpoint name=${url} endpointId=${endpointId}`);
   }
 
-  private async _run(revisionId: string) {
+  private async _run(options: {
+    projectId: string;
+    projectName: string;
+    endpointId: string;
+    isDraft: boolean;
+    revisionId: string;
+  }) {
     const graphqlSchema = await this.queryBus.execute<
       GetGraphqlSchemaQuery,
       GraphQLSchema
-    >(
-      new GetGraphqlSchemaQuery({
-        revisionId,
-      }),
-    );
+    >(new GetGraphqlSchemaQuery(options));
 
     const tables: string[] = Object.keys(
       graphqlSchema.getQueryType().getFields(),

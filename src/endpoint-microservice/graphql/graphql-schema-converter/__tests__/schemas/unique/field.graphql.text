@@ -13,6 +13,15 @@ type ProjectPageInfo {
 }
 
 type ProjectUser {
+  NAmE: ProjectUserNAmE!
+  naMe: ProjectUsernaMe!
+}
+
+type ProjectUserNAmE {
+  name: String!
+}
+
+type ProjectUsernaMe {
   name: String!
 }
 

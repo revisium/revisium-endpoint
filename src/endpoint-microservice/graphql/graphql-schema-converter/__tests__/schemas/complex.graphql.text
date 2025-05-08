@@ -1,65 +1,70 @@
 scalar DataTime
 
-type Datauser {
-  address: Datauser_address!
-  adult: Boolean!
-  age: Float!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  posts: [Datauser_posts_Items!]!
-}
-
-type Datauser_address {
-  city: String!
-  nestedAddress: Datauser_address_nestedAddress!
-  zipCode: Float!
-}
-
-type Datauser_address_nestedAddress {
-  zipCode: String!
-}
-
-type Datauser_posts_Items {
-  id: String!
-  title: String!
-}
-
-input GetuserInput {
+input ProjectGetUsersInput {
   after: String
   first: Float
 }
 
-type PageInfo {
+type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
 }
 
-type Query {
-  _service: _Service
-  user(data: GetuserInput): userConnection!
+type ProjectUser {
+  address: ProjectUserAddress!
+  adult: Boolean!
+  age: Float!
+  array: [[[ProjectUserArrayItemsItemsItems!]!]!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [ProjectUserPostsItems!]!
 }
 
-type _Service {
-  sdl: String
+type ProjectUserAddress {
+  city: String!
+  nestedAddress: ProjectUserAddressNestedaddress!
+  zipCode: Float!
 }
 
-type user {
+type ProjectUserAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserPostsItems {
+  id: String!
+  title: String!
+}
+
+type ProjectUsersConnection {
+  edges: [ProjectUsersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectUsersEdge {
+  cursor: String!
+  node: ProjectUsersNode!
+}
+
+type ProjectUsersNode {
   createdAt: DataTime!
-  data: Datauser!
+  data: ProjectUser!
   id: String!
   versionId: String!
 }
 
-type userConnection {
-  edges: [userEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Float!
+type Query {
+  _service: _Service
+  users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 
-type userEdge {
-  cursor: String!
-  node: user!
+type _Service {
+  sdl: String
 }

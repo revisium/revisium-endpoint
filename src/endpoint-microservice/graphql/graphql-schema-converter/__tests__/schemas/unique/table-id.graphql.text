@@ -1,11 +1,11 @@
 scalar DataTime
 
-input ProjectGetPostsInput {
+input ProjectGetUsERsInput {
   after: String
   first: Float
 }
 
-input ProjectGetUsersInput {
+input ProjectGetuSersInput {
   after: String
   first: Float
 }
@@ -17,54 +17,54 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectPost {
-  title: String!
+type ProjectUsER {
+  name: String!
 }
 
-type ProjectPostsConnection {
-  edges: [ProjectPostsEdge!]!
+type ProjectUsERsConnection {
+  edges: [ProjectUsERsEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Float!
 }
 
-type ProjectPostsEdge {
+type ProjectUsERsEdge {
   cursor: String!
-  node: ProjectPostsNode!
+  node: ProjectUsERsNode!
 }
 
-type ProjectPostsNode {
+type ProjectUsERsNode {
   createdAt: DataTime!
-  data: ProjectPost!
+  data: ProjectUsER!
   id: String!
   versionId: String!
 }
 
-type ProjectUser {
+type ProjectuSer {
   name: String!
 }
 
-type ProjectUsersConnection {
-  edges: [ProjectUsersEdge!]!
+type ProjectuSersConnection {
+  edges: [ProjectuSersEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Float!
 }
 
-type ProjectUsersEdge {
+type ProjectuSersEdge {
   cursor: String!
-  node: ProjectUsersNode!
+  node: ProjectuSersNode!
 }
 
-type ProjectUsersNode {
+type ProjectuSersNode {
   createdAt: DataTime!
-  data: ProjectUser!
+  data: ProjectuSer!
   id: String!
   versionId: String!
 }
 
 type Query {
+  UsERs(data: ProjectGetUsERsInput): ProjectUsERsConnection!
   _service: _Service
-  posts(data: ProjectGetPostsInput): ProjectPostsConnection!
-  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+  uSers(data: ProjectGetuSersInput): ProjectuSersConnection!
 }
 
 type _Service {
