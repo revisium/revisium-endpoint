@@ -4,6 +4,7 @@ type Datauser {
   address: Datauser_address!
   adult: Boolean!
   age: Float!
+  array: [[[Datauser_array_Items_Items_Items!]!]!]!
   firstName: String!
   imageIds: [String!]!
   lastName: String!
@@ -18,6 +19,10 @@ type Datauser_address {
 
 type Datauser_address_nestedAddress {
   zipCode: String!
+}
+
+type Datauser_array_Items_Items_Items {
+  nested: String!
 }
 
 type Datauser_posts_Items {

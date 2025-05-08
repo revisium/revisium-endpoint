@@ -1,0 +1,44 @@
+scalar DataTime
+
+type Datauser_Items_Items {
+  name: String!
+}
+
+input GetuserInput {
+  after: String
+  first: Float
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type Query {
+  _service: _Service
+  user(data: GetuserInput): userConnection!
+}
+
+type _Service {
+  sdl: String
+}
+
+type user {
+  createdAt: DataTime!
+  data: [[Datauser_Items_Items!]!]!
+  id: String!
+  versionId: String!
+}
+
+type userConnection {
+  edges: [userEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Float!
+}
+
+type userEdge {
+  cursor: String!
+  node: user!
+}

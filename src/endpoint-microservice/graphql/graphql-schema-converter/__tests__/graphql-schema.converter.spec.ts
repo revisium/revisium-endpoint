@@ -91,6 +91,15 @@ describe('GraphQL Schema Converter', () => {
         posts: getArraySchema(
           getObjectSchema({ title: getStringSchema(), id: getStringSchema() }),
         ),
+        array: getArraySchema(
+          getArraySchema(
+            getArraySchema(
+              getObjectSchema({
+                nested: getStringSchema(),
+              }),
+            ),
+          ),
+        ),
         imageIds: getArraySchema(getStringSchema()),
       }),
     };
@@ -156,6 +165,84 @@ describe('GraphQL Schema Converter', () => {
       revisionId,
     });
     await check(schemaUserPost, 'empty-object.graphql.text');
+  });
+
+  describe('root', () => {
+    it('string root', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getStringSchema(),
+      };
+
+      const schema = await converter.convert({
+        tables: [table],
+        revisionId,
+      });
+      await check(schema, 'root/string.graphql.text');
+    });
+
+    it('number root', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getNumberSchema(),
+      };
+
+      const schema = await converter.convert({
+        tables: [table],
+        revisionId,
+      });
+      await check(schema, 'root/number.graphql.text');
+    });
+
+    it('boolean root', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getBooleanSchema(),
+      };
+
+      const schema = await converter.convert({
+        tables: [table],
+        revisionId,
+      });
+      await check(schema, 'root/boolean.graphql.text');
+    });
+
+    it('array string root', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getArraySchema(getStringSchema()),
+      };
+
+      const schema = await converter.convert({
+        tables: [table],
+        revisionId,
+      });
+      await check(schema, 'root/array-string.graphql.text');
+    });
+
+    it('array array object root', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getArraySchema(
+          getArraySchema(
+            getObjectSchema({
+              name: getStringSchema(),
+            }),
+          ),
+        ),
+      };
+
+      const schema = await converter.convert({
+        tables: [table],
+        revisionId,
+      });
+      await check(schema, 'root/array-array-object.graphql.text');
+    });
   });
 
   async function check(schema: GraphQLSchema, schemaPath: string) {

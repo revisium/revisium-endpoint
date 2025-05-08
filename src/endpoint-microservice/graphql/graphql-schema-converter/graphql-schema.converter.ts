@@ -12,7 +12,6 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLObjectTypeConfig,
   GraphQLSchema,
   GraphQLString,
 } from 'graphql/type';
@@ -20,19 +19,18 @@ import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
-  InputType,
-  ServiceType,
   ContextType,
-  PageInfo,
   DateTimeType,
+  PageInfo,
+  ServiceType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
   getSafetyName,
   isEmptyObject,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils';
 import {
-  ConverterContextType,
   Converter,
+  ConverterContextType,
   ConverterTable,
 } from 'src/endpoint-microservice/shared/converter';
 import {
@@ -63,7 +61,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       query: new GraphQLObjectType({
         name: 'Query',
         fields: {
-          ...(await this.getQueryFields()),
+          ...this.createQueryFields(),
           _service: {
             type: ServiceType,
             resolve: () => {
@@ -81,50 +79,42 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return schema;
   }
 
-  private async getQueryFields(): Promise<
-    GraphQLObjectTypeConfig<any, any>['fields']
-  > {
-    const mapper: GraphQLObjectTypeConfig<any, any>['fields'] = {};
-
-    for (const rowSchema of this.context.tables) {
-      if (isEmptyObject(rowSchema.schema)) {
-        continue;
-      }
-
-      const safetyTableId = getSafetyName(rowSchema.id, 'INVALID_TABLE_NAME');
-
-      mapper[safetyTableId] = {
-        type: new GraphQLNonNull(
-          this.getTableConnection(rowSchema, safetyTableId),
-        ),
-        args: {
-          data: { type: this.getTableInput(safetyTableId) },
+  private createQueryFields() {
+    return this.context.tables
+      .filter((table) => !isEmptyObject(table.schema))
+      .reduce(
+        (fields, table) => {
+          const safeName = getSafetyName(table.id, 'INVALID_TABLE_NAME');
+          fields[`${safeName}`] = this.createListField(table, safeName);
+          return fields;
         },
-        resolve: async (_, { data }: InputType, context: ContextType) => {
-          const { data: dataResponse, error } = await this.proxyCoreApi.rows(
-            {
-              revisionId: this.context.revisionId,
-              tableId: rowSchema.id,
-              first: data?.first || DEFAULT_FIRST,
-              after: data?.after,
-            },
-            { headers: context.headers },
-          );
+        {} as Record<string, any>,
+      );
+  }
 
-          if (error) {
-            this.logger.error(error);
+  private createListField(table: ConverterTable, name: string) {
+    const ConnectionType = this.getTableConnection(table, name);
+    return {
+      type: new GraphQLNonNull(ConnectionType),
+      args: { data: { type: this.getTableInput(name) } },
+      resolve: this.getListResolver(table),
+    };
+  }
 
-            throw new GraphQLError(error.message, {
-              extensions: { code: error.error, originalError: error },
-            });
-          }
-
-          return dataResponse;
+  private getListResolver(table: ConverterTable) {
+    return async (_: any, { data }: any, ctx: ContextType) => {
+      const { data: response, error } = await this.proxyCoreApi.rows(
+        {
+          revisionId: this.context.revisionId,
+          tableId: table.id,
+          first: data?.first || DEFAULT_FIRST,
+          after: data?.after,
         },
-      };
-    }
-
-    return mapper;
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response;
+    };
   }
 
   private getTableConnection(data: ConverterTable, safetyTableId: string) {
@@ -180,26 +170,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getRootSchema(name: string, schema: JsonSchema) {
-    switch (schema.type) {
-      case 'object':
-        return new GraphQLNonNull(this.getObjectSchema(name, schema));
-      case 'array':
-        return new GraphQLNonNull(
-          new GraphQLList(this.getArrayItems(name, schema.items)),
-        );
-      case 'string':
-        return new GraphQLNonNull(GraphQLString);
-      case 'number':
-        return new GraphQLNonNull(GraphQLFloat);
-      case 'boolean':
-        return new GraphQLNonNull(GraphQLBoolean);
-      default:
-        throw new Error('Invalid type');
-    }
-  }
-
-  private getArrayItems(name: string, schema: JsonSchema) {
+  private getRootSchema(
+    name: string,
+    schema: JsonSchema,
+    postfix: string = '',
+  ) {
     switch (schema.type) {
       case 'string':
         return new GraphQLNonNull(GraphQLString);
@@ -209,11 +184,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         return new GraphQLNonNull(GraphQLBoolean);
       case 'object':
         return new GraphQLNonNull(
-          this.getObjectSchema(`${name}_Items`, schema),
+          this.getObjectSchema(`${name}${postfix}`, schema),
         );
       case 'array':
         return new GraphQLNonNull(
-          new GraphQLList(this.getArrayItems(`${name}_Items`, schema.items)),
+          new GraphQLList(
+            this.getRootSchema(`${name}${postfix}`, schema.items, '_Items'),
+          ),
         );
       default:
         throw new Error('Invalid type');
@@ -247,7 +224,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           fields[safetyKey] = {
             type: new GraphQLNonNull(
               new GraphQLList(
-                this.getArrayItems(`${name}_${safetyKey}`, itemSchema.items),
+                this.getRootSchema(
+                  `${name}_${safetyKey}`,
+                  itemSchema.items,
+                  '_Items',
+                ),
               ),
             ),
           };
@@ -257,6 +238,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return new GraphQLObjectType({
       name,
       fields: () => fields,
+    });
+  }
+
+  private toGraphQLError(err: any): GraphQLError {
+    this.logger.error(err);
+    return new GraphQLError(err.message, {
+      extensions: { code: err.error, originalError: err },
     });
   }
 
