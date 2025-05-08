@@ -1,0 +1,72 @@
+scalar DataTime
+
+input ProjectGetUsERsInput {
+  after: String
+  first: Float
+}
+
+input ProjectGetuSersInput {
+  after: String
+  first: Float
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectUsER {
+  name: String!
+}
+
+type ProjectUsERsConnection {
+  edges: [ProjectUsERsEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectUsERsEdge {
+  cursor: String!
+  node: ProjectUsERsNode!
+}
+
+type ProjectUsERsNode {
+  createdAt: DataTime!
+  data: ProjectUsER!
+  id: String!
+  versionId: String!
+}
+
+type ProjectuSer {
+  name: String!
+}
+
+type ProjectuSersConnection {
+  edges: [ProjectuSersEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Float!
+}
+
+type ProjectuSersEdge {
+  cursor: String!
+  node: ProjectuSersNode!
+}
+
+type ProjectuSersNode {
+  createdAt: DataTime!
+  data: ProjectuSer!
+  id: String!
+  versionId: String!
+}
+
+type Query {
+  UsERs(data: ProjectGetUsERsInput): ProjectUsERsConnection!
+  _service: _Service
+  uSers(data: ProjectGetuSersInput): ProjectuSersConnection!
+}
+
+type _Service {
+  sdl: String
+}

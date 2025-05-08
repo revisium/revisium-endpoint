@@ -40,6 +40,7 @@ import {
 } from 'src/endpoint-microservice/shared/types/schema.types';
 import {
   capitalize,
+  hasDuplicateKeyCaseInsensitive,
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
@@ -97,18 +98,25 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createQueryFields() {
+    const ids = this.context.tables.map((table) => table.id);
+
     return this.context.tables
       .filter((table) => !isEmptyObject(table.schema))
       .reduce(
         (fields, table) => {
-          const lowerCasedTableId = table.id.toLowerCase();
-          const safeName = getSafetyName(
-            lowerCasedTableId,
-            'INVALID_TABLE_NAME',
-          );
+          const safeName = hasDuplicateKeyCaseInsensitive(ids, table.id)
+            ? getSafetyName(table.id, 'INVALID_TABLE_NAME')
+            : getSafetyName(table.id.toLowerCase(), 'INVALID_TABLE_NAME');
 
           const pluralName = pluralize(safeName);
-          const capitalizedSafeName = capitalize(safeName); // TODO check unique insensitivity
+
+          const capitalizedSafeName = hasDuplicateKeyCaseInsensitive(
+            ids,
+            table.id,
+          )
+            ? safeName
+            : capitalize(safeName);
+
           const pluralCapitalizedSafeName = pluralize(capitalizedSafeName);
 
           fields[pluralName] = this.createListField(
@@ -124,7 +132,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private createListField(
     table: ConverterTable,
-    safetyTableId,
+    safetyTableId: string,
     pluralSafetyTableId: string,
   ) {
     const ConnectionType = this.getListConnection(

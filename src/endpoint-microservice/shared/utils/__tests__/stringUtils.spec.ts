@@ -1,6 +1,6 @@
 import {
   capitalize,
-  hasDuplicateKeysCaseInsensitive,
+  hasDuplicateKeyCaseInsensitive,
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
@@ -45,31 +45,30 @@ describe('stringUtils', () => {
     });
   });
 
-  describe('hasDuplicateKeysCaseInsensitive', () => {
-    it('returns false for empty object', () => {
-      expect(hasDuplicateKeysCaseInsensitive({})).toBe(false);
+  describe('hasDuplicateKeyCaseInsensitive', () => {
+    it('returns false when key not present', () => {
+      expect(hasDuplicateKeyCaseInsensitive([], 'a')).toBe(false);
+      expect(hasDuplicateKeyCaseInsensitive(['b'], 'a')).toBe(false);
     });
 
-    it('returns false when all keys unique ignoring case', () => {
-      expect(hasDuplicateKeysCaseInsensitive({ a: 1, B: 2, c: 3 })).toBe(false);
+    it('returns false when key present only once', () => {
+      expect(hasDuplicateKeyCaseInsensitive(['a'], 'a')).toBe(false);
+      expect(hasDuplicateKeyCaseInsensitive(['A'], 'a')).toBe(false);
     });
 
-    it('returns true when keys differ only by case', () => {
-      expect(hasDuplicateKeysCaseInsensitive({ a: 1, A: 2 })).toBe(true);
-      expect(hasDuplicateKeysCaseInsensitive({ foo: 1, FOO: 2, bar: 3 })).toBe(
+    it('returns true when key appears at least twice', () => {
+      expect(hasDuplicateKeyCaseInsensitive(['a', 'A'], 'a')).toBe(true);
+      expect(hasDuplicateKeyCaseInsensitive(['x', 'y', 'X'], 'x')).toBe(true);
+    });
+
+    it('is case-insensitive', () => {
+      expect(hasDuplicateKeyCaseInsensitive(['Key', 'key', 'KEY'], 'kEy')).toBe(
         true,
       );
     });
 
-    it('detects multiple pairs of duplicates', () => {
-      const obj = { x: 1, X: 2, y: 3, Y: 4, z: 5 };
-      expect(hasDuplicateKeysCaseInsensitive(obj)).toBe(true);
-    });
-
-    it('ignores truly distinct keys', () => {
-      expect(
-        hasDuplicateKeysCaseInsensitive({ apple: 1, banana: 2, Cherry: 3 }),
-      ).toBe(false);
+    it('returns false when other items repeat but not the key', () => {
+      expect(hasDuplicateKeyCaseInsensitive(['b', 'b', 'c'], 'a')).toBe(false);
     });
   });
 });

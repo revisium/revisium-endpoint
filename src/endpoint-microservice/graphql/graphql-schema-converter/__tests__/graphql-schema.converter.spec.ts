@@ -298,6 +298,33 @@ describe('GraphQL Schema Converter', () => {
     });
   });
 
+  describe('unique', () => {
+    it('similar table', async () => {
+      const user1: ConverterTable = {
+        id: 'uSer',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const user2: ConverterTable = {
+        id: 'UsER',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user1, user2],
+        }),
+      );
+      await check(schema, 'unique/table-id.graphql.text');
+    });
+  });
+
   function getContext(
     data: Partial<ConverterContextType>,
   ): ConverterContextType {

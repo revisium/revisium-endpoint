@@ -23,16 +23,19 @@ export const pluralize = (str: string): string => {
   return str + 's';
 };
 
-export const hasDuplicateKeysCaseInsensitive = (
-  obj: Record<string, any>,
+export const hasDuplicateKeyCaseInsensitive = (
+  arr: string[],
+  key: string,
 ): boolean => {
-  const seen = new Set<string>();
-  for (const key of Object.keys(obj)) {
-    const lower = key.toLowerCase();
-    if (seen.has(lower)) {
-      return true;
+  const lowerKey = key.toLowerCase();
+  let count = 0;
+  for (const item of arr) {
+    if (item.toLowerCase() === lowerKey) {
+      count++;
+      if (count > 1) {
+        return true;
+      }
     }
-    seen.add(lower);
   }
   return false;
 };
