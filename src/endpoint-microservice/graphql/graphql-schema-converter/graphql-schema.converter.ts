@@ -38,7 +38,7 @@ import {
 import {
   JsonObjectSchema,
   JsonSchema,
-} from 'src/endpoint-microservice/shared/types/schema.types';
+} from 'src/endpoint-microservice/shared/schema';
 import {
   capitalize,
   hasDuplicateKeyCaseInsensitive,
@@ -243,6 +243,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getSchema(name: string, schema: JsonSchema, postfix: string = '') {
+    if ('$ref' in schema) {
+      throw new InternalServerErrorException(
+        `endpointId: ${this.context.endpointId}, unssuported $ref in schema: ${JSON.stringify(schema)}`,
+      );
+    }
+
     switch (schema.type) {
       case 'string':
         return new GraphQLNonNull(GraphQLString);

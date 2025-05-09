@@ -1,4 +1,4 @@
-import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 
 export type ConverterTable = {
   id: string;

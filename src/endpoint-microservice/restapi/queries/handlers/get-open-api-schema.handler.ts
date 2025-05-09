@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 
 @QueryHandler(GetOpenApiSchemaQuery)

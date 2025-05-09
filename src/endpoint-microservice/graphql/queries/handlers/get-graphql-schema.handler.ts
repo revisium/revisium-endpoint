@@ -5,7 +5,7 @@ import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/inter
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 
 export type GetJsonSchemasReturnType = {
   id: string;
