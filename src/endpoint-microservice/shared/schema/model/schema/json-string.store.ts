@@ -38,8 +38,10 @@ export class JsonStringStore extends EventEmitter implements JsonStringSchema {
     return this.getOrCreateValues(rowId)[index];
   }
 
-  public getPlainSchema(): JsonStringSchema | JsonRefSchema {
-    if (this.$ref) {
+  public getPlainSchema(options?: {
+    skip$Ref?: boolean;
+  }): JsonStringSchema | JsonRefSchema {
+    if (this.$ref && options?.skip$Ref !== true) {
       return { $ref: this.$ref };
     }
 

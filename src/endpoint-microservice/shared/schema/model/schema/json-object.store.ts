@@ -182,8 +182,10 @@ export class JsonObjectStore implements JsonObjectSchema {
     return this.properties[name];
   }
 
-  public getPlainSchema(): JsonObjectSchema | JsonRefSchema {
-    if (this.$ref) {
+  public getPlainSchema(options?: {
+    skip$Ref?: boolean;
+  }): JsonObjectSchema | JsonRefSchema {
+    if (this.$ref && options?.skip$Ref !== true) {
       return { $ref: this.$ref };
     }
 
@@ -194,7 +196,7 @@ export class JsonObjectStore implements JsonObjectSchema {
       properties: Object.entries<JsonSchemaStore>(this.properties).reduce<
         Record<string, JsonSchema>
       >((result, [name, store]) => {
-        result[name] = store.getPlainSchema();
+        result[name] = store.getPlainSchema(options);
         return result;
       }, {}),
     };

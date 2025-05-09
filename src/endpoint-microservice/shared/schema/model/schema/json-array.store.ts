@@ -80,14 +80,16 @@ export class JsonArrayStore implements JsonArraySchema {
     }
   }
 
-  public getPlainSchema(): JsonArraySchema | JsonRefSchema {
-    if (this.$ref) {
+  public getPlainSchema(options?: {
+    skip$Ref?: boolean;
+  }): JsonArraySchema | JsonRefSchema {
+    if (this.$ref && options?.skip$Ref !== true) {
       return { $ref: this.$ref };
     }
 
     return {
       type: this.type,
-      items: this.items.getPlainSchema(),
+      items: this.items.getPlainSchema(options),
     };
   }
 

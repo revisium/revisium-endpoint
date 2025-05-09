@@ -41,8 +41,10 @@ export class JsonBooleanStore
     return this.getOrCreateValues(rowId)[index];
   }
 
-  public getPlainSchema(): JsonBooleanSchema | JsonRefSchema {
-    if (this.$ref) {
+  public getPlainSchema(options?: {
+    skip$Ref?: boolean;
+  }): JsonBooleanSchema | JsonRefSchema {
+    if (this.$ref && options?.skip$Ref !== true) {
       return { $ref: this.$ref };
     }
 

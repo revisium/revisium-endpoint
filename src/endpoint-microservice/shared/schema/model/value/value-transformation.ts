@@ -1,8 +1,9 @@
 import {
   JsonArrayStore,
   JsonSchemaStore,
-  JsonSchemaTypeName,
 } from 'src/endpoint-microservice/shared/schema';
+
+import { JsonSchemaTypeName } from 'src/endpoint-microservice/shared/schema/types/schema.types';
 
 export const equel = (value: unknown): unknown => value;
 
