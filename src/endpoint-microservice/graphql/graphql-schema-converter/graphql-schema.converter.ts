@@ -28,6 +28,7 @@ import {
   getProjectName,
   getSafetyName,
   isEmptyObject,
+  isValidName,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils';
 import {
   Converter,
@@ -260,7 +261,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           ),
         );
       default:
-        this.logger.error(`Unknown schema: ${schema}`);
+        throw new InternalServerErrorException(
+          `endpointId: ${this.context.endpointId}, unknown schema: ${JSON.stringify(schema)}`,
+        );
     }
   }
 
@@ -275,18 +278,21 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       fields: () =>
         Object.entries(schema.properties).reduce(
           (fields, [key, itemSchema]) => {
-            const safetyKey = getSafetyName(key, 'INVALID_FIELD_NAME');
+            if (!isValidName(key)) {
+              return fields;
+            }
+
             const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(
               ids,
-              safetyKey,
+              key,
             )
-              ? safetyKey
-              : capitalize(safetyKey);
+              ? key
+              : capitalize(key);
             const type = this.getSchema(
               `${name}${capitalizedSafetyKey}`,
               itemSchema,
             );
-            fields[safetyKey] = { type };
+            fields[key] = { type };
             return fields;
           },
           {} as Record<string, any>,
