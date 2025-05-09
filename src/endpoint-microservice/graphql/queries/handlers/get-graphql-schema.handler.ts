@@ -4,13 +4,9 @@ import { GraphQLSchema } from 'graphql/type';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
-import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
+import { resolveRefs } from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import {
-  createJsonSchemaStore,
-  fileSchema,
-  JsonSchema,
-} from 'src/endpoint-microservice/shared/schema';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 
 export type GetJsonSchemasReturnType = {
   id: string;
@@ -19,10 +15,6 @@ export type GetJsonSchemasReturnType = {
 }[];
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
-
-const refs: Readonly<Record<string, JsonSchema>> = {
-  [SystemSchemaIds.File]: fileSchema,
-};
 
 @QueryHandler(GetGraphqlSchemaQuery)
 export class GetGraphqlSchemaHandler
@@ -47,7 +39,7 @@ export class GetGraphqlSchemaHandler
       tables: tables.map((table) => ({
         id: table.id,
         versionId: table.versionId,
-        schema: this.resolveRefs(table.data),
+        schema: resolveRefs(table.data),
       })),
     });
   }
@@ -64,10 +56,5 @@ export class GetGraphqlSchemaHandler
     }
 
     return data.edges.map((edge) => edge.node) as GetJsonSchemasReturnType;
-  }
-
-  private resolveRefs(schema: JsonSchema) {
-    const store = createJsonSchemaStore(schema, refs);
-    return store.getPlainSchema({ skip$Ref: true });
   }
 }
