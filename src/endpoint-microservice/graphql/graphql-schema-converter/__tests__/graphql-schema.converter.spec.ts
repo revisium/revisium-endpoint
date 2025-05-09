@@ -179,6 +179,9 @@ describe('GraphQL Schema Converter', () => {
         ['--name']: getObjectSchema({
           nestedField: getStringSchema(),
         }),
+        field: getObjectSchema({
+          otherNestedField: getStringSchema(),
+        }),
       }),
     };
 

@@ -13,11 +13,11 @@ type ProjectPageInfo {
 }
 
 type ProjectUser {
-  INVALID_FIELD_NAME___name: ProjectUserInvalid_field_name___name!
+  field: ProjectUserField!
 }
 
-type ProjectUserInvalid_field_name___name {
-  nestedField: String!
+type ProjectUserField {
+  otherNestedField: String!
 }
 
 type ProjectUsersConnection {
