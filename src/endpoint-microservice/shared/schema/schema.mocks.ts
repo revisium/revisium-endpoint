@@ -1,17 +1,17 @@
 import {
-  JsonArraySchema,
-  JsonBooleanSchema,
-  JsonNumberSchema,
-  JsonObjectSchema,
-  JsonSchema,
-  JsonStringSchema,
-} from 'src/endpoint-microservice/shared/types/schema.types';
-import {
   JsonPatchAdd,
   JsonPatchMove,
   JsonPatchRemove,
   JsonPatchReplace,
-} from 'src/endpoint-microservice/shared/types/json-patch.types';
+  JsonArraySchema,
+  JsonBooleanSchema,
+  JsonNumberSchema,
+  JsonObjectSchema,
+  JsonRefSchema,
+  JsonSchema,
+  JsonSchemaTypeName,
+  JsonStringSchema,
+} from 'src/endpoint-microservice/shared/schema';
 
 export const getReplacePatch = ({
   path,
@@ -66,7 +66,7 @@ export const getStringSchema = ({
   foreignKey?: string;
 } = {}): JsonStringSchema => {
   const schema: JsonStringSchema = {
-    type: 'string',
+    type: JsonSchemaTypeName.String,
     default: defaultValue,
   };
 
@@ -80,27 +80,31 @@ export const getStringSchema = ({
 export const getNumberSchema = (
   defaultValue: number = 0,
 ): JsonNumberSchema => ({
-  type: 'number',
+  type: JsonSchemaTypeName.Number,
   default: defaultValue,
 });
 
 export const getBooleanSchema = (
   defaultValue: boolean = false,
 ): JsonBooleanSchema => ({
-  type: 'boolean',
+  type: JsonSchemaTypeName.Boolean,
   default: defaultValue,
 });
 
 export const getObjectSchema = (
   properties: Record<string, JsonSchema>,
 ): JsonObjectSchema => ({
-  type: 'object',
+  type: JsonSchemaTypeName.Object,
   additionalProperties: false,
   required: Object.keys(properties).sort((a, b) => a.localeCompare(b)),
   properties,
 });
 
 export const getArraySchema = (items: JsonSchema): JsonArraySchema => ({
-  type: 'array',
+  type: JsonSchemaTypeName.Array,
   items,
+});
+
+export const getRefSchema = ($ref: string): JsonRefSchema => ({
+  $ref,
 });

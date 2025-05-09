@@ -1,7 +1,11 @@
-import { JsonSchema } from 'src/endpoint-microservice/shared/types/schema.types';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 import { capitalize } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 export const isEmptyObject = (schema: JsonSchema): boolean => {
+  if ('$ref' in schema) {
+    return false;
+  }
+
   if (schema.type === 'object' && !Object.keys(schema.properties).length) {
     return true;
   }

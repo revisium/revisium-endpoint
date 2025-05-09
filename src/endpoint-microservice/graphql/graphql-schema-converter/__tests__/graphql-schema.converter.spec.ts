@@ -9,7 +9,7 @@ import {
   getNumberSchema,
   getObjectSchema,
   getStringSchema,
-} from 'src/__tests__/schema.mocks';
+} from 'src/endpoint-microservice/shared/schema';
 import * as fs from 'node:fs/promises';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
