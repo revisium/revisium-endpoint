@@ -161,7 +161,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           revisionId,
           tableId: table.id,
           first: data?.first || DEFAULT_FIRST,
-          after: data?.after,
+          after: data?.after ?? undefined,
         },
         { headers: ctx.headers },
       );
