@@ -98,37 +98,55 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return schema;
   }
 
-  private createQueryFields() {
-    const ids = this.context.tables.map((table) => table.id);
+  private createQueryFields(): Record<string, any> {
+    const tableIds = this.context.tables.map((table) => table.id);
 
     return this.context.tables
       .filter((table) => !isEmptyObject(table.schema))
       .reduce(
         (fields, table) => {
-          const safeName = hasDuplicateKeyCaseInsensitive(ids, table.id)
-            ? getSafetyName(table.id, 'INVALID_TABLE_NAME')
-            : getSafetyName(table.id.toLowerCase(), 'INVALID_TABLE_NAME');
-
-          const pluralName = pluralize(safeName);
-
-          const capitalizedSafeName = hasDuplicateKeyCaseInsensitive(
-            ids,
+          const { fieldName, typeNames } = this.generateFieldAndTypeNames(
             table.id,
-          )
-            ? safeName
-            : capitalize(safeName);
+            tableIds,
+          );
 
-          const pluralCapitalizedSafeName = pluralize(capitalizedSafeName);
-
-          fields[pluralName] = this.createListField(
+          fields[fieldName] = this.createListField(
             table,
-            capitalizedSafeName,
-            pluralCapitalizedSafeName,
+            typeNames.singular,
+            typeNames.plural,
           );
           return fields;
         },
         {} as Record<string, any>,
       );
+  }
+
+  private generateFieldAndTypeNames(
+    tableId: string,
+    allTableIds: string[],
+  ): {
+    fieldName: string;
+    typeNames: { singular: string; plural: string };
+  } {
+    const hasDuplicate = hasDuplicateKeyCaseInsensitive(allTableIds, tableId);
+
+    const safeName = hasDuplicate
+      ? getSafetyName(tableId, 'INVALID_TABLE_NAME')
+      : getSafetyName(tableId.toLowerCase(), 'INVALID_TABLE_NAME');
+
+    const fieldName = pluralize(safeName);
+
+    const singularTypeName = hasDuplicate ? safeName : capitalize(safeName);
+
+    const pluralTypeName = pluralize(singularTypeName);
+
+    return {
+      fieldName,
+      typeNames: {
+        singular: singularTypeName,
+        plural: pluralTypeName,
+      },
+    };
   }
 
   private createListField(
