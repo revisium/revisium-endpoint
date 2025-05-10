@@ -371,10 +371,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             )
               ? key
               : capitalize(key);
-            const type = this.getSchema(
-              `${name}${capitalizedSafetyKey}`,
-              itemSchema,
-            );
 
             if (
               !('$ref' in itemSchema) &&
@@ -387,6 +383,34 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               };
               return fields;
             }
+
+            if (
+              !('$ref' in itemSchema) &&
+              itemSchema.type === 'array' &&
+              !('$ref' in itemSchema.items) &&
+              itemSchema.items.type === 'string' &&
+              itemSchema.items.foreignKey
+            ) {
+              fields[key] = {
+                type: new GraphQLNonNull(
+                  new GraphQLList(
+                    new GraphQLNonNull(
+                      this.context.nodes[itemSchema.items.foreignKey].node,
+                    ),
+                  ),
+                ),
+                resolve: this.getFieldArrayItemResolver(
+                  itemSchema.items.foreignKey,
+                  key,
+                ),
+              };
+              return fields;
+            }
+
+            const type = this.getSchema(
+              `${name}${capitalizedSafetyKey}`,
+              itemSchema,
+            );
 
             fields[key] = { type };
             return fields;
@@ -410,6 +434,34 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       );
       if (error) throw this.toGraphQLError(error);
       return response;
+    };
+  }
+
+  private getFieldArrayItemResolver(foreignTableId: string, field: string) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      parent: Record<string, string[]>,
+      _,
+      context: ContextType,
+    ) => {
+      const ids = parent[field];
+      if (!ids?.length) return [];
+
+      const promises = ids.map(async (id) => {
+        const { data: response, error } = await this.proxyCoreApi.api.row(
+          revisionId,
+          foreignTableId,
+          id,
+          {
+            headers: context.headers,
+          },
+        );
+        if (error) throw this.toGraphQLError(error);
+        return response;
+      });
+
+      return Promise.all(promises);
     };
   }
 
