@@ -51,8 +51,16 @@ type CreatingTableOptionsType = {
   pluralSafetyTableId: string;
 };
 
+interface CacheNode {
+  table: ConverterTable;
+  node: GraphQLObjectType;
+  fieldName: { singular: string; plural: string };
+  typeNames: { singular: string; plural: string };
+}
+
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
+  nodes: Record<string, CacheNode>;
 }
 
 @Injectable()
@@ -68,6 +76,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
+      nodes: {},
     };
 
     return this.asyncLocalStorage.run(
@@ -105,31 +114,52 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createQueryFields(): Record<string, any> {
-    const tableIds = this.context.tables.map((table) => table.id);
+    const tables = this.context.tables.filter(
+      (table) => !isEmptyObject(table.schema),
+    );
+    const tableIds = tables.map((table) => table.id);
 
-    return this.context.tables
-      .filter((table) => !isEmptyObject(table.schema))
-      .reduce(
-        (fields, table) => {
-          const { fieldName, typeNames } = this.generateFieldAndTypeNames(
-            table.id,
-            tableIds,
-          );
+    this.context.nodes = tables.reduce<Record<string, CacheNode>>(
+      (nodes, table) => {
+        const { fieldName, typeNames } = this.generateFieldAndTypeNames(
+          table.id,
+          tableIds,
+        );
 
-          const options: CreatingTableOptionsType = {
-            table,
-            safetyTableId: typeNames.singular,
-            pluralSafetyTableId: typeNames.plural,
-          };
+        const options: CreatingTableOptionsType = {
+          table,
+          safetyTableId: typeNames.singular,
+          pluralSafetyTableId: typeNames.plural,
+        };
 
-          const node = this.getNodeType(options);
+        const node = this.getNodeType(options);
 
-          fields[fieldName.singular] = this.createItemField(options, node);
-          fields[fieldName.plural] = this.createListField(options, node);
-          return fields;
-        },
-        {} as Record<string, any>,
-      );
+        nodes[table.id] = {
+          table,
+          node,
+          fieldName,
+          typeNames,
+        };
+
+        return nodes;
+      },
+      {},
+    );
+
+    return Object.values(this.context.nodes).reduce(
+      (fields, { table, node, fieldName, typeNames }) => {
+        const options: CreatingTableOptionsType = {
+          table,
+          safetyTableId: typeNames.singular,
+          pluralSafetyTableId: typeNames.plural,
+        };
+
+        fields[fieldName.singular] = this.createItemField(options, node);
+        fields[fieldName.plural] = this.createListField(options, node);
+        return fields;
+      },
+      {},
+    );
   }
 
   private generateFieldAndTypeNames(
@@ -345,12 +375,42 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               `${name}${capitalizedSafetyKey}`,
               itemSchema,
             );
+
+            if (
+              !('$ref' in itemSchema) &&
+              itemSchema.type === 'string' &&
+              itemSchema.foreignKey
+            ) {
+              fields[key] = {
+                type: this.context.nodes[itemSchema.foreignKey].node,
+                resolve: this.getFieldResolver(itemSchema.foreignKey, key),
+              };
+              return fields;
+            }
+
             fields[key] = { type };
             return fields;
           },
           {} as Record<string, any>,
         ),
     });
+  }
+
+  private getFieldResolver(foreignTableId: string, field: string) {
+    const revisionId = this.context.revisionId;
+
+    return async (parent: Record<string, string>, _, context: ContextType) => {
+      const { data: response, error } = await this.proxyCoreApi.api.row(
+        revisionId,
+        foreignTableId,
+        parent[field],
+        {
+          headers: context.headers,
+        },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response;
+    };
   }
 
   private get projectName() {
