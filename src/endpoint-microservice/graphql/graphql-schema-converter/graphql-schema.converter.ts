@@ -15,6 +15,7 @@ import {
   GraphQLSchema,
   GraphQLString,
 } from 'graphql/type';
+import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
@@ -314,6 +315,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             `${this.projectName}${options.safetyTableId}`,
             options.table.schema,
           ),
+          resolve: (parent) => parent.data,
         },
       }),
     });
@@ -365,6 +367,24 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               return fields;
             }
 
+            const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
+              itemSchema,
+              key,
+            );
+
+            if (foreignKeyConfig) {
+              fields[key] = foreignKeyConfig;
+              return fields;
+            }
+
+            const foreignKeyArrayConfig =
+              this.tryGettingForeignKeyArrayFieldConfig(itemSchema, key);
+
+            if (foreignKeyArrayConfig) {
+              fields[key] = foreignKeyArrayConfig;
+              return fields;
+            }
+
             const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(
               ids,
               key,
@@ -372,54 +392,69 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               ? key
               : capitalize(key);
 
-            if (
-              !('$ref' in itemSchema) &&
-              itemSchema.type === 'string' &&
-              itemSchema.foreignKey
-            ) {
-              fields[key] = {
-                type: new GraphQLNonNull(
-                  this.context.nodes[itemSchema.foreignKey].node,
-                ),
-                resolve: this.getFieldResolver(itemSchema.foreignKey, key),
-              };
-              return fields;
-            }
-
-            if (
-              !('$ref' in itemSchema) &&
-              itemSchema.type === 'array' &&
-              !('$ref' in itemSchema.items) &&
-              itemSchema.items.type === 'string' &&
-              itemSchema.items.foreignKey
-            ) {
-              fields[key] = {
-                type: new GraphQLNonNull(
-                  new GraphQLList(
-                    new GraphQLNonNull(
-                      this.context.nodes[itemSchema.items.foreignKey].node,
-                    ),
-                  ),
-                ),
-                resolve: this.getFieldArrayItemResolver(
-                  itemSchema.items.foreignKey,
-                  key,
-                ),
-              };
-              return fields;
-            }
-
-            const type = this.getSchema(
+            const schemaConfig = this.getSchemaConfig(
               `${name}${capitalizedSafetyKey}`,
               itemSchema,
             );
 
-            fields[key] = { type };
+            fields[key] = schemaConfig;
             return fields;
           },
           {} as Record<string, any>,
         ),
     });
+  }
+
+  private getSchemaConfig(
+    field: string,
+    schema: JsonSchema,
+  ): GraphQLFieldConfig<any, any> {
+    const type = this.getSchema(field, schema);
+
+    return {
+      type,
+    };
+  }
+
+  private tryGettingForeignKeyFieldConfig(
+    schema: JsonSchema,
+    field: string,
+  ): GraphQLFieldConfig<any, any> | null {
+    const isForeignKey =
+      !('$ref' in schema) && schema.type === 'string' && schema.foreignKey;
+
+    if (isForeignKey) {
+      return {
+        type: new GraphQLNonNull(this.context.nodes[schema.foreignKey].node),
+        resolve: this.getFieldResolver(schema.foreignKey, field),
+      };
+    }
+
+    return null;
+  }
+
+  private tryGettingForeignKeyArrayFieldConfig(
+    schema: JsonSchema,
+    field: string,
+  ): GraphQLFieldConfig<any, any> {
+    if (
+      !('$ref' in schema) &&
+      schema.type === 'array' &&
+      !('$ref' in schema.items) &&
+      schema.items.type === 'string' &&
+      schema.items.foreignKey
+    ) {
+      return {
+        type: new GraphQLNonNull(
+          new GraphQLList(
+            new GraphQLNonNull(
+              this.context.nodes[schema.items.foreignKey].node,
+            ),
+          ),
+        ),
+        resolve: this.getFieldArrayItemResolver(schema.items.foreignKey, field),
+      };
+    }
   }
 
   private getFieldResolver(foreignTableId: string, field: string) {
