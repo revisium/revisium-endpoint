@@ -230,8 +230,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       name: `${this.projectName}${pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
+        createdId: { type: new GraphQLNonNull(GraphQLString) },
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
+        updatedAt: { type: new GraphQLNonNull(DateTimeType) },
         data: {
           type: this.getSchema(
             `${this.projectName}${safetyTableId}`,

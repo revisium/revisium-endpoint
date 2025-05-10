@@ -22,8 +22,10 @@ type ProjectInvalid_table_name____usersEdge {
 
 type ProjectInvalid_table_name____usersNode {
   createdAt: DataTime!
+  createdId: String!
   data: ProjectInvalid_table_name____user!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 

@@ -25,8 +25,10 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: String!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 

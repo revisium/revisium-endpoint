@@ -29,8 +29,10 @@ type INVALID_PROJECT_NAME_1UsersEdge {
 
 type INVALID_PROJECT_NAME_1UsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: INVALID_PROJECT_NAME_1User!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 

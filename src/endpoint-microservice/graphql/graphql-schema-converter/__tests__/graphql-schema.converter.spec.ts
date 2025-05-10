@@ -136,7 +136,7 @@ describe('GraphQL Schema Converter', () => {
     await check(schema, 'complex.graphql.text');
   });
 
-  it('invalid project id', async () => {
+  it('invalid project name', async () => {
     const table: ConverterTable = {
       id: 'user',
       versionId: '1',
@@ -327,7 +327,7 @@ describe('GraphQL Schema Converter', () => {
       await check(schema, 'unique/table-id.graphql.text');
     });
 
-    it('similar table', async () => {
+    it('similar field', async () => {
       const user: ConverterTable = {
         id: 'uSer',
         versionId: '1',

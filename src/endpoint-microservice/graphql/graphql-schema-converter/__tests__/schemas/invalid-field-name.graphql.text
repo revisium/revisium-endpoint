@@ -33,8 +33,10 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: ProjectUser!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 
