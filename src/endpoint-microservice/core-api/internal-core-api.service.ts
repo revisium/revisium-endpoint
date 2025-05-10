@@ -35,7 +35,7 @@ export class InternalCoreApiService extends Api<unknown> {
       ? await this.getLoginDtoInBuildMode()
       : this.getLoginDtoInCloudMode();
 
-    const { data, error } = await this.login(loginDto);
+    const { data, error } = await this.api.login(loginDto);
 
     if (error) {
       throw new HttpException(error, error.statusCode);

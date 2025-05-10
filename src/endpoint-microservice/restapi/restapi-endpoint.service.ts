@@ -50,7 +50,6 @@ export class RestapiEndpointService {
       throw new Error(`${endpointId} is not started`);
     }
 
-    // TODO
     const [url, item] = [...this.map.entries()].find(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([_, mapValue]) => mapValue.endpointId === endpointId,
@@ -99,7 +98,7 @@ export class RestapiEndpointService {
         revisionId: revision.id,
       }),
       getRow: async (headers, tableId, rowId) => {
-        const { data, error } = await this.proxyCoreApi.row(
+        const { data, error } = await this.proxyCoreApi.api.row(
           revision.id,
           tableId,
           rowId,
@@ -113,7 +112,7 @@ export class RestapiEndpointService {
         return data;
       },
       deleteRow: async (headers, tableId, rowId) => {
-        const { error } = await this.proxyCoreApi.deleteRow(
+        const { error } = await this.proxyCoreApi.api.deleteRow(
           revision.id,
           tableId,
           rowId,
@@ -129,15 +128,16 @@ export class RestapiEndpointService {
         return true;
       },
       updateRow: async (headers, tableId, rowId, data) => {
-        const { data: responseData, error } = await this.proxyCoreApi.updateRow(
-          revision.id,
-          tableId,
-          rowId,
-          {
-            data,
-          },
-          { headers },
-        );
+        const { data: responseData, error } =
+          await this.proxyCoreApi.api.updateRow(
+            revision.id,
+            tableId,
+            rowId,
+            {
+              data,
+            },
+            { headers },
+          );
 
         if (error) {
           throw new HttpException(error, error.statusCode);
@@ -146,15 +146,16 @@ export class RestapiEndpointService {
         return responseData.row.data;
       },
       createRow: async (headers, tableId, rowId, data) => {
-        const { data: responseData, error } = await this.proxyCoreApi.createRow(
-          revision.id,
-          tableId,
-          {
-            rowId,
-            data,
-          },
-          { headers },
-        );
+        const { data: responseData, error } =
+          await this.proxyCoreApi.api.createRow(
+            revision.id,
+            tableId,
+            {
+              rowId,
+              data,
+            },
+            { headers },
+          );
 
         if (error) {
           throw new HttpException(error, error.statusCode);
@@ -163,7 +164,7 @@ export class RestapiEndpointService {
         return responseData.row.data;
       },
       getRows: async (headers, tableId, first, after) => {
-        const { data, error } = await this.proxyCoreApi.rows(
+        const { data, error } = await this.proxyCoreApi.api.rows(
           {
             revisionId: revision.id,
             tableId,
@@ -187,7 +188,7 @@ export class RestapiEndpointService {
         first,
         after,
       ) => {
-        const { data, error } = await this.proxyCoreApi.rowForeignKeysBy(
+        const { data, error } = await this.proxyCoreApi.api.rowForeignKeysBy(
           {
             revisionId: revision.id,
             tableId,
@@ -253,7 +254,7 @@ export class RestapiEndpointService {
   }
 
   private async getCountTables(revisionId: string) {
-    const { data, error } = await this.internalCoreApi.tables({
+    const { data, error } = await this.internalCoreApi.api.tables({
       revisionId,
       first: 0,
     });
