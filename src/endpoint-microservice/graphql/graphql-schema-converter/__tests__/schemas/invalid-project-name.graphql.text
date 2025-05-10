@@ -38,6 +38,7 @@ type INVALID_PROJECT_NAME_1UsersNode {
 
 type Query {
   _service: _Service
+  user(id: String!): INVALID_PROJECT_NAME_1UsersNode!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UsersConnection!
 }
 

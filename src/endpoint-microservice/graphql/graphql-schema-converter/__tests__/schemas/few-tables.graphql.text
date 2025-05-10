@@ -67,7 +67,9 @@ type ProjectUsersNode {
 
 type Query {
   _service: _Service
+  post(id: String!): ProjectPostsNode!
   posts(data: ProjectGetPostsInput): ProjectPostsConnection!
+  user(id: String!): ProjectUsersNode!
   users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 

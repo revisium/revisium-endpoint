@@ -124,6 +124,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
           const node = this.getNodeType(options);
 
+          fields[fieldName.singular] = this.createItemField(options, node);
           fields[fieldName.plural] = this.createListField(options, node);
           return fields;
         },
@@ -159,6 +160,34 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         singular: singularTypeName,
         plural: pluralTypeName,
       },
+    };
+  }
+
+  private getItemResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const { data: response, error } = await this.proxyCoreApi.api.row(
+        revisionId,
+        table.id,
+        id,
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response;
+    };
+  }
+
+  private createItemField(
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
+  ) {
+    return {
+      type: new GraphQLNonNull(node),
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: this.getItemResolver(options.table),
     };
   }
 
