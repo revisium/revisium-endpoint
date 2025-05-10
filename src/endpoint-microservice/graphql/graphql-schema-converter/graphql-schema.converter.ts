@@ -46,6 +46,8 @@ import {
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
+const DATA_KEY = 'data';
+
 type CreatingTableOptionsType = {
   table: ConverterTable;
   safetyTableId: string;
@@ -310,18 +312,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
-        data: {
-          type: this.getSchema(
-            `${this.projectName}${options.safetyTableId}`,
-            options.table.schema,
-          ),
-          resolve: (parent) => parent.data,
-        },
+        [DATA_KEY]: this.getSchemaConfig(
+          options.table.schema,
+          DATA_KEY,
+          `${this.projectName}${options.safetyTableId}`,
+        ),
       }),
     });
   }
 
-  private getSchema(name: string, schema: JsonSchema, postfix: string = '') {
+  private getSchema(
+    typeName: string,
+    schema: JsonSchema,
+    postfix: string = '',
+  ) {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
         `endpointId: ${this.context.endpointId}, unssuported $ref in schema: ${JSON.stringify(schema)}`,
@@ -337,12 +341,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         return new GraphQLNonNull(GraphQLBoolean);
       case 'object':
         return new GraphQLNonNull(
-          this.getObjectSchema(`${name}${postfix}`, schema),
+          this.getObjectSchema(`${typeName}${postfix}`, schema),
         );
       case 'array':
         return new GraphQLNonNull(
           new GraphQLList(
-            this.getSchema(`${name}${postfix}`, schema.items, 'Items'),
+            this.getSchema(`${typeName}${postfix}`, schema.items, 'Items'),
           ),
         );
       default:
@@ -367,24 +371,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               return fields;
             }
 
-            const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
-              itemSchema,
-              key,
-            );
-
-            if (foreignKeyConfig) {
-              fields[key] = foreignKeyConfig;
-              return fields;
-            }
-
-            const foreignKeyArrayConfig =
-              this.tryGettingForeignKeyArrayFieldConfig(itemSchema, key);
-
-            if (foreignKeyArrayConfig) {
-              fields[key] = foreignKeyArrayConfig;
-              return fields;
-            }
-
             const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(
               ids,
               key,
@@ -392,12 +378,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               ? key
               : capitalize(key);
 
-            const schemaConfig = this.getSchemaConfig(
-              `${name}${capitalizedSafetyKey}`,
+            fields[key] = this.getSchemaConfig(
               itemSchema,
+              key,
+              `${name}${capitalizedSafetyKey}`,
             );
-
-            fields[key] = schemaConfig;
             return fields;
           },
           {} as Record<string, any>,
@@ -406,10 +391,29 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getSchemaConfig(
-    field: string,
     schema: JsonSchema,
+    field: string,
+    typeName: string,
   ): GraphQLFieldConfig<any, any> {
-    const type = this.getSchema(field, schema);
+    const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
+      schema,
+      field,
+    );
+
+    if (foreignKeyConfig) {
+      return foreignKeyConfig;
+    }
+
+    const foreignKeyArrayConfig = this.tryGettingForeignKeyArrayFieldConfig(
+      schema,
+      field,
+    );
+
+    if (foreignKeyArrayConfig) {
+      return foreignKeyArrayConfig;
+    }
+
+    const type = this.getSchema(typeName, schema);
 
     return {
       type,
