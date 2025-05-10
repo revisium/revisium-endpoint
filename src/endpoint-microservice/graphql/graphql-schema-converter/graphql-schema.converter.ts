@@ -378,7 +378,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               itemSchema.foreignKey
             ) {
               fields[key] = {
-                type: this.context.nodes[itemSchema.foreignKey].node,
+                type: new GraphQLNonNull(
+                  this.context.nodes[itemSchema.foreignKey].node,
+                ),
                 resolve: this.getFieldResolver(itemSchema.foreignKey, key),
               };
               return fields;

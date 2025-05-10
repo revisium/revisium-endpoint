@@ -350,6 +350,135 @@ describe('GraphQL Schema Converter', () => {
     });
   });
 
+  describe('foreign key', () => {
+    it('simple', async () => {
+      const user: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          post: getStringSchema({ foreignKey: 'post' }),
+        }),
+      };
+
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user, post],
+        }),
+      );
+      await check(schema, 'foreign-key/simple.graphql.text');
+    });
+
+    it('array object', async () => {
+      const user: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+          posts: getArraySchema(
+            getObjectSchema({
+              title: getStringSchema(),
+              postId: getStringSchema({ foreignKey: 'post' }),
+            }),
+          ),
+        }),
+      };
+
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user, post],
+        }),
+      );
+      await check(schema, 'foreign-key/array-object.graphql.text');
+    });
+
+    it('array string', async () => {
+      const user: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          posts: getArraySchema(getStringSchema({ foreignKey: 'post' })),
+        }),
+      };
+
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user, post],
+        }),
+      );
+      await check(schema, 'foreign-key/array-string.graphql.text');
+    });
+
+    it('root string', async () => {
+      const user: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getStringSchema({ foreignKey: 'post' }),
+      };
+
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user, post],
+        }),
+      );
+      await check(schema, 'foreign-key/root-string.graphql.text');
+    });
+
+    it('root array string', async () => {
+      const user: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getArraySchema(getStringSchema({ foreignKey: 'post' })),
+      };
+
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [user, post],
+        }),
+      );
+      await check(schema, 'foreign-key/root-array-string.graphql.text');
+    });
+  });
+
   function getContext(
     data: Partial<ConverterContextType>,
   ): ConverterContextType {
