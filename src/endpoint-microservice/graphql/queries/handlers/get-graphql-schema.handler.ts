@@ -4,9 +4,11 @@ import { GraphQLSchema } from 'graphql/type';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
-import { resolveRefs } from 'src/endpoint-microservice/shared/schema';
+import {
+  resolveRefs,
+  JsonSchema,
+} from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 
 export type GetJsonSchemasReturnType = {
   id: string;
@@ -45,7 +47,7 @@ export class GetGraphqlSchemaHandler
   }
 
   private async getSchemas(revisionId: string) {
-    const { data, error } = await this.internalCoreApi.rows({
+    const { data, error } = await this.internalCoreApi.api.rows({
       revisionId,
       tableId: SystemTables.Schema,
       first: HARDCODED_LIMIT_FOR_TABLES,

@@ -2,10 +2,14 @@ import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
-import { resolveRefs } from 'src/endpoint-microservice/shared/schema';
+import {
+  resolveRefs,
+  JsonSchema,
+} from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
+
+const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
 @QueryHandler(GetOpenApiSchemaQuery)
 export class GetOpenApiSchemaHandler
@@ -269,11 +273,13 @@ export class GetOpenApiSchemaHandler
           : {}),
       };
 
-      const { data, error } = await this.internalCoreApi.tableForeignKeysBy({
-        revisionId,
-        tableId: schemaRow.id,
-        first: 100,
-      });
+      const { data, error } = await this.internalCoreApi.api.tableForeignKeysBy(
+        {
+          revisionId,
+          tableId: schemaRow.id,
+          first: 100,
+        },
+      );
 
       if (error) {
         throw new HttpException(error, error.statusCode);
@@ -388,7 +394,7 @@ export class GetOpenApiSchemaHandler
   }
 
   private async getIsDraftRevision(revisionId: string) {
-    const { data, error } = await this.internalCoreApi.revision(revisionId);
+    const { data, error } = await this.internalCoreApi.api.revision(revisionId);
 
     if (error) {
       throw new HttpException(error, error.statusCode);
@@ -398,11 +404,10 @@ export class GetOpenApiSchemaHandler
   }
 
   private async getSchemas(revisionId: string) {
-    // TODO schema, 1000
-    const { error, data } = await this.internalCoreApi.rows({
+    const { error, data } = await this.internalCoreApi.api.rows({
       revisionId,
       tableId: SystemTables.Schema,
-      first: 1000,
+      first: HARDCODED_LIMIT_FOR_TABLES,
     });
 
     if (error) {

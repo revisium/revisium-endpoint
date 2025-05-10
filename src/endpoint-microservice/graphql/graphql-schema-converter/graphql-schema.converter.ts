@@ -156,7 +156,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       { data }: { data: { first?: number; after?: string } },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.rows(
+      const { data: response, error } = await this.proxyCoreApi.api.rows(
         {
           revisionId,
           tableId: table.id,

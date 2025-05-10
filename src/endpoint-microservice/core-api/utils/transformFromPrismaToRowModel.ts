@@ -6,8 +6,10 @@ export const excludeDataFromRowModel = (
 ): Omit<RowModel, 'data'> => {
   return {
     versionId: data.versionId,
+    createdId: data.createdId,
     id: data.id,
     createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
     readonly: data.readonly,
   };
 };
