@@ -45,6 +45,12 @@ import {
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
+type CreatingTableOptionsType = {
+  table: ConverterTable;
+  safetyTableId: string;
+  pluralSafetyTableId: string;
+};
+
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
 }
@@ -110,11 +116,15 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             tableIds,
           );
 
-          fields[fieldName.plural] = this.createListField(
+          const options: CreatingTableOptionsType = {
             table,
-            typeNames.singular,
-            typeNames.plural,
-          );
+            safetyTableId: typeNames.singular,
+            pluralSafetyTableId: typeNames.plural,
+          };
+
+          const node = this.getNodeType(options);
+
+          fields[fieldName.plural] = this.createListField(options, node);
           return fields;
         },
         {} as Record<string, any>,
@@ -153,19 +163,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createListField(
-    table: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
-    const ConnectionType = this.getListConnection(
-      table,
-      safetyTableId,
-      pluralSafetyTableId,
-    );
+    const ConnectionType = this.getListConnection(options, node);
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(pluralSafetyTableId) } },
-      resolve: this.getListResolver(table),
+      args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
+      resolve: this.getListResolver(options.table),
     };
   }
 
@@ -192,19 +197,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getListConnection(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Connection`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Connection`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
             new GraphQLList(
-              new GraphQLNonNull(
-                this.getEdgeType(data, safetyTableId, pluralSafetyTableId),
-              ),
+              new GraphQLNonNull(this.getEdgeType(options, node)),
             ),
           ),
         },
@@ -225,30 +227,23 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getEdgeType(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Edge`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Edge`,
       fields: {
         node: {
-          type: new GraphQLNonNull(
-            this.getNodeType(data, safetyTableId, pluralSafetyTableId),
-          ),
+          type: new GraphQLNonNull(node),
         },
         cursor: { type: new GraphQLNonNull(GraphQLString) },
       },
     });
   }
 
-  private getNodeType(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
-  ) {
+  private getNodeType(options: CreatingTableOptionsType) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Node`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
         createdId: { type: new GraphQLNonNull(GraphQLString) },
@@ -257,8 +252,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
         data: {
           type: this.getSchema(
-            `${this.projectName}${safetyTableId}`,
-            data.schema,
+            `${this.projectName}${options.safetyTableId}`,
+            options.table.schema,
           ),
         },
       }),
