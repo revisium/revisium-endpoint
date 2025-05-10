@@ -47,6 +47,7 @@ import {
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 const DATA_KEY = 'data';
+const ITEMS_POSTFIX = 'Items';
 
 type CreatingTableOptionsType = {
   table: ConverterTable;
@@ -64,6 +65,11 @@ interface CacheNode {
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
   nodes: Record<string, CacheNode>;
+}
+
+interface FieldAndTypeNames {
+  fieldName: { singular: string; plural: string };
+  typeNames: { singular: string; plural: string };
 }
 
 @Injectable()
@@ -99,16 +105,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         name: 'Query',
         fields: {
           ...this.createQueryFields(),
-          _service: {
-            type: ServiceType,
-            resolve: () => {
-              if (!cachedSdl) {
-                cachedSdl = printSchema(schema);
-              }
-
-              return { sdl: cachedSdl };
-            },
-          },
+          _service: this.createServiceField(() => {
+            if (!cachedSdl) {
+              cachedSdl = printSchema(schema);
+            }
+            return { sdl: cachedSdl };
+          }),
         },
       }),
     });
@@ -116,12 +118,28 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return schema;
   }
 
+  private createServiceField(
+    resolver: () => { sdl: string },
+  ): GraphQLFieldConfig<any, any> {
+    return {
+      type: ServiceType,
+      resolve: resolver,
+    };
+  }
+
   private createQueryFields(): Record<string, any> {
-    const tables = this.context.tables.filter(
-      (table) => !isEmptyObject(table.schema),
-    );
+    const tables = this.getValidTables();
     const tableIds = tables.map((table) => table.id);
 
+    this.buildNodesCache(tables, tableIds);
+    return this.createFieldsFromNodes();
+  }
+
+  private getValidTables(): ConverterTable[] {
+    return this.context.tables.filter((table) => !isEmptyObject(table.schema));
+  }
+
+  private buildNodesCache(tables: ConverterTable[], tableIds: string[]): void {
     this.context.nodes = tables.reduce<Record<string, CacheNode>>(
       (nodes, table) => {
         const { fieldName, typeNames } = this.generateFieldAndTypeNames(
@@ -148,7 +166,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       },
       {},
     );
+  }
 
+  private createFieldsFromNodes(): Record<string, any> {
     return Object.values(this.context.nodes).reduce(
       (fields, { table, node, fieldName, typeNames }) => {
         const options: CreatingTableOptionsType = {
@@ -168,10 +188,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private generateFieldAndTypeNames(
     tableId: string,
     allTableIds: string[],
-  ): {
-    fieldName: { singular: string; plural: string };
-    typeNames: { singular: string; plural: string };
-  } {
+  ): FieldAndTypeNames {
     const hasDuplicate = hasDuplicateKeyCaseInsensitive(allTableIds, tableId);
 
     const safeName = hasDuplicate
@@ -261,7 +278,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private getListConnection(
     options: CreatingTableOptionsType,
     node: GraphQLObjectType,
-  ) {
+  ): GraphQLObjectType {
     return new GraphQLObjectType({
       name: `${this.projectName}${options.pluralSafetyTableId}Connection`,
       fields: {
@@ -278,7 +295,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getListArgs(name: string) {
+  private getListArgs(name: string): GraphQLInputObjectType {
     return new GraphQLInputObjectType({
       name: `${this.projectName}Get${name}Input`,
       fields: {
@@ -291,7 +308,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private getEdgeType(
     options: CreatingTableOptionsType,
     node: GraphQLObjectType,
-  ) {
+  ): GraphQLObjectType {
     return new GraphQLObjectType({
       name: `${this.projectName}${options.pluralSafetyTableId}Edge`,
       fields: {
@@ -303,7 +320,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getNodeType(options: CreatingTableOptionsType) {
+  private getNodeType(options: CreatingTableOptionsType): GraphQLObjectType {
     return new GraphQLObjectType({
       name: `${this.projectName}${options.pluralSafetyTableId}Node`,
       fields: () => ({
@@ -321,14 +338,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getSchema(
+  private mapSchemaTypeToGraphQL(
     typeName: string,
     schema: JsonSchema,
     postfix: string = '',
   ) {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
-        `endpointId: ${this.context.endpointId}, unssuported $ref in schema: ${JSON.stringify(schema)}`,
+        `endpointId: ${this.context.endpointId}, unsupported $ref in schema: ${JSON.stringify(schema)}`,
       );
     }
 
@@ -346,7 +363,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       case 'array':
         return new GraphQLNonNull(
           new GraphQLList(
-            this.getSchema(`${typeName}${postfix}`, schema.items, 'Items'),
+            this.mapSchemaTypeToGraphQL(
+              `${typeName}${postfix}`,
+              schema.items,
+              ITEMS_POSTFIX,
+            ),
           ),
         );
       default:
@@ -413,7 +434,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       return foreignKeyArrayConfig;
     }
 
-    const type = this.getSchema(typeName, schema);
+    const type = this.mapSchemaTypeToGraphQL(typeName, schema);
 
     return {
       type,
@@ -440,7 +461,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private tryGettingForeignKeyArrayFieldConfig(
     schema: JsonSchema,
     field: string,
-  ): GraphQLFieldConfig<any, any> {
+  ): GraphQLFieldConfig<any, any> | null {
     if (
       !('$ref' in schema) &&
       schema.type === 'array' &&
@@ -459,6 +480,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         resolve: this.getFieldArrayItemResolver(schema.items.foreignKey, field),
       };
     }
+
+    return null;
   }
 
   private getFieldResolver(foreignTableId: string, field: string) {
@@ -506,7 +529,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private get projectName() {
+  private get projectName(): string {
     return getProjectName(this.context.projectName);
   }
 
