@@ -34,8 +34,10 @@ type ProjectPostsEdge {
 
 type ProjectPostsNode {
   createdAt: DataTime!
+  createdId: String!
   data: ProjectPost!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 
@@ -56,14 +58,18 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: ProjectUser!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 
 type Query {
   _service: _Service
+  post(id: String!): ProjectPostsNode!
   posts(data: ProjectGetPostsInput): ProjectPostsConnection!
+  user(id: String!): ProjectUsersNode!
   users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 

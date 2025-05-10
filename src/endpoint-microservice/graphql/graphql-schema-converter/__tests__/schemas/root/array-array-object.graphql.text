@@ -29,13 +29,16 @@ type ProjectUsersEdge {
 
 type ProjectUsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: [[ProjectUserItemsItems!]!]!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 
 type Query {
   _service: _Service
+  user(id: String!): ProjectUsersNode!
   users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 

@@ -45,6 +45,12 @@ import {
   pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
+type CreatingTableOptionsType = {
+  table: ConverterTable;
+  safetyTableId: string;
+  pluralSafetyTableId: string;
+};
+
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
 }
@@ -98,53 +104,102 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return schema;
   }
 
-  private createQueryFields() {
-    const ids = this.context.tables.map((table) => table.id);
+  private createQueryFields(): Record<string, any> {
+    const tableIds = this.context.tables.map((table) => table.id);
 
     return this.context.tables
       .filter((table) => !isEmptyObject(table.schema))
       .reduce(
         (fields, table) => {
-          const safeName = hasDuplicateKeyCaseInsensitive(ids, table.id)
-            ? getSafetyName(table.id, 'INVALID_TABLE_NAME')
-            : getSafetyName(table.id.toLowerCase(), 'INVALID_TABLE_NAME');
-
-          const pluralName = pluralize(safeName);
-
-          const capitalizedSafeName = hasDuplicateKeyCaseInsensitive(
-            ids,
+          const { fieldName, typeNames } = this.generateFieldAndTypeNames(
             table.id,
-          )
-            ? safeName
-            : capitalize(safeName);
-
-          const pluralCapitalizedSafeName = pluralize(capitalizedSafeName);
-
-          fields[pluralName] = this.createListField(
-            table,
-            capitalizedSafeName,
-            pluralCapitalizedSafeName,
+            tableIds,
           );
+
+          const options: CreatingTableOptionsType = {
+            table,
+            safetyTableId: typeNames.singular,
+            pluralSafetyTableId: typeNames.plural,
+          };
+
+          const node = this.getNodeType(options);
+
+          fields[fieldName.singular] = this.createItemField(options, node);
+          fields[fieldName.plural] = this.createListField(options, node);
           return fields;
         },
         {} as Record<string, any>,
       );
   }
 
-  private createListField(
-    table: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+  private generateFieldAndTypeNames(
+    tableId: string,
+    allTableIds: string[],
+  ): {
+    fieldName: { singular: string; plural: string };
+    typeNames: { singular: string; plural: string };
+  } {
+    const hasDuplicate = hasDuplicateKeyCaseInsensitive(allTableIds, tableId);
+
+    const safeName = hasDuplicate
+      ? getSafetyName(tableId, 'INVALID_TABLE_NAME')
+      : getSafetyName(tableId.toLowerCase(), 'INVALID_TABLE_NAME');
+
+    const singularFieldName = safeName;
+    const pluralFieldName = pluralize(safeName);
+
+    const singularTypeName = hasDuplicate ? safeName : capitalize(safeName);
+    const pluralTypeName = pluralize(singularTypeName);
+
+    return {
+      fieldName: {
+        singular: singularFieldName,
+        plural: pluralFieldName,
+      },
+      typeNames: {
+        singular: singularTypeName,
+        plural: pluralTypeName,
+      },
+    };
+  }
+
+  private getItemResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const { data: response, error } = await this.proxyCoreApi.api.row(
+        revisionId,
+        table.id,
+        id,
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response;
+    };
+  }
+
+  private createItemField(
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
-    const ConnectionType = this.getListConnection(
-      table,
-      safetyTableId,
-      pluralSafetyTableId,
-    );
+    return {
+      type: new GraphQLNonNull(node),
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: this.getItemResolver(options.table),
+    };
+  }
+
+  private createListField(
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
+  ) {
+    const ConnectionType = this.getListConnection(options, node);
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(pluralSafetyTableId) } },
-      resolve: this.getListResolver(table),
+      args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
+      resolve: this.getListResolver(options.table),
     };
   }
 
@@ -171,19 +226,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getListConnection(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Connection`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Connection`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
             new GraphQLList(
-              new GraphQLNonNull(
-                this.getEdgeType(data, safetyTableId, pluralSafetyTableId),
-              ),
+              new GraphQLNonNull(this.getEdgeType(options, node)),
             ),
           ),
         },
@@ -204,38 +256,33 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getEdgeType(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
+    options: CreatingTableOptionsType,
+    node: GraphQLObjectType,
   ) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Edge`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Edge`,
       fields: {
         node: {
-          type: new GraphQLNonNull(
-            this.getNodeType(data, safetyTableId, pluralSafetyTableId),
-          ),
+          type: new GraphQLNonNull(node),
         },
         cursor: { type: new GraphQLNonNull(GraphQLString) },
       },
     });
   }
 
-  private getNodeType(
-    data: ConverterTable,
-    safetyTableId: string,
-    pluralSafetyTableId: string,
-  ) {
+  private getNodeType(options: CreatingTableOptionsType) {
     return new GraphQLObjectType({
-      name: `${this.projectName}${pluralSafetyTableId}Node`,
+      name: `${this.projectName}${options.pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
+        createdId: { type: new GraphQLNonNull(GraphQLString) },
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
+        updatedAt: { type: new GraphQLNonNull(DateTimeType) },
         data: {
           type: this.getSchema(
-            `${this.projectName}${safetyTableId}`,
-            data.schema,
+            `${this.projectName}${options.safetyTableId}`,
+            options.table.schema,
           ),
         },
       }),

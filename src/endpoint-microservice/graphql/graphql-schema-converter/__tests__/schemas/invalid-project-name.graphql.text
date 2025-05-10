@@ -29,13 +29,16 @@ type INVALID_PROJECT_NAME_1UsersEdge {
 
 type INVALID_PROJECT_NAME_1UsersNode {
   createdAt: DataTime!
+  createdId: String!
   data: INVALID_PROJECT_NAME_1User!
   id: String!
+  updatedAt: DataTime!
   versionId: String!
 }
 
 type Query {
   _service: _Service
+  user(id: String!): INVALID_PROJECT_NAME_1UsersNode!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UsersConnection!
 }
 
