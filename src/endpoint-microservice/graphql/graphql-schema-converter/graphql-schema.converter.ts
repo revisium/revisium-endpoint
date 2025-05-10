@@ -110,7 +110,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             tableIds,
           );
 
-          fields[fieldName] = this.createListField(
+          fields[fieldName.plural] = this.createListField(
             table,
             typeNames.singular,
             typeNames.plural,
@@ -125,7 +125,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     tableId: string,
     allTableIds: string[],
   ): {
-    fieldName: string;
+    fieldName: { singular: string; plural: string };
     typeNames: { singular: string; plural: string };
   } {
     const hasDuplicate = hasDuplicateKeyCaseInsensitive(allTableIds, tableId);
@@ -134,14 +134,17 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       ? getSafetyName(tableId, 'INVALID_TABLE_NAME')
       : getSafetyName(tableId.toLowerCase(), 'INVALID_TABLE_NAME');
 
-    const fieldName = pluralize(safeName);
+    const singularFieldName = safeName;
+    const pluralFieldName = pluralize(safeName);
 
     const singularTypeName = hasDuplicate ? safeName : capitalize(safeName);
-
     const pluralTypeName = pluralize(singularTypeName);
 
     return {
-      fieldName,
+      fieldName: {
+        singular: singularFieldName,
+        plural: pluralFieldName,
+      },
       typeNames: {
         singular: singularTypeName,
         plural: pluralTypeName,
