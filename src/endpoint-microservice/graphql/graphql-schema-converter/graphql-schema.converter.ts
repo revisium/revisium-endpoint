@@ -17,6 +17,7 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
+import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
@@ -322,7 +323,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getNodeType(options: CreatingTableOptionsType): GraphQLObjectType {
-    return new GraphQLObjectType({
+    return new GraphQLObjectType<RowModel>({
       name: `${this.projectName}${options.pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
