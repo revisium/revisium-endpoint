@@ -16,7 +16,6 @@ import {
   GraphQLString,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
-import { GraphQLID } from 'graphql/type/scalars';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
