@@ -22,6 +22,10 @@ export const DateTimeType = new GraphQLScalarType({
   name: 'DataTime',
 });
 
+export const JsonType = new GraphQLScalarType({
+  name: 'JSON',
+});
+
 export const ServiceType = new GraphQLObjectType({
   name: '_Service',
   fields: {

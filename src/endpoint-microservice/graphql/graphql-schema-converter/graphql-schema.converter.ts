@@ -16,6 +16,7 @@ import {
   GraphQLString,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
+import { GraphQLID } from 'graphql/type/scalars';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
@@ -23,6 +24,7 @@ import {
   ContextType,
   DateTimeType,
   getPageInfoType,
+  JsonType,
   ServiceType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
@@ -334,6 +336,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           DATA_KEY,
           `${this.projectName}${options.safetyTableId}`,
         ),
+        json: { type: JsonType, resolve: (parent) => parent.data },
       }),
     });
   }

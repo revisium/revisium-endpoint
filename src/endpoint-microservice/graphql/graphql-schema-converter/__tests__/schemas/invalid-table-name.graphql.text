@@ -1,5 +1,7 @@
 scalar DataTime
 
+scalar JSON
+
 input ProjectGetInvalid_table_name____usersInput {
   after: String
   first: Float
@@ -25,6 +27,7 @@ type ProjectInvalid_table_name____usersNode {
   createdId: String!
   data: ProjectInvalid_table_name____user!
   id: String!
+  json: JSON
   updatedAt: DataTime!
   versionId: String!
 }
