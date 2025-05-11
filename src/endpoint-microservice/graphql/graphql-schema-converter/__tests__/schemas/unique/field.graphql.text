@@ -1,5 +1,7 @@
 scalar DataTime
 
+scalar JSON
+
 input ProjectGetUsersInput {
   after: String
   first: Float
@@ -41,6 +43,7 @@ type ProjectUsersNode {
   createdId: String!
   data: ProjectUser!
   id: String!
+  json: JSON
   updatedAt: DataTime!
   versionId: String!
 }

@@ -1,5 +1,7 @@
 scalar DataTime
 
+scalar JSON
+
 input ProjectGetPostsInput {
   after: String
   first: Float
@@ -37,6 +39,7 @@ type ProjectPostsNode {
   createdId: String!
   data: ProjectPost!
   id: String!
+  json: JSON
   updatedAt: DataTime!
   versionId: String!
 }
@@ -57,6 +60,7 @@ type ProjectUsersNode {
   createdId: String!
   data: ProjectPostsNode!
   id: String!
+  json: JSON
   updatedAt: DataTime!
   versionId: String!
 }

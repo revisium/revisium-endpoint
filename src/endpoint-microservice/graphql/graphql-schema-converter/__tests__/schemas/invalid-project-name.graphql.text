@@ -32,9 +32,12 @@ type INVALID_PROJECT_NAME_1UsersNode {
   createdId: String!
   data: INVALID_PROJECT_NAME_1User!
   id: String!
+  json: JSON
   updatedAt: DataTime!
   versionId: String!
 }
+
+scalar JSON
 
 type Query {
   _service: _Service
