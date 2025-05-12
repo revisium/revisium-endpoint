@@ -71,9 +71,11 @@ type ProjectuSersNode {
 
 type Query {
   UsER(id: String!): ProjectUsERsNode!
+  UsERFlat(id: String!): ProjectUsER!
   UsERs(data: ProjectGetUsERsInput): ProjectUsERsConnection!
   _service: _Service
   uSer(id: String!): ProjectuSersNode!
+  uSerFlat(id: String!): ProjectuSer!
   uSers(data: ProjectGetuSersInput): ProjectuSersConnection!
 }
 

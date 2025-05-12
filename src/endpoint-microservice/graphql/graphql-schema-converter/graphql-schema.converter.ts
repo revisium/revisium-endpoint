@@ -50,6 +50,7 @@ import {
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 const DATA_KEY = 'data';
+const FLAT_KEY = 'Flat';
 const ITEMS_POSTFIX = 'Items';
 
 type CreatingTableOptionsType = {
@@ -177,6 +178,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         fields[validTable.fieldName.plural] = this.createListField(
           validTable.options,
         );
+
+        fields[`${validTable.fieldName.singular}${FLAT_KEY}`] =
+          this.createItemFlatField(validTable.options);
+
         return fields;
       },
       {},
@@ -211,6 +216,21 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
+  private getItemFlatResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const { data: response, error } = await this.proxyCoreApi.api.row(
+        revisionId,
+        table.id,
+        id,
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response.data;
+    };
+  }
+
   private getItemResolver(table: ConverterTable) {
     const revisionId = this.context.revisionId;
 
@@ -223,6 +243,18 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       );
       if (error) throw this.toGraphQLError(error);
       return response;
+    };
+  }
+
+  private createItemFlatField(options: CreatingTableOptionsType) {
+    const dataConfig = this.getCachedNodeType(options.table.id).data;
+
+    return {
+      type: dataConfig.type,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: dataConfig.resolve ?? this.getItemFlatResolver(options.table),
     };
   }
 

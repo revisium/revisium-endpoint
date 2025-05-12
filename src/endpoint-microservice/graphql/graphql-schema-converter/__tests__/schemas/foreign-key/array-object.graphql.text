@@ -78,8 +78,10 @@ type ProjectUsersNode {
 type Query {
   _service: _Service
   post(id: String!): ProjectPostsNode!
+  postFlat(id: String!): ProjectPost!
   posts(data: ProjectGetPostsInput): ProjectPostsConnection!
   user(id: String!): ProjectUsersNode!
+  userFlat(id: String!): ProjectUser!
   users(data: ProjectGetUsersInput): ProjectUsersConnection!
 }
 

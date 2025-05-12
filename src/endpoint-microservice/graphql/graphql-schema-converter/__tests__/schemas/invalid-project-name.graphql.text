@@ -42,6 +42,7 @@ scalar JSON
 type Query {
   _service: _Service
   user(id: String!): INVALID_PROJECT_NAME_1UsersNode!
+  userFlat(id: String!): INVALID_PROJECT_NAME_1User!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UsersConnection!
 }
 
