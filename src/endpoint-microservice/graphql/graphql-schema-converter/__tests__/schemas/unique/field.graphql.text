@@ -30,7 +30,7 @@ type ProjectUsernaMe {
 type ProjectUsersConnection {
   edges: [ProjectUsersEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectUsersEdge {

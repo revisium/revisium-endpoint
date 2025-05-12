@@ -19,7 +19,7 @@ type INVALID_PROJECT_NAME_1User {
 type INVALID_PROJECT_NAME_1UsersConnection {
   edges: [INVALID_PROJECT_NAME_1UsersEdge!]!
   pageInfo: INVALID_PROJECT_NAME_1PageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type INVALID_PROJECT_NAME_1UsersEdge {

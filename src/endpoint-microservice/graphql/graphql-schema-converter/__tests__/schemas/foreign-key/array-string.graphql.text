@@ -26,7 +26,7 @@ type ProjectPost {
 type ProjectPostsConnection {
   edges: [ProjectPostsEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectPostsEdge {
@@ -51,7 +51,7 @@ type ProjectUser {
 type ProjectUsersConnection {
   edges: [ProjectUsersEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectUsersEdge {

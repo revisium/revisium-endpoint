@@ -26,7 +26,7 @@ type ProjectUsER {
 type ProjectUsERsConnection {
   edges: [ProjectUsERsEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectUsERsEdge {
@@ -51,7 +51,7 @@ type ProjectuSer {
 type ProjectuSersConnection {
   edges: [ProjectuSersEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectuSersEdge {
