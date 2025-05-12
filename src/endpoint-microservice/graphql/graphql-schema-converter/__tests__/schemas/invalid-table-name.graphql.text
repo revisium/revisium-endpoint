@@ -14,7 +14,7 @@ type ProjectInvalid_table_name____user {
 type ProjectInvalid_table_name____usersConnection {
   edges: [ProjectInvalid_table_name____usersEdge!]!
   pageInfo: ProjectPageInfo!
-  totalCount: Float!
+  totalCount: Int!
 }
 
 type ProjectInvalid_table_name____usersEdge {

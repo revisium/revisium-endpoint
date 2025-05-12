@@ -9,6 +9,7 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLInputObjectType,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -292,7 +293,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           ),
         },
         pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
-        totalCount: { type: new GraphQLNonNull(GraphQLFloat) },
+        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
       },
     });
   }
