@@ -23,18 +23,18 @@ type ProjectPost {
   name: String!
 }
 
-type ProjectPostsConnection {
-  edges: [ProjectPostsEdge!]!
+type ProjectPostConnection {
+  edges: [ProjectPostEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectPostsEdge {
+type ProjectPostEdge {
   cursor: String!
-  node: ProjectPostsNode!
+  node: ProjectPostNode!
 }
 
-type ProjectPostsNode {
+type ProjectPostNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectPost!
@@ -44,21 +44,21 @@ type ProjectPostsNode {
   versionId: String!
 }
 
-type ProjectUsersConnection {
-  edges: [ProjectUsersEdge!]!
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUsersEdge {
+type ProjectUserEdge {
   cursor: String!
-  node: ProjectUsersNode!
+  node: ProjectUserNode!
 }
 
-type ProjectUsersNode {
+type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
-  data: ProjectPostsNode!
+  data: ProjectPostNode!
   id: String!
   json: JSON
   updatedAt: DataTime!
@@ -67,12 +67,12 @@ type ProjectUsersNode {
 
 type Query {
   _service: _Service
-  post(id: String!): ProjectPostsNode!
+  post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPost!
-  posts(data: ProjectGetPostsInput): ProjectPostsConnection!
-  user(id: String!): ProjectUsersNode!
-  userFlat(id: String!): ProjectPostsNode!
-  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+  posts(data: ProjectGetPostsInput): ProjectPostConnection!
+  user(id: String!): ProjectUserNode!
+  userFlat(id: String!): ProjectPostNode!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 
 type _Service {

@@ -16,18 +16,18 @@ type INVALID_PROJECT_NAME_1User {
   name: String!
 }
 
-type INVALID_PROJECT_NAME_1UsersConnection {
-  edges: [INVALID_PROJECT_NAME_1UsersEdge!]!
+type INVALID_PROJECT_NAME_1UserConnection {
+  edges: [INVALID_PROJECT_NAME_1UserEdge!]!
   pageInfo: INVALID_PROJECT_NAME_1PageInfo!
   totalCount: Int!
 }
 
-type INVALID_PROJECT_NAME_1UsersEdge {
+type INVALID_PROJECT_NAME_1UserEdge {
   cursor: String!
-  node: INVALID_PROJECT_NAME_1UsersNode!
+  node: INVALID_PROJECT_NAME_1UserNode!
 }
 
-type INVALID_PROJECT_NAME_1UsersNode {
+type INVALID_PROJECT_NAME_1UserNode {
   createdAt: DataTime!
   createdId: String!
   data: INVALID_PROJECT_NAME_1User!
@@ -41,9 +41,9 @@ scalar JSON
 
 type Query {
   _service: _Service
-  user(id: String!): INVALID_PROJECT_NAME_1UsersNode!
+  user(id: String!): INVALID_PROJECT_NAME_1UserNode!
   userFlat(id: String!): INVALID_PROJECT_NAME_1User!
-  users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UsersConnection!
+  users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserConnection!
 }
 
 type _Service {

@@ -303,7 +303,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     options: CreatingTableOptionsType,
   ): GraphQLObjectType {
     return new GraphQLObjectType({
-      name: `${this.projectName}${options.pluralSafetyTableId}Connection`,
+      name: `${this.projectName}${options.safetyTableId}Connection`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
@@ -328,7 +328,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
     return new GraphQLObjectType({
-      name: `${this.projectName}${options.pluralSafetyTableId}Edge`,
+      name: `${this.projectName}${options.safetyTableId}Edge`,
       fields: {
         node: {
           type: new GraphQLNonNull(
@@ -367,7 +367,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     );
 
     const node = new GraphQLObjectType<RowModel>({
-      name: `${this.projectName}${options.pluralSafetyTableId}Node`,
+      name: `${this.projectName}${options.safetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
         createdId: { type: new GraphQLNonNull(GraphQLString) },

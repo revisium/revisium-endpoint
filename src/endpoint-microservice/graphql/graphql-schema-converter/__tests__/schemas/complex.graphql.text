@@ -39,23 +39,18 @@ type ProjectUserArrayItemsItemsItems {
   nested: String!
 }
 
-type ProjectUserPostsItems {
-  id: String!
-  title: String!
-}
-
-type ProjectUsersConnection {
-  edges: [ProjectUsersEdge!]!
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUsersEdge {
+type ProjectUserEdge {
   cursor: String!
-  node: ProjectUsersNode!
+  node: ProjectUserNode!
 }
 
-type ProjectUsersNode {
+type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectUser!
@@ -65,11 +60,16 @@ type ProjectUsersNode {
   versionId: String!
 }
 
+type ProjectUserPostsItems {
+  id: String!
+  title: String!
+}
+
 type Query {
   _service: _Service
-  user(id: String!): ProjectUsersNode!
+  user(id: String!): ProjectUserNode!
   userFlat(id: String!): ProjectUser!
-  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 
 type _Service {
