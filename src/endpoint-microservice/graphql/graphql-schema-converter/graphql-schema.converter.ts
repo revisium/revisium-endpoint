@@ -497,7 +497,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     if (isForeignKey) {
       return {
-        // type: new GraphQLNonNull(this.context.nodes[schema.foreignKey].node),
         type: new GraphQLNonNull(
           this.getCachedNodeType(schema.foreignKey).node,
         ),
