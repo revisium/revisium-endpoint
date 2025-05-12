@@ -59,15 +59,20 @@ type CreatingTableOptionsType = {
 };
 
 interface CacheNode {
-  table: ConverterTable;
-  node: GraphQLObjectType;
+  node: GraphQLObjectType<RowModel>;
+  data: GraphQLFieldConfig<any, any>;
+}
+
+interface ValidTableType {
   fieldName: { singular: string; plural: string };
   typeNames: { singular: string; plural: string };
+  options: CreatingTableOptionsType;
 }
 
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
   nodes: Record<string, CacheNode>;
+  validTables: Record<string, ValidTableType>;
 }
 
 interface FieldAndTypeNames {
@@ -89,6 +94,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
       nodes: {},
+      validTables: {},
     };
 
     return this.asyncLocalStorage.run(
@@ -103,18 +109,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private async createSchema(): Promise<GraphQLSchema> {
     let cachedSdl: string = undefined;
 
+    this.createValidTables();
+
     const schema = new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
-        fields: {
-          ...this.createQueryFields(),
+        fields: () => ({
+          ...this.createFieldsFromNodes(),
           _service: this.createServiceField(() => {
             if (!cachedSdl) {
               cachedSdl = printSchema(schema);
             }
             return { sdl: cachedSdl };
           }),
-        },
+        }),
       }),
     });
 
@@ -130,58 +138,45 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createQueryFields(): Record<string, any> {
-    const tables = this.getValidTables();
-    const tableIds = tables.map((table) => table.id);
-
-    this.buildNodesCache(tables, tableIds);
-    return this.createFieldsFromNodes();
-  }
-
-  private getValidTables(): ConverterTable[] {
-    return this.context.tables.filter((table) => !isEmptyObject(table.schema));
-  }
-
-  private buildNodesCache(tables: ConverterTable[], tableIds: string[]): void {
-    this.context.nodes = tables.reduce<Record<string, CacheNode>>(
-      (nodes, table) => {
-        const { fieldName, typeNames } = this.generateFieldAndTypeNames(
-          table.id,
-          tableIds,
-        );
-
-        const options: CreatingTableOptionsType = {
-          table,
-          safetyTableId: typeNames.singular,
-          pluralSafetyTableId: typeNames.plural,
-        };
-
-        const node = this.getNodeType(options);
-
-        nodes[table.id] = {
-          table,
-          node,
-          fieldName,
-          typeNames,
-        };
-
-        return nodes;
-      },
-      {},
+  private createValidTables() {
+    const validTables = this.context.tables.filter(
+      (table) => !isEmptyObject(table.schema),
     );
+
+    const validTableIds = validTables.map((table) => table.id);
+
+    this.context.validTables = validTables.reduce<
+      Record<string, ValidTableType>
+    >((acc, table) => {
+      const { fieldName, typeNames } = this.generateFieldAndTypeNames(
+        table.id,
+        validTableIds,
+      );
+
+      const options: CreatingTableOptionsType = {
+        table,
+        safetyTableId: typeNames.singular,
+        pluralSafetyTableId: typeNames.plural,
+      };
+
+      acc[table.id] = {
+        fieldName,
+        typeNames,
+        options,
+      };
+      return acc;
+    }, {});
   }
 
   private createFieldsFromNodes(): Record<string, any> {
-    return Object.values(this.context.nodes).reduce(
-      (fields, { table, node, fieldName, typeNames }) => {
-        const options: CreatingTableOptionsType = {
-          table,
-          safetyTableId: typeNames.singular,
-          pluralSafetyTableId: typeNames.plural,
-        };
-
-        fields[fieldName.singular] = this.createItemField(options, node);
-        fields[fieldName.plural] = this.createListField(options, node);
+    return Object.values(this.context.validTables).reduce(
+      (fields, validTable) => {
+        fields[validTable.fieldName.singular] = this.createItemField(
+          validTable.options,
+        );
+        fields[validTable.fieldName.plural] = this.createListField(
+          validTable.options,
+        );
         return fields;
       },
       {},
@@ -231,12 +226,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createItemField(
-    options: CreatingTableOptionsType,
-    node: GraphQLObjectType,
-  ) {
+  private createItemField(options: CreatingTableOptionsType) {
     return {
-      type: new GraphQLNonNull(node),
+      type: new GraphQLNonNull(this.getCachedNodeType(options.table.id).node),
       args: {
         id: { type: new GraphQLNonNull(GraphQLString) },
       },
@@ -244,11 +236,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createListField(
-    options: CreatingTableOptionsType,
-    node: GraphQLObjectType,
-  ) {
-    const ConnectionType = this.getListConnection(options, node);
+  private createListField(options: CreatingTableOptionsType) {
+    const ConnectionType = this.getListConnection(options);
     return {
       type: new GraphQLNonNull(ConnectionType),
       args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
@@ -280,16 +269,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private getListConnection(
     options: CreatingTableOptionsType,
-    node: GraphQLObjectType,
   ): GraphQLObjectType {
     return new GraphQLObjectType({
       name: `${this.projectName}${options.pluralSafetyTableId}Connection`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
-            new GraphQLList(
-              new GraphQLNonNull(this.getEdgeType(options, node)),
-            ),
+            new GraphQLList(new GraphQLNonNull(this.getEdgeType(options))),
           ),
         },
         pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
@@ -308,23 +294,47 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
   }
 
-  private getEdgeType(
-    options: CreatingTableOptionsType,
-    node: GraphQLObjectType,
-  ): GraphQLObjectType {
+  private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
     return new GraphQLObjectType({
       name: `${this.projectName}${options.pluralSafetyTableId}Edge`,
       fields: {
         node: {
-          type: new GraphQLNonNull(node),
+          type: new GraphQLNonNull(
+            this.getCachedNodeType(options.table.id).node,
+          ),
         },
         cursor: { type: new GraphQLNonNull(GraphQLString) },
       },
     });
   }
 
-  private getNodeType(options: CreatingTableOptionsType): GraphQLObjectType {
-    return new GraphQLObjectType<RowModel>({
+  private buildNodeCache(tableId: string): void {
+    const validTable = this.context.validTables[tableId];
+
+    const { data, node } = this.getNodeType(validTable.options);
+
+    this.context.nodes[tableId] = {
+      node,
+      data,
+    };
+  }
+
+  private getCachedNodeType(tableId: string) {
+    if (!this.context.nodes[tableId]) {
+      this.buildNodeCache(tableId);
+    }
+
+    return this.context.nodes[tableId];
+  }
+
+  private getNodeType(options: CreatingTableOptionsType) {
+    const data = this.getSchemaConfig(
+      options.table.schema,
+      DATA_KEY,
+      `${this.projectName}${options.safetyTableId}`,
+    );
+
+    const node = new GraphQLObjectType<RowModel>({
       name: `${this.projectName}${options.pluralSafetyTableId}Node`,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
@@ -332,14 +342,15 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
-        [DATA_KEY]: this.getSchemaConfig(
-          options.table.schema,
-          DATA_KEY,
-          `${this.projectName}${options.safetyTableId}`,
-        ),
+        [DATA_KEY]: data,
         json: { type: JsonType, resolve: (parent) => parent.data },
       }),
     });
+
+    return {
+      data,
+      node,
+    };
   }
 
   private mapSchemaTypeToGraphQL(
@@ -454,7 +465,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     if (isForeignKey) {
       return {
-        type: new GraphQLNonNull(this.context.nodes[schema.foreignKey].node),
+        // type: new GraphQLNonNull(this.context.nodes[schema.foreignKey].node),
+        type: new GraphQLNonNull(
+          this.getCachedNodeType(schema.foreignKey).node,
+        ),
         resolve: this.getFieldResolver(schema.foreignKey, field),
       };
     }
@@ -477,7 +491,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         type: new GraphQLNonNull(
           new GraphQLList(
             new GraphQLNonNull(
-              this.context.nodes[schema.items.foreignKey].node,
+              this.getCachedNodeType(schema.items.foreignKey).node,
             ),
           ),
         ),
