@@ -51,6 +51,7 @@ import {
 
 const DATA_KEY = 'data';
 const FLAT_KEY = 'Flat';
+const EXTENDED_KEY = 'Extended';
 const ITEMS_POSTFIX = 'Items';
 
 type CreatingTableOptionsType = {
@@ -172,15 +173,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private createFieldsFromNodes(): Record<string, any> {
     return Object.values(this.context.validTables).reduce(
       (fields, validTable) => {
-        fields[validTable.fieldName.singular] = this.createItemField(
-          validTable.options,
-        );
-        fields[validTable.fieldName.plural] = this.createListField(
-          validTable.options,
-        );
+        fields[`${validTable.fieldName.singular}${EXTENDED_KEY}`] =
+          this.createItemField(validTable.options);
+        fields[`${validTable.fieldName.plural}${EXTENDED_KEY}`] =
+          this.createListField(validTable.options);
 
-        fields[`${validTable.fieldName.singular}${FLAT_KEY}`] =
-          this.createItemFlatField(validTable.options);
+        fields[`${validTable.fieldName.singular}`] = this.createItemFlatField(
+          validTable.options,
+        );
 
         return fields;
       },
