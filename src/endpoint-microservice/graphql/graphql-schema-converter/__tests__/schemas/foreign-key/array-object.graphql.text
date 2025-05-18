@@ -70,7 +70,7 @@ type ProjectUserFlat {
 }
 
 type ProjectUserFlatPostsItems {
-  postId: ProjectPostFlay!
+  postId: ProjectPostFlat!
   title: String!
 }
 

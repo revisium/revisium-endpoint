@@ -62,7 +62,6 @@ type CreatingTableOptionsType = {
 interface CacheNode {
   node: GraphQLObjectType<RowModel>;
   data: GraphQLFieldConfig<any, any>;
-  nodeFlat: GraphQLObjectType<RowModel>;
   dataFlat: GraphQLFieldConfig<any, any>;
 }
 
@@ -344,12 +343,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const validTable = this.context.validTables[tableId];
 
     const { data, node } = this.getNodeType(validTable.options);
-    const { dataFlat, nodeFlat } = this.getNodeFlatType(validTable.options);
+    const dataFlat = this.getDataFlatType(validTable.options);
 
     this.context.nodes[tableId] = {
       node,
       data,
-      nodeFlat,
       dataFlat,
     };
   }
@@ -388,36 +386,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private getNodeFlatType(options: CreatingTableOptionsType) {
-    const dataFlat = this.getSchemaConfig(
+  private getDataFlatType(options: CreatingTableOptionsType) {
+    return this.getSchemaConfig(
       options.table.schema,
       DATA_KEY,
       `${this.projectName}${options.safetyTableId}${FLAT_KEY}`,
+      true,
     );
-
-    const nodeFlat = new GraphQLObjectType<RowModel>({
-      name: `${this.projectName}${options.safetyTableId}Node`,
-      fields: () => ({
-        versionId: { type: new GraphQLNonNull(GraphQLString) },
-        createdId: { type: new GraphQLNonNull(GraphQLString) },
-        id: { type: new GraphQLNonNull(GraphQLString) },
-        createdAt: { type: new GraphQLNonNull(DateTimeType) },
-        updatedAt: { type: new GraphQLNonNull(DateTimeType) },
-        [DATA_KEY]: dataFlat,
-        json: { type: JsonType, resolve: (parent) => parent.data },
-      }),
-    });
-
-    return {
-      dataFlat,
-      nodeFlat,
-    };
   }
 
   private mapSchemaTypeToGraphQL(
     typeName: string,
     schema: JsonSchema,
     postfix: string = '',
+    isFlat: boolean = false,
   ) {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
@@ -434,7 +416,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         return new GraphQLNonNull(GraphQLBoolean);
       case 'object':
         return new GraphQLNonNull(
-          this.getObjectSchema(`${typeName}${postfix}`, schema),
+          this.getObjectSchema(`${typeName}${postfix}`, schema, isFlat),
         );
       case 'array':
         return new GraphQLNonNull(
@@ -443,6 +425,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               `${typeName}${postfix}`,
               schema.items,
               ITEMS_POSTFIX,
+              isFlat,
             ),
           ),
         );
@@ -456,6 +439,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private getObjectSchema(
     name: string,
     schema: JsonObjectSchema,
+    isFlat: boolean = false,
   ): GraphQLObjectType {
     const ids = Object.keys(schema.properties);
 
@@ -479,6 +463,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
               itemSchema,
               key,
               `${name}${capitalizedSafetyKey}`,
+              isFlat,
             );
             return fields;
           },
@@ -491,10 +476,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     schema: JsonSchema,
     field: string,
     typeName: string,
+    isFlat: boolean = false,
   ): GraphQLFieldConfig<any, any> {
     const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
       schema,
       field,
+      isFlat,
     );
 
     if (foreignKeyConfig) {
@@ -504,13 +491,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const foreignKeyArrayConfig = this.tryGettingForeignKeyArrayFieldConfig(
       schema,
       field,
+      isFlat,
     );
 
     if (foreignKeyArrayConfig) {
       return foreignKeyArrayConfig;
     }
 
-    const type = this.mapSchemaTypeToGraphQL(typeName, schema);
+    const type = this.mapSchemaTypeToGraphQL(typeName, schema, '', isFlat);
 
     return {
       type,
@@ -520,16 +508,17 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private tryGettingForeignKeyFieldConfig(
     schema: JsonSchema,
     field: string,
+    isFlat: boolean = false,
   ): GraphQLFieldConfig<any, any> | null {
     const isForeignKey =
       !('$ref' in schema) && schema.type === 'string' && schema.foreignKey;
 
     if (isForeignKey) {
       return {
-        type: new GraphQLNonNull(
-          this.getCachedNodeType(schema.foreignKey).node,
-        ),
-        resolve: this.getFieldResolver(schema.foreignKey, field),
+        type: isFlat
+          ? this.getCachedNodeType(schema.foreignKey).dataFlat.type
+          : new GraphQLNonNull(this.getCachedNodeType(schema.foreignKey).node),
+        resolve: this.getFieldResolver(schema.foreignKey, field, isFlat),
       };
     }
 
@@ -539,6 +528,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private tryGettingForeignKeyArrayFieldConfig(
     schema: JsonSchema,
     field: string,
+    isFlat: boolean = false,
   ): GraphQLFieldConfig<any, any> | null {
     if (
       !('$ref' in schema) &&
@@ -550,19 +540,29 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       return {
         type: new GraphQLNonNull(
           new GraphQLList(
-            new GraphQLNonNull(
-              this.getCachedNodeType(schema.items.foreignKey).node,
-            ),
+            isFlat
+              ? this.getCachedNodeType(schema.items.foreignKey).dataFlat.type
+              : new GraphQLNonNull(
+                  this.getCachedNodeType(schema.items.foreignKey).node,
+                ),
           ),
         ),
-        resolve: this.getFieldArrayItemResolver(schema.items.foreignKey, field),
+        resolve: this.getFieldArrayItemResolver(
+          schema.items.foreignKey,
+          field,
+          isFlat,
+        ),
       };
     }
 
     return null;
   }
 
-  private getFieldResolver(foreignTableId: string, field: string) {
+  private getFieldResolver(
+    foreignTableId: string,
+    field: string,
+    isFlat: boolean = false,
+  ) {
     const revisionId = this.context.revisionId;
 
     return async (parent: Record<string, string>, _, context: ContextType) => {
@@ -575,11 +575,15 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         },
       );
       if (error) throw this.toGraphQLError(error);
-      return response;
+      return isFlat ? response.data : response;
     };
   }
 
-  private getFieldArrayItemResolver(foreignTableId: string, field: string) {
+  private getFieldArrayItemResolver(
+    foreignTableId: string,
+    field: string,
+    isFlat: boolean = false,
+  ) {
     const revisionId = this.context.revisionId;
 
     return async (
@@ -600,7 +604,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           },
         );
         if (error) throw this.toGraphQLError(error);
-        return response;
+        return isFlat ? response.data : response;
       });
 
       return Promise.all(promises);
