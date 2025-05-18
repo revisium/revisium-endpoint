@@ -8,6 +8,14 @@ import {
 } from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
+import {
+  createCRUDPaths,
+  createGetByIdPath,
+  createGetListPath,
+  getIdPathParam,
+  getPaginatedResponseSchema,
+  getPaginationParams,
+} from './open-api-shema.utils';
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
@@ -29,10 +37,7 @@ export class GetOpenApiSchemaHandler
 
     const openApiJson: OpenApiSchema = {
       openapi: '3.0.2',
-      info: {
-        version: `${revisionId}`,
-        title: '',
-      },
+      info: { version: revisionId, title: '' },
       servers: [],
       paths: {},
       components: {
@@ -48,335 +53,28 @@ export class GetOpenApiSchemaHandler
     };
 
     for (const schemaRow of schemas) {
-      openApiJson.paths[`/${schemaRow.id}`] = {
-        get: {
-          security: [
-            {
-              'access-token': [],
-            },
-          ],
-          tags: [schemaRow.id],
-          parameters: [
-            {
-              name: 'first',
-              in: 'query',
-              required: true,
-              schema: {
-                type: 'integer',
-                minimum: 1,
-                default: 100,
-              },
-            },
-            {
-              name: 'after',
-              in: 'query',
-              required: false,
-              schema: {
-                type: 'string',
-              },
-            },
-          ],
-          responses: {
-            '200': {
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['edges', 'pageInfo', 'totalCount'],
-                    properties: {
-                      edges: {
-                        type: 'array',
-                        items: {
-                          type: 'object',
-                          required: ['cursor', 'node'],
-                          properties: {
-                            cursor: { type: 'string' },
-                            node: {
-                              type: 'object',
-                              required: [
-                                'id',
-                                'versionId',
-                                'createdAt',
-                                'readonly',
-                              ],
-                              properties: {
-                                id: { type: 'string' },
-                                versionId: { type: 'string' },
-                                createdAt: { type: 'string' },
-                                readonly: { type: 'boolean' },
-                              },
-                            },
-                          },
-                        },
-                      },
-                      pageInfo: {
-                        type: 'object',
-                        required: [
-                          'startCursor',
-                          'endCursor',
-                          'hasNextPage',
-                          'hasPreviousPage',
-                        ],
-                        properties: {
-                          startCursor: { type: 'string' },
-                          endCursor: { type: 'string' },
-                          hasNextPage: { type: 'boolean' },
-                          hasPreviousPage: { type: 'boolean' },
-                        },
-                      },
-                      totalCount: { type: 'number', minimum: 0 },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+      const schemaId = schemaRow.id;
+
+      openApiJson.paths[`/${schemaId}`] = createGetListPath(schemaId);
+
+      openApiJson.paths[`/${schemaId}/{id}`] = {
+        ...createGetByIdPath(schemaId),
+        ...(isDraftRevision ? createCRUDPaths(schemaId) : {}),
       };
 
-      openApiJson.paths[`/${schemaRow.id}/{id}`] = {
-        get: {
-          security: [
-            {
-              'access-token': [],
-            },
-          ],
-          tags: [schemaRow.id],
-          parameters: [
-            {
-              name: 'id',
-              in: 'path',
-              required: true,
-              schema: { type: 'string' },
-            },
-          ],
-          responses: {
-            '200': {
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: `#/components/schemas/${schemaRow.id}`,
-                  },
-                },
-              },
-            },
-          },
-        },
-        ...(isDraftRevision
-          ? {
-              post: {
-                security: [
-                  {
-                    'access-token': [],
-                  },
-                ],
-                tags: [schemaRow.id],
-                parameters: [
-                  {
-                    name: 'id',
-                    in: 'path',
-                    required: true,
-                    schema: {
-                      type: 'string',
-                    },
-                  },
-                ],
-                requestBody: {
-                  required: true,
-                  content: {
-                    'application/json': {
-                      schema: {
-                        $ref: `#/components/schemas/${schemaRow.id}`,
-                      },
-                    },
-                  },
-                },
-                responses: {
-                  '200': {
-                    content: {
-                      'application/json': {
-                        schema: {
-                          $ref: `#/components/schemas/${schemaRow.id}`,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              put: {
-                security: [
-                  {
-                    'access-token': [],
-                  },
-                ],
-                tags: [schemaRow.id],
-                parameters: [
-                  {
-                    name: 'id',
-                    in: 'path',
-                    required: true,
-                    schema: {
-                      type: 'string',
-                    },
-                  },
-                ],
-                requestBody: {
-                  required: true,
-                  content: {
-                    'application/json': {
-                      schema: {
-                        $ref: `#/components/schemas/${schemaRow.id}`,
-                      },
-                    },
-                  },
-                },
-                responses: {
-                  '200': {
-                    content: {
-                      'application/json': {
-                        schema: {
-                          $ref: `#/components/schemas/${schemaRow.id}`,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              delete: {
-                security: [
-                  {
-                    'access-token': [],
-                  },
-                ],
-                tags: [schemaRow.id],
-                parameters: [
-                  {
-                    name: 'id',
-                    in: 'path',
-                    required: true,
-                    schema: { type: 'string' },
-                  },
-                ],
-                responses: {
-                  '200': {
-                    content: {
-                      'application/json': {
-                        schema: {
-                          type: 'boolean',
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            }
-          : {}),
-      };
+      const foreignKeys = await this.getForeignKeys(revisionId, schemaId);
 
-      const { data, error } = await this.internalCoreApi.api.tableForeignKeysBy(
-        {
-          revisionId,
-          tableId: schemaRow.id,
-          first: 100,
-        },
-      );
-
-      if (error) {
-        throw new HttpException(error, error.statusCode);
-      }
-
-      const tableForeignKeysBy = data.edges.map((edge) => edge.node);
-
-      for (const tableForeignKeyBy of tableForeignKeysBy) {
-        openApiJson.paths[
-          `/${schemaRow.id}/{id}/foreign-keys-by/${tableForeignKeyBy.id}`
-        ] = {
+      for (const fk of foreignKeys) {
+        openApiJson.paths[`/${schemaId}/{id}/foreign-keys-by/${fk.id}`] = {
           get: {
-            security: [
-              {
-                'access-token': [],
-              },
-            ],
-            tags: [schemaRow.id],
-            parameters: [
-              {
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: {
-                  type: 'string',
-                },
-              },
-              {
-                name: 'first',
-                in: 'query',
-                required: true,
-                schema: {
-                  type: 'integer',
-                  minimum: 1,
-                  default: 100,
-                },
-              },
-              {
-                name: 'after',
-                in: 'query',
-                required: false,
-                schema: {
-                  type: 'string',
-                },
-              },
-            ],
+            security: [{ 'access-token': [] }],
+            tags: [schemaId],
+            parameters: [getIdPathParam(), ...getPaginationParams()],
             responses: {
               '200': {
                 content: {
                   'application/json': {
-                    schema: {
-                      type: 'object',
-                      required: ['edges', 'pageInfo', 'totalCount'],
-                      properties: {
-                        edges: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            required: ['cursor', 'node'],
-                            properties: {
-                              cursor: { type: 'string' },
-                              node: {
-                                type: 'object',
-                                required: [
-                                  'id',
-                                  'versionId',
-                                  'createdAt',
-                                  'readonly',
-                                ],
-                                properties: {
-                                  id: { type: 'string' },
-                                  versionId: { type: 'string' },
-                                  createdAt: { type: 'string' },
-                                  readonly: { type: 'boolean' },
-                                },
-                              },
-                            },
-                          },
-                        },
-                        pageInfo: {
-                          type: 'object',
-                          required: [
-                            'startCursor',
-                            'endCursor',
-                            'hasNextPage',
-                            'hasPreviousPage',
-                          ],
-                          properties: {
-                            startCursor: { type: 'string' },
-                            endCursor: { type: 'string' },
-                            hasNextPage: { type: 'boolean' },
-                            hasPreviousPage: { type: 'boolean' },
-                          },
-                        },
-                        totalCount: { type: 'number', minimum: 0 },
-                      },
-                    },
+                    schema: getPaginatedResponseSchema(),
                   },
                 },
               },
@@ -384,7 +82,6 @@ export class GetOpenApiSchemaHandler
           },
         };
       }
-
       openApiJson.components.schemas[schemaRow.id] = resolveRefs(
         schemaRow.data as JsonSchema,
       );
@@ -414,10 +111,19 @@ export class GetOpenApiSchemaHandler
       throw new HttpException(error, error.statusCode);
     }
 
-    const nodes = data.edges.map((edge) => edge.node);
+    return data.edges
+      .map((e) => e.node)
+      .sort((a, b) => a.id.localeCompare(b.id));
+  }
 
-    nodes.sort((a, b) => a.id.localeCompare(b.id));
+  private async getForeignKeys(revisionId: string, tableId: string) {
+    const { data, error } = await this.internalCoreApi.api.tableForeignKeysBy({
+      revisionId,
+      tableId,
+      first: 100,
+    });
 
-    return nodes;
+    if (error) throw new HttpException(error, error.statusCode);
+    return data.edges.map((e) => e.node);
   }
 }
