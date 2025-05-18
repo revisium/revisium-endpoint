@@ -19,26 +19,35 @@ type ProjectUser {
   naMe: ProjectUsernaMe!
 }
 
-type ProjectUserNAmE {
-  name: String!
-}
-
-type ProjectUsernaMe {
-  name: String!
-}
-
-type ProjectUsersConnection {
-  edges: [ProjectUsersEdge!]!
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUsersEdge {
+type ProjectUserEdge {
   cursor: String!
-  node: ProjectUsersNode!
+  node: ProjectUserNode!
 }
 
-type ProjectUsersNode {
+type ProjectUserFlat {
+  NAmE: ProjectUserFlatNAmE!
+  naMe: ProjectUserFlatnaMe!
+}
+
+type ProjectUserFlatNAmE {
+  name: String!
+}
+
+type ProjectUserFlatnaMe {
+  name: String!
+}
+
+type ProjectUserNAmE {
+  name: String!
+}
+
+type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectUser!
@@ -48,10 +57,15 @@ type ProjectUsersNode {
   versionId: String!
 }
 
+type ProjectUsernaMe {
+  name: String!
+}
+
 type Query {
   _service: _Service
-  user(id: String!): ProjectUsersNode!
-  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+  user(id: String!): ProjectUserNode!
+  userFlat(id: String!): ProjectUserFlat!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 
 type _Service {

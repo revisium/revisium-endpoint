@@ -23,18 +23,22 @@ type ProjectUsER {
   name: String!
 }
 
-type ProjectUsERsConnection {
-  edges: [ProjectUsERsEdge!]!
+type ProjectUsERConnection {
+  edges: [ProjectUsEREdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUsERsEdge {
+type ProjectUsEREdge {
   cursor: String!
-  node: ProjectUsERsNode!
+  node: ProjectUsERNode!
 }
 
-type ProjectUsERsNode {
+type ProjectUsERFlat {
+  name: String!
+}
+
+type ProjectUsERNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectUsER!
@@ -48,18 +52,22 @@ type ProjectuSer {
   name: String!
 }
 
-type ProjectuSersConnection {
-  edges: [ProjectuSersEdge!]!
+type ProjectuSerConnection {
+  edges: [ProjectuSerEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectuSersEdge {
+type ProjectuSerEdge {
   cursor: String!
-  node: ProjectuSersNode!
+  node: ProjectuSerNode!
 }
 
-type ProjectuSersNode {
+type ProjectuSerFlat {
+  name: String!
+}
+
+type ProjectuSerNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectuSer!
@@ -70,11 +78,13 @@ type ProjectuSersNode {
 }
 
 type Query {
-  UsER(id: String!): ProjectUsERsNode!
-  UsERs(data: ProjectGetUsERsInput): ProjectUsERsConnection!
+  UsER(id: String!): ProjectUsERNode!
+  UsERFlat(id: String!): ProjectUsERFlat!
+  UsERs(data: ProjectGetUsERsInput): ProjectUsERConnection!
   _service: _Service
-  uSer(id: String!): ProjectuSersNode!
-  uSers(data: ProjectGetuSersInput): ProjectuSersConnection!
+  uSer(id: String!): ProjectuSerNode!
+  uSerFlat(id: String!): ProjectuSerFlat!
+  uSers(data: ProjectGetuSersInput): ProjectuSerConnection!
 }
 
 type _Service {

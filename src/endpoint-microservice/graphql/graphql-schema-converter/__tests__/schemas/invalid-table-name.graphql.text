@@ -11,18 +11,22 @@ type ProjectInvalid_table_name____user {
   name: String!
 }
 
-type ProjectInvalid_table_name____usersConnection {
-  edges: [ProjectInvalid_table_name____usersEdge!]!
+type ProjectInvalid_table_name____userConnection {
+  edges: [ProjectInvalid_table_name____userEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectInvalid_table_name____usersEdge {
+type ProjectInvalid_table_name____userEdge {
   cursor: String!
-  node: ProjectInvalid_table_name____usersNode!
+  node: ProjectInvalid_table_name____userNode!
 }
 
-type ProjectInvalid_table_name____usersNode {
+type ProjectInvalid_table_name____userFlat {
+  name: String!
+}
+
+type ProjectInvalid_table_name____userNode {
   createdAt: DataTime!
   createdId: String!
   data: ProjectInvalid_table_name____user!
@@ -40,8 +44,9 @@ type ProjectPageInfo {
 }
 
 type Query {
-  INVALID_TABLE_NAME____user(id: String!): ProjectInvalid_table_name____usersNode!
-  INVALID_TABLE_NAME____users(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____usersConnection!
+  INVALID_TABLE_NAME____user(id: String!): ProjectInvalid_table_name____userNode!
+  INVALID_TABLE_NAME____userFlat(id: String!): ProjectInvalid_table_name____userFlat!
+  INVALID_TABLE_NAME____users(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____userConnection!
   _service: _Service
 }
 

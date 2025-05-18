@@ -14,18 +14,18 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectUsersConnection {
-  edges: [ProjectUsersEdge!]!
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUsersEdge {
+type ProjectUserEdge {
   cursor: String!
-  node: ProjectUsersNode!
+  node: ProjectUserNode!
 }
 
-type ProjectUsersNode {
+type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
   data: Float!
@@ -37,8 +37,9 @@ type ProjectUsersNode {
 
 type Query {
   _service: _Service
-  user(id: String!): ProjectUsersNode!
-  users(data: ProjectGetUsersInput): ProjectUsersConnection!
+  user(id: String!): ProjectUserNode!
+  userFlat(id: String!): Float!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 
 type _Service {
