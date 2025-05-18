@@ -27,6 +27,10 @@ type INVALID_PROJECT_NAME_1UserEdge {
   node: INVALID_PROJECT_NAME_1UserNode!
 }
 
+type INVALID_PROJECT_NAME_1UserFlat {
+  name: String!
+}
+
 type INVALID_PROJECT_NAME_1UserNode {
   createdAt: DataTime!
   createdId: String!
@@ -42,7 +46,7 @@ scalar JSON
 type Query {
   _service: _Service
   user(id: String!): INVALID_PROJECT_NAME_1UserNode!
-  userFlat(id: String!): INVALID_PROJECT_NAME_1User!
+  userFlat(id: String!): INVALID_PROJECT_NAME_1UserFlat!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserConnection!
 }
 

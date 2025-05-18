@@ -30,6 +30,19 @@ type ProjectUserEdge {
   node: ProjectUserNode!
 }
 
+type ProjectUserFlat {
+  NAmE: ProjectUserFlatNAmE!
+  naMe: ProjectUserFlatnaMe!
+}
+
+type ProjectUserFlatNAmE {
+  name: String!
+}
+
+type ProjectUserFlatnaMe {
+  name: String!
+}
+
 type ProjectUserNAmE {
   name: String!
 }
@@ -51,7 +64,7 @@ type ProjectUsernaMe {
 type Query {
   _service: _Service
   user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUser!
+  userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 

@@ -34,6 +34,10 @@ type ProjectPostEdge {
   node: ProjectPostNode!
 }
 
+type ProjectPostFlat {
+  name: String!
+}
+
 type ProjectPostNode {
   createdAt: DataTime!
   createdId: String!
@@ -68,10 +72,10 @@ type ProjectUserNode {
 type Query {
   _service: _Service
   post(id: String!): ProjectPostNode!
-  postFlat(id: String!): ProjectPost!
+  postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
   user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectPostNode!
+  userFlat(id: String!): ProjectPostFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 

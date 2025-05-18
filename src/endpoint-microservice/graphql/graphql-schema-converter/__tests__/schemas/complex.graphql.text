@@ -50,6 +50,36 @@ type ProjectUserEdge {
   node: ProjectUserNode!
 }
 
+type ProjectUserFlat {
+  address: ProjectUserFlatAddress!
+  adult: Boolean!
+  age: Float!
+  array: [[[ProjectUserFlatArrayItemsItemsItems!]!]!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [ProjectUserFlatPostsItems!]!
+}
+
+type ProjectUserFlatAddress {
+  city: String!
+  nestedAddress: ProjectUserFlatAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserFlatAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserFlatArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserFlatPostsItems {
+  id: String!
+  title: String!
+}
+
 type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
@@ -68,7 +98,7 @@ type ProjectUserPostsItems {
 type Query {
   _service: _Service
   user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUser!
+  userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 

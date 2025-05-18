@@ -34,6 +34,10 @@ type ProjectUsEREdge {
   node: ProjectUsERNode!
 }
 
+type ProjectUsERFlat {
+  name: String!
+}
+
 type ProjectUsERNode {
   createdAt: DataTime!
   createdId: String!
@@ -59,6 +63,10 @@ type ProjectuSerEdge {
   node: ProjectuSerNode!
 }
 
+type ProjectuSerFlat {
+  name: String!
+}
+
 type ProjectuSerNode {
   createdAt: DataTime!
   createdId: String!
@@ -71,11 +79,11 @@ type ProjectuSerNode {
 
 type Query {
   UsER(id: String!): ProjectUsERNode!
-  UsERFlat(id: String!): ProjectUsER!
+  UsERFlat(id: String!): ProjectUsERFlat!
   UsERs(data: ProjectGetUsERsInput): ProjectUsERConnection!
   _service: _Service
   uSer(id: String!): ProjectuSerNode!
-  uSerFlat(id: String!): ProjectuSer!
+  uSerFlat(id: String!): ProjectuSerFlat!
   uSers(data: ProjectGetuSersInput): ProjectuSerConnection!
 }
 

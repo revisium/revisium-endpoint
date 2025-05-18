@@ -33,6 +33,14 @@ type ProjectUserField {
   otherNestedField: String!
 }
 
+type ProjectUserFlat {
+  field: ProjectUserFlatField!
+}
+
+type ProjectUserFlatField {
+  otherNestedField: String!
+}
+
 type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
@@ -46,7 +54,7 @@ type ProjectUserNode {
 type Query {
   _service: _Service
   user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUser!
+  userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
 }
 

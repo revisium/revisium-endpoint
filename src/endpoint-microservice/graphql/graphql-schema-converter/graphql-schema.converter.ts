@@ -51,7 +51,6 @@ import {
 
 const DATA_KEY = 'data';
 const FLAT_KEY = 'Flat';
-const EXTENDED_KEY = 'Extended';
 const ITEMS_POSTFIX = 'Items';
 
 type CreatingTableOptionsType = {
@@ -63,6 +62,8 @@ type CreatingTableOptionsType = {
 interface CacheNode {
   node: GraphQLObjectType<RowModel>;
   data: GraphQLFieldConfig<any, any>;
+  nodeFlat: GraphQLObjectType<RowModel>;
+  dataFlat: GraphQLFieldConfig<any, any>;
 }
 
 interface ValidTableType {
@@ -173,14 +174,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private createFieldsFromNodes(): Record<string, any> {
     return Object.values(this.context.validTables).reduce(
       (fields, validTable) => {
-        fields[`${validTable.fieldName.singular}${EXTENDED_KEY}`] =
-          this.createItemField(validTable.options);
-        fields[`${validTable.fieldName.plural}${EXTENDED_KEY}`] =
-          this.createListField(validTable.options);
+        const pluralKey = `${validTable.fieldName.plural}`;
+        const singularKey = `${validTable.fieldName.singular}`;
+        const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
 
-        fields[`${validTable.fieldName.singular}`] = this.createItemFlatField(
-          validTable.options,
-        );
+        fields[singularKey] = this.createItemField(validTable.options);
+        fields[pluralKey] = this.createListField(validTable.options);
+        fields[flatSingularKey] = this.createItemFlatField(validTable.options);
 
         return fields;
       },
@@ -247,7 +247,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createItemFlatField(options: CreatingTableOptionsType) {
-    const dataConfig = this.getCachedNodeType(options.table.id).data;
+    const dataConfig = this.getCachedNodeType(options.table.id).dataFlat;
 
     return {
       type: dataConfig.type,
@@ -344,10 +344,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const validTable = this.context.validTables[tableId];
 
     const { data, node } = this.getNodeType(validTable.options);
+    const { dataFlat, nodeFlat } = this.getNodeFlatType(validTable.options);
 
     this.context.nodes[tableId] = {
       node,
       data,
+      nodeFlat,
+      dataFlat,
     };
   }
 
@@ -382,6 +385,32 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return {
       data,
       node,
+    };
+  }
+
+  private getNodeFlatType(options: CreatingTableOptionsType) {
+    const dataFlat = this.getSchemaConfig(
+      options.table.schema,
+      DATA_KEY,
+      `${this.projectName}${options.safetyTableId}${FLAT_KEY}`,
+    );
+
+    const nodeFlat = new GraphQLObjectType<RowModel>({
+      name: `${this.projectName}${options.safetyTableId}Node`,
+      fields: () => ({
+        versionId: { type: new GraphQLNonNull(GraphQLString) },
+        createdId: { type: new GraphQLNonNull(GraphQLString) },
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        createdAt: { type: new GraphQLNonNull(DateTimeType) },
+        updatedAt: { type: new GraphQLNonNull(DateTimeType) },
+        [DATA_KEY]: dataFlat,
+        json: { type: JsonType, resolve: (parent) => parent.data },
+      }),
+    });
+
+    return {
+      dataFlat,
+      nodeFlat,
     };
   }
 
