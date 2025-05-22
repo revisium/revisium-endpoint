@@ -101,11 +101,13 @@ export class GetOpenApiSchemaHandler
   }
 
   private async getSchemas(revisionId: string) {
-    const { error, data } = await this.internalCoreApi.api.rows({
+    const { error, data } = await this.internalCoreApi.api.rows(
       revisionId,
-      tableId: SystemTables.Schema,
-      first: HARDCODED_LIMIT_FOR_TABLES,
-    });
+      SystemTables.Schema,
+      {
+        first: HARDCODED_LIMIT_FOR_TABLES,
+      },
+    );
 
     if (error) {
       throw new HttpException(error, error.statusCode);

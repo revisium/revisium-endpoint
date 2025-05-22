@@ -7,6 +7,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLInt,
@@ -27,6 +28,8 @@ import {
   getPageInfoType,
   JsonType,
   ServiceType,
+  SortDirection,
+  SortOrder,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
   getProjectName,
@@ -281,15 +284,24 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     return async (
       _: unknown,
-      { data }: { data: { first?: number; after?: string } },
+      {
+        data,
+      }: {
+        data: {
+          first?: number;
+          after?: string;
+          orderBy?: { field: string; direction: SortDirection }[];
+        };
+      },
       ctx: ContextType,
     ) => {
       const { data: response, error } = await this.proxyCoreApi.api.rows(
+        revisionId,
+        table.id,
         {
-          revisionId,
-          tableId: table.id,
           first: data?.first || DEFAULT_FIRST,
           after: data?.after ?? undefined,
+          orderBy: data?.orderBy,
         },
         { headers: ctx.headers },
       );
@@ -321,8 +333,30 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       fields: {
         first: { type: GraphQLFloat },
         after: { type: GraphQLString },
+        orderBy: { type: this.generateOrderByType() },
       },
     });
+  }
+
+  private generateOrderByType() {
+    const OrderByFieldEnum = new GraphQLEnumType({
+      name: 'OrderByField',
+      values: {
+        createdAt: { value: 'createdAt' },
+        updatedAt: { value: 'updatedAt' },
+        id: { value: 'id' },
+      },
+    });
+
+    const OrderByFieldInput = new GraphQLInputObjectType({
+      name: 'OrderByFieldInput',
+      fields: {
+        field: { type: new GraphQLNonNull(OrderByFieldEnum) },
+        direction: { type: new GraphQLNonNull(SortOrder) },
+      },
+    });
+
+    return new GraphQLList(OrderByFieldInput);
   }
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {

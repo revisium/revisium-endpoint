@@ -165,9 +165,9 @@ export class RestapiEndpointService {
       },
       getRows: async (headers, tableId, first, after) => {
         const { data, error } = await this.proxyCoreApi.api.rows(
+          revision.id,
+          tableId,
           {
-            revisionId: revision.id,
-            tableId,
             first,
             after,
           },

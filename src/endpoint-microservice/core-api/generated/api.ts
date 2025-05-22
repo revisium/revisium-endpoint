@@ -236,6 +236,19 @@ export interface CreateTableResponse {
   table: TableModel;
 }
 
+export type OrderByItemDto = object;
+
+export interface GetTableRowsDto {
+  /** @default 100 */
+  first: number;
+  after?: string;
+  /**
+   * Array of sorting criteria
+   * @example [{"field":"createdAt","direction":"asc"},{"field":"updatedAt","direction":"desc"}]
+   */
+  orderBy?: OrderByItemDto[];
+}
+
 export interface RowModel {
   createdId: string;
   id: string;
@@ -386,14 +399,6 @@ export interface TablesParams {
   first: number;
   after?: string;
   revisionId: string;
-}
-
-export interface RowsParams {
-  /** @default 100 */
-  first: number;
-  after?: string;
-  revisionId: string;
-  tableId: string;
 }
 
 export interface TableForeignKeysByParams {
@@ -677,7 +682,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 0.11.0-alpha.3
+ * @version 1.0.0
  * @contact
  */
 export class Api<
@@ -1508,18 +1513,21 @@ export class Api<
      *
      * @tags Table
      * @name Rows
-     * @request GET:/api/revision/{revisionId}/tables/{tableId}/rows
+     * @request POST:/api/revision/{revisionId}/tables/{tableId}/rows
      * @secure
      */
     rows: (
-      { revisionId, tableId, ...query }: RowsParams,
+      revisionId: string,
+      tableId: string,
+      data: GetTableRowsDto,
       params: RequestParams = {},
     ) =>
       this.request<RowsConnection, any>({
         path: `/api/revision/${revisionId}/tables/${tableId}/rows`,
-        method: "GET",
-        query: query,
+        method: "POST",
+        body: data,
         secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),
@@ -1529,7 +1537,7 @@ export class Api<
      *
      * @tags Table
      * @name CreateRow
-     * @request POST:/api/revision/{revisionId}/tables/{tableId}/rows
+     * @request POST:/api/revision/{revisionId}/tables/{tableId}/createRow
      * @secure
      */
     createRow: (
@@ -1539,7 +1547,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CreateRowResponse, any>({
-        path: `/api/revision/${revisionId}/tables/${tableId}/rows`,
+        path: `/api/revision/${revisionId}/tables/${tableId}/createRow`,
         method: "POST",
         body: data,
         secure: true,
@@ -1561,7 +1569,7 @@ export class Api<
       tableId: string,
       params: RequestParams = {},
     ) =>
-      this.request<object, any>({
+      this.request<OrderByItemDto, any>({
         path: `/api/revision/${revisionId}/tables/${tableId}/schema`,
         method: "GET",
         secure: true,

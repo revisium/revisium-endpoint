@@ -47,11 +47,13 @@ export class GetGraphqlSchemaHandler
   }
 
   private async getSchemas(revisionId: string) {
-    const { data, error } = await this.internalCoreApi.api.rows({
+    const { data, error } = await this.internalCoreApi.api.rows(
       revisionId,
-      tableId: SystemTables.Schema,
-      first: HARDCODED_LIMIT_FOR_TABLES,
-    });
+      SystemTables.Schema,
+      {
+        first: HARDCODED_LIMIT_FOR_TABLES,
+      },
+    );
 
     if (error) {
       throw new HttpException(error, error.statusCode);
