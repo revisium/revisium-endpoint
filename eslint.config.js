@@ -10,7 +10,6 @@ module.exports = [
       'dist/**',
       'coverage/**',
       'src/endpoint-microservice/core-api/generated/**',
-      '.eslintrc.js',
     ],
   },
   {
