@@ -20,7 +20,7 @@ import {
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import {
-  OrderByDto,
+  GetTableRowsDto,
   RowModel,
 } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
@@ -32,7 +32,6 @@ import {
   getSortOrder,
   JsonType,
   ServiceType,
-  SortDirection,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
   getProjectName,
@@ -292,11 +291,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       {
         data,
       }: {
-        data: {
-          first?: number;
-          after?: string;
-          orderBy?: { field: string; direction: SortDirection }[];
-        };
+        data: GetTableRowsDto;
       },
       ctx: ContextType,
     ) => {
@@ -306,9 +301,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         {
           first: data?.first || DEFAULT_FIRST,
           after: data?.after ?? undefined,
-          orderBy: data?.orderBy
-            ? (data.orderBy as unknown as OrderByDto[])
-            : undefined,
+          orderBy: data?.orderBy ?? undefined,
         },
         { headers: ctx.headers },
       );
@@ -338,7 +331,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return new GraphQLInputObjectType({
       name: `${this.projectName}Get${name}Input`,
       fields: {
-        first: { type: GraphQLFloat },
+        first: { type: GraphQLInt },
         after: { type: GraphQLString },
         orderBy: {
           type: this.generateOrderByType(`${this.projectName}Get${name}`),
