@@ -59,6 +59,10 @@ export class GetGraphqlSchemaHandler
       throw new HttpException(error, error.statusCode);
     }
 
-    return data.edges.map((edge) => edge.node) as GetJsonSchemasReturnType;
+    return data.edges.map((edge) => ({
+      id: edge.node.id,
+      versionId: edge.node.versionId,
+      data: edge.node.data as JsonSchema,
+    }));
   }
 }
