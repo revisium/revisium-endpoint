@@ -5,11 +5,35 @@ scalar JSON
 input ProjectGetPostsInput {
   after: String
   first: Float
+  orderBy: [ProjectGetPostsOrderByInput]
+}
+
+enum ProjectGetPostsOrderByField {
+  createdAt
+  id
+  updatedAt
+}
+
+input ProjectGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetPostsOrderByField!
 }
 
 input ProjectGetUsersInput {
   after: String
   first: Float
+  orderBy: [ProjectGetUsersOrderByInput]
+}
+
+enum ProjectGetUsersOrderByField {
+  createdAt
+  id
+  updatedAt
+}
+
+input ProjectGetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsersOrderByField!
 }
 
 type ProjectPageInfo {
@@ -46,6 +70,11 @@ type ProjectPostNode {
   json: JSON
   updatedAt: DataTime!
   versionId: String!
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
 }
 
 type ProjectUser {

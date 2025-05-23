@@ -43,10 +43,12 @@ export enum SortDirection {
   DESC = 'desc',
 }
 
-export const SortOrder = new GraphQLEnumType({
-  name: 'SortOrder',
-  values: {
-    asc: { value: SortDirection.ASC },
-    desc: { value: SortDirection.DESC },
-  },
-});
+export const getSortOrder = (projectName: string) => {
+  return new GraphQLEnumType({
+    name: `${projectName}SortOrder`,
+    values: {
+      asc: { value: SortDirection.ASC },
+      desc: { value: SortDirection.DESC },
+    },
+  });
+};

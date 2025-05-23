@@ -5,11 +5,35 @@ scalar JSON
 input ProjectGetUsERsInput {
   after: String
   first: Float
+  orderBy: [ProjectGetUsERsOrderByInput]
+}
+
+enum ProjectGetUsERsOrderByField {
+  createdAt
+  id
+  updatedAt
+}
+
+input ProjectGetUsERsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsERsOrderByField!
 }
 
 input ProjectGetuSersInput {
   after: String
   first: Float
+  orderBy: [ProjectGetuSersOrderByInput]
+}
+
+enum ProjectGetuSersOrderByField {
+  createdAt
+  id
+  updatedAt
+}
+
+input ProjectGetuSersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetuSersOrderByField!
 }
 
 type ProjectPageInfo {
@@ -17,6 +41,11 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
 }
 
 type ProjectUsER {

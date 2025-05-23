@@ -19,17 +19,20 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import {
+  OrderByDto,
+  RowModel,
+} from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
   ContextType,
   DateTimeType,
   getPageInfoType,
+  getSortOrder,
   JsonType,
   ServiceType,
   SortDirection,
-  SortOrder,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import {
   getProjectName,
@@ -76,6 +79,7 @@ interface ValidTableType {
 
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
+  sortOrder: GraphQLEnumType;
   nodes: Record<string, CacheNode>;
   validTables: Record<string, ValidTableType>;
 }
@@ -98,6 +102,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
+      sortOrder: getSortOrder(getProjectName(context.projectName)),
       nodes: {},
       validTables: {},
     };
@@ -301,7 +306,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         {
           first: data?.first || DEFAULT_FIRST,
           after: data?.after ?? undefined,
-          orderBy: data?.orderBy,
+          orderBy: data?.orderBy
+            ? (data.orderBy as unknown as OrderByDto[])
+            : undefined,
         },
         { headers: ctx.headers },
       );
@@ -333,14 +340,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       fields: {
         first: { type: GraphQLFloat },
         after: { type: GraphQLString },
-        orderBy: { type: this.generateOrderByType() },
+        orderBy: {
+          type: this.generateOrderByType(`${this.projectName}Get${name}`),
+        },
       },
     });
   }
 
-  private generateOrderByType() {
+  private generateOrderByType(prefix: string) {
     const OrderByFieldEnum = new GraphQLEnumType({
-      name: 'OrderByField',
+      name: `${prefix}OrderByField`,
       values: {
         createdAt: { value: 'createdAt' },
         updatedAt: { value: 'updatedAt' },
@@ -349,10 +358,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     });
 
     const OrderByFieldInput = new GraphQLInputObjectType({
-      name: 'OrderByFieldInput',
+      name: `${prefix}OrderByInput`,
       fields: {
         field: { type: new GraphQLNonNull(OrderByFieldEnum) },
-        direction: { type: new GraphQLNonNull(SortOrder) },
+        direction: { type: new GraphQLNonNull(this.context.sortOrder) },
       },
     });
 

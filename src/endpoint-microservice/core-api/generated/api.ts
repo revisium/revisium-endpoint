@@ -236,17 +236,21 @@ export interface CreateTableResponse {
   table: TableModel;
 }
 
-export type OrderByItemDto = object;
+export interface OrderByDto {
+  field: "createdAt" | "updatedAt" | "id";
+  direction: "asc" | "desc";
+}
 
 export interface GetTableRowsDto {
   /** @default 100 */
   first: number;
+  /** @example "" */
   after?: string;
   /**
    * Array of sorting criteria
-   * @example [{"field":"createdAt","direction":"asc"},{"field":"updatedAt","direction":"desc"}]
+   * @example [{"field":"id","direction":"asc"}]
    */
-  orderBy?: OrderByItemDto[];
+  orderBy?: OrderByDto[];
 }
 
 export interface RowModel {
@@ -682,7 +686,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 1.0.0
+ * @version 1.1.0
  * @contact
  */
 export class Api<
@@ -1537,7 +1541,7 @@ export class Api<
      *
      * @tags Table
      * @name CreateRow
-     * @request POST:/api/revision/{revisionId}/tables/{tableId}/createRow
+     * @request POST:/api/revision/{revisionId}/tables/{tableId}/create-row
      * @secure
      */
     createRow: (
@@ -1547,7 +1551,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CreateRowResponse, any>({
-        path: `/api/revision/${revisionId}/tables/${tableId}/createRow`,
+        path: `/api/revision/${revisionId}/tables/${tableId}/create-row`,
         method: "POST",
         body: data,
         secure: true,
@@ -1569,7 +1573,7 @@ export class Api<
       tableId: string,
       params: RequestParams = {},
     ) =>
-      this.request<OrderByItemDto, any>({
+      this.request<object, any>({
         path: `/api/revision/${revisionId}/tables/${tableId}/schema`,
         method: "GET",
         secure: true,
