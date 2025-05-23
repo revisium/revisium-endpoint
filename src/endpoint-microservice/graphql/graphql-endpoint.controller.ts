@@ -27,22 +27,52 @@ export class GraphqlEndpointController {
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
-    @Param('postfix')
-    postfix: string,
-    @Req()
-    req: Request,
+    @Param('postfix') postfix: string,
+    @Req() req: Request,
     @Res() res: Response,
-    @Next() next: NextFunction,
   ) {
-    this.run({
+    const endpoint = this.endpointService.getEndpoint(
       organizationId,
       projectName,
       branchName,
       postfix,
-      req,
-      res,
-      next,
-    });
+    );
+
+    if (!endpoint) {
+      return res.status(HttpStatus.NOT_FOUND).send();
+    }
+
+    const graphqlUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+    const url = new URL('https://studio.apollographql.com/sandbox/explorer');
+    url.searchParams.set('endpoint', graphqlUrl);
+    url.searchParams.set(
+      'document',
+      `query ExampleQuery {
+  ${endpoint.table} {
+    edges {
+      node {
+        id
+      }
+    }
+    pageInfo {
+      startCursor
+      endCursor
+      hasPreviousPage
+      hasNextPage
+    }
+    totalCount
+  }
+}`,
+    );
+    url.searchParams.set(
+      'headers',
+      JSON.stringify({
+        'Cache-Control': 'no-cache',
+      }),
+    );
+
+    return res.redirect(url.toString());
   }
 
   @Post()
@@ -84,17 +114,17 @@ export class GraphqlEndpointController {
     res: Response;
     next: NextFunction;
   }) {
-    const endpointMiddleware = this.endpointService.getEndpointMiddleware(
+    const endpoint = this.endpointService.getEndpoint(
       organizationId,
       projectName,
       branchName,
       postfix,
     );
 
-    if (!endpointMiddleware) {
+    if (!endpoint) {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
-    endpointMiddleware(req, res, next);
+    endpoint.middleware(req, res, next);
   }
 }

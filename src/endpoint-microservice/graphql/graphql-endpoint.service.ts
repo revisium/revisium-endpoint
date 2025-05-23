@@ -1,5 +1,4 @@
 import { ApolloServer } from '@apollo/server';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { expressMiddleware } from '@apollo/server/express4';
 import { Injectable, Logger } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
@@ -16,7 +15,12 @@ export class GraphqlEndpointService {
 
   private readonly map = new Map<
     string,
-    { middleware: RequestHandler; apollo: ApolloServer; endpointId: string }
+    {
+      middleware: RequestHandler;
+      apollo: ApolloServer;
+      endpointId: string;
+      table?: string;
+    }
   >();
   private startedEndpointIds: string[] = [];
 
@@ -26,16 +30,15 @@ export class GraphqlEndpointService {
     private readonly graphqlMetricsPlugin: GraphqlMetricsPlugin,
   ) {}
 
-  public getEndpointMiddleware(
+  public getEndpoint(
     organizationId: string,
     projectName: string,
     branchName: string,
     postfix: string,
   ) {
-    const item = this.map.get(
+    return this.map.get(
       this.getUrl(organizationId, projectName, branchName, postfix),
     );
-    return item?.middleware;
   }
 
   public existEndpoint(endpointId: string) {
@@ -80,7 +83,7 @@ export class GraphqlEndpointService {
       branch.name,
       this.getPostfix(revision),
     );
-    const apollo = await this._run({
+    const { apollo, table } = await this._run({
       projectId: branch.projectId,
       projectName: branch.project.name,
       endpointId,
@@ -95,6 +98,7 @@ export class GraphqlEndpointService {
           return { headers: parseHeaders(req.headers) };
         },
       }),
+      table,
       apollo,
       endpointId,
     });
@@ -118,9 +122,9 @@ export class GraphqlEndpointService {
       graphqlSchema.getQueryType().getFields(),
     ).filter((field) => field !== '_service');
 
-    const table = tables[0] || 'Table';
+    const table = tables[2] || 'Table';
 
-    const server = new ApolloServer({
+    const apollo = new ApolloServer({
       schema: graphqlSchema,
       introspection: true,
       formatError: (error) => {
@@ -129,32 +133,11 @@ export class GraphqlEndpointService {
         }
         return error;
       },
-      plugins: [
-        this.graphqlMetricsPlugin,
-        ApolloServerPluginLandingPageLocalDefault({
-          document: `query ExampleQuery {
-  ${table} {
-    edges {
-      node {
-        id
-      }
-    }
-    pageInfo {
-      startCursor
-      endCursor
-      hasPreviousPage
-      hasNextPage
-    }
-    totalCount
-  }
-}
-        `,
-        }),
-      ],
+      plugins: [this.graphqlMetricsPlugin],
     });
 
-    await server.start();
-    return server;
+    await apollo.start();
+    return { apollo, table };
   }
 
   private getPostfix(revision: {

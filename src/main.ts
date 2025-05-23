@@ -13,6 +13,8 @@ async function bootstrap() {
     }),
   });
 
+  app.enableCors();
+
   const config = app.get(ConfigService);
 
   const portPath = 'ENDPOINT_PORT';
