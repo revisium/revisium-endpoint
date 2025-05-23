@@ -4,7 +4,19 @@ scalar JSON
 
 input ProjectGetUsersInput {
   after: String
-  first: Float
+  first: Int
+  orderBy: [ProjectGetUsersOrderByInput]
+}
+
+enum ProjectGetUsersOrderByField {
+  createdAt
+  id
+  updatedAt
+}
+
+input ProjectGetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsersOrderByField!
 }
 
 type ProjectPageInfo {
@@ -12,6 +24,11 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
 }
 
 type ProjectUserConnection {

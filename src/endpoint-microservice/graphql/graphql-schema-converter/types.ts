@@ -1,5 +1,6 @@
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
@@ -36,3 +37,18 @@ export const ServiceType = new GraphQLObjectType({
 export type InputType = { data?: { first?: number; after?: string } };
 
 export type ContextType = { headers: Record<string, string> };
+
+export enum SortDirection {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
+export const getSortOrder = (projectName: string) => {
+  return new GraphQLEnumType({
+    name: `${projectName}SortOrder`,
+    values: {
+      asc: { value: SortDirection.ASC },
+      desc: { value: SortDirection.DESC },
+    },
+  });
+};

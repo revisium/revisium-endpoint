@@ -7,6 +7,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
+  GraphQLEnumType,
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLInt,
@@ -18,13 +19,17 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import {
+  GetTableRowsDto,
+  RowModel,
+} from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
   ContextType,
   DateTimeType,
   getPageInfoType,
+  getSortOrder,
   JsonType,
   ServiceType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
@@ -73,6 +78,7 @@ interface ValidTableType {
 
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
+  sortOrder: GraphQLEnumType;
   nodes: Record<string, CacheNode>;
   validTables: Record<string, ValidTableType>;
 }
@@ -95,6 +101,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
+      sortOrder: getSortOrder(getProjectName(context.projectName)),
       nodes: {},
       validTables: {},
     };
@@ -281,15 +288,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     return async (
       _: unknown,
-      { data }: { data: { first?: number; after?: string } },
+      {
+        data,
+      }: {
+        data: GetTableRowsDto;
+      },
       ctx: ContextType,
     ) => {
       const { data: response, error } = await this.proxyCoreApi.api.rows(
+        revisionId,
+        table.id,
         {
-          revisionId,
-          tableId: table.id,
           first: data?.first || DEFAULT_FIRST,
           after: data?.after ?? undefined,
+          orderBy: data?.orderBy ?? undefined,
         },
         { headers: ctx.headers },
       );
@@ -319,10 +331,34 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return new GraphQLInputObjectType({
       name: `${this.projectName}Get${name}Input`,
       fields: {
-        first: { type: GraphQLFloat },
+        first: { type: GraphQLInt },
         after: { type: GraphQLString },
+        orderBy: {
+          type: this.generateOrderByType(`${this.projectName}Get${name}`),
+        },
       },
     });
+  }
+
+  private generateOrderByType(prefix: string) {
+    const OrderByFieldEnum = new GraphQLEnumType({
+      name: `${prefix}OrderByField`,
+      values: {
+        createdAt: { value: 'createdAt' },
+        updatedAt: { value: 'updatedAt' },
+        id: { value: 'id' },
+      },
+    });
+
+    const OrderByFieldInput = new GraphQLInputObjectType({
+      name: `${prefix}OrderByInput`,
+      fields: {
+        field: { type: new GraphQLNonNull(OrderByFieldEnum) },
+        direction: { type: new GraphQLNonNull(this.context.sortOrder) },
+      },
+    });
+
+    return new GraphQLList(OrderByFieldInput);
   }
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
