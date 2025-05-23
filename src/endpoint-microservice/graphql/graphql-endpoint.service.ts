@@ -13,7 +13,7 @@ import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeader
 export class GraphqlEndpointService {
   private readonly logger = new Logger(GraphqlEndpointService.name);
 
-  private readonly map = new Map<
+  private readonly endpointMap = new Map<
     string,
     {
       middleware: RequestHandler;
@@ -22,6 +22,7 @@ export class GraphqlEndpointService {
       table?: string;
     }
   >();
+
   private startedEndpointIds: string[] = [];
 
   constructor(
@@ -36,54 +37,47 @@ export class GraphqlEndpointService {
     branchName: string,
     postfix: string,
   ) {
-    return this.map.get(
-      this.getUrl(organizationId, projectName, branchName, postfix),
-    );
+    const url = this.buildUrl(organizationId, projectName, branchName, postfix);
+    return this.endpointMap.get(url);
   }
 
-  public existEndpoint(endpointId: string) {
+  public existEndpoint(endpointId: string): boolean {
     return this.startedEndpointIds.includes(endpointId);
   }
 
-  public async stopEndpoint(endpointId: string) {
-    if (!this.startedEndpointIds.includes(endpointId)) {
+  public async stopEndpoint(endpointId: string): Promise<void> {
+    if (!this.existEndpoint(endpointId)) {
       throw new Error(`${endpointId} is not started`);
     }
 
-    const [url, item] = [...this.map.entries()].find(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ([_, mapValue]) => mapValue.endpointId === endpointId,
-    );
+    const [url, entry] =
+      [...this.endpointMap.entries()].find(
+        ([, value]) => value.endpointId === endpointId,
+      ) ?? [];
 
-    if (item) {
-      await item.apollo.stop();
-      this.map.delete(url);
+    if (entry) {
+      await entry.apollo.stop();
+      this.endpointMap.delete(url);
+      this.startedEndpointIds = this.startedEndpointIds.filter(
+        (id) => id !== endpointId,
+      );
+      this.logger.log(`stopped endpoint name=${url} endpointId=${endpointId}`);
     }
-
-    this.startedEndpointIds = this.startedEndpointIds.filter(
-      (id) => id !== endpointId,
-    );
-
-    this.logger.log(`stopped endpoint name=${url} endpointId=${endpointId}`);
   }
 
-  public async runEndpoint(endpointId: string) {
-    if (this.startedEndpointIds.includes(endpointId)) {
+  public async runEndpoint(endpointId: string): Promise<void> {
+    if (this.existEndpoint(endpointId)) {
       throw new Error(`${endpointId} already started`);
     }
 
-    const dbEndpoint = await this.getDbEndpoint(endpointId);
+    const dbEndpoint = await this.fetchDbEndpoint(endpointId);
     const {
       revision: { branch, ...revision },
     } = dbEndpoint;
 
-    const url = this.getUrl(
-      branch.project.organizationId,
-      branch.project.name,
-      branch.name,
-      this.getPostfix(revision),
-    );
-    const { apollo, table } = await this._run({
+    const url = this.getEndpointRouteKey(revision, branch.project, branch.name);
+
+    const { apollo, table } = await this.createApolloServerWithSchema({
       projectId: branch.projectId,
       projectName: branch.project.name,
       endpointId,
@@ -91,72 +85,102 @@ export class GraphqlEndpointService {
       revisionId: revision.id,
     });
 
-    this.startedEndpointIds.push(endpointId);
-    this.map.set(url, {
-      middleware: expressMiddleware(apollo, {
-        context: async ({ req }) => {
-          return { headers: parseHeaders(req.headers) };
-        },
-      }),
-      table,
+    this.endpointMap.set(url, {
+      middleware: this.createMiddleware(apollo),
       apollo,
+      table,
       endpointId,
     });
 
+    this.startedEndpointIds.push(endpointId);
     this.logger.log(`started endpoint name=${url} endpointId=${endpointId}`);
   }
 
-  private async _run(options: {
+  private async createApolloServerWithSchema(options: {
     projectId: string;
     projectName: string;
     endpointId: string;
     isDraft: boolean;
     revisionId: string;
-  }) {
-    const graphqlSchema = await this.queryBus.execute<
+  }): Promise<{ apollo: ApolloServer; table: string }> {
+    const { schema, defaultTable } =
+      await this.getSchemaAndDefaultTable(options);
+    const apollo = await this.buildApolloServer(schema);
+    return { apollo, table: defaultTable };
+  }
+
+  private async getSchemaAndDefaultTable(options: {
+    projectId: string;
+    projectName: string;
+    endpointId: string;
+    isDraft: boolean;
+    revisionId: string;
+  }): Promise<{ schema: GraphQLSchema; defaultTable: string }> {
+    const schema = await this.queryBus.execute<
       GetGraphqlSchemaQuery,
       GraphQLSchema
     >(new GetGraphqlSchemaQuery(options));
 
-    const tables: string[] = Object.keys(
-      graphqlSchema.getQueryType().getFields(),
-    ).filter((field) => field !== '_service');
+    const fields = Object.keys(schema.getQueryType().getFields()).filter(
+      (name) => name !== '_service',
+    );
 
-    const table = tables[2] || 'Table';
+    const defaultTable = fields[2] ?? 'Table';
+    return { schema, defaultTable };
+  }
 
+  private async buildApolloServer(
+    schema: GraphQLSchema,
+  ): Promise<ApolloServer> {
     const apollo = new ApolloServer({
-      schema: graphqlSchema,
+      schema,
       introspection: true,
+      plugins: [this.graphqlMetricsPlugin],
       formatError: (error) => {
         if (error.extensions?.stacktrace) {
           error.extensions.stacktrace = [];
         }
         return error;
       },
-      plugins: [this.graphqlMetricsPlugin],
     });
 
     await apollo.start();
-    return { apollo, table };
+    return apollo;
   }
 
-  private getPostfix(revision: {
+  private createMiddleware(apollo: ApolloServer): RequestHandler {
+    return expressMiddleware(apollo, {
+      context: async ({ req }) => ({
+        headers: parseHeaders(req.headers),
+      }),
+    });
+  }
+
+  private getEndpointRouteKey(
+    revision: { id: string; isHead: boolean; isDraft: boolean },
+    project: { name: string; organizationId: string },
+    branchName: string,
+  ): string {
+    const postfix = this.getRevisionPostfix(revision);
+    return this.buildUrl(
+      project.organizationId,
+      project.name,
+      branchName,
+      postfix,
+    );
+  }
+
+  private getRevisionPostfix(revision: {
     id: string;
     isHead: boolean;
     isDraft: boolean;
   }): string | undefined {
-    if (revision.isHead) {
-      return 'head';
-    }
-
-    if (revision.isDraft) {
-      return 'draft';
-    }
-
+    if (revision.isHead) return 'head';
+    if (revision.isDraft) return 'draft';
     return revision.id;
   }
 
-  private getUrl(
+  private buildUrl(
     organizationId: string,
     projectName: string,
     branchName: string,
@@ -165,7 +189,7 @@ export class GraphqlEndpointService {
     return `${organizationId}/${projectName}/${branchName}/${postfix}`;
   }
 
-  private getDbEndpoint(endpointId: string) {
+  private fetchDbEndpoint(endpointId: string) {
     return this.prisma.endpoint.findUniqueOrThrow({
       where: { id: endpointId },
       include: {
