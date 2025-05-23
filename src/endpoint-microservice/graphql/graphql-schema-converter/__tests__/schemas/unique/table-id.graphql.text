@@ -4,7 +4,7 @@ scalar JSON
 
 input ProjectGetUsERsInput {
   after: String
-  first: Float
+  first: Int
   orderBy: [ProjectGetUsERsOrderByInput]
 }
 
@@ -21,7 +21,7 @@ input ProjectGetUsERsOrderByInput {
 
 input ProjectGetuSersInput {
   after: String
-  first: Float
+  first: Int
   orderBy: [ProjectGetuSersOrderByInput]
 }
 

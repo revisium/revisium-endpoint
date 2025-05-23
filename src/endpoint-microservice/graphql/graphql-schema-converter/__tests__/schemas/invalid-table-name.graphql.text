@@ -4,7 +4,7 @@ scalar JSON
 
 input ProjectGetInvalid_table_name____usersInput {
   after: String
-  first: Float
+  first: Int
   orderBy: [ProjectGetInvalid_table_name____usersOrderByInput]
 }
 

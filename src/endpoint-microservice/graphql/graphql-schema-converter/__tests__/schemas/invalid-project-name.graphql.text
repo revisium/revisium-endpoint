@@ -2,7 +2,7 @@ scalar DataTime
 
 input INVALID_PROJECT_NAME_1GetUsersInput {
   after: String
-  first: Float
+  first: Int
   orderBy: [INVALID_PROJECT_NAME_1GetUsersOrderByInput]
 }
 
