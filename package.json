@@ -84,6 +84,11 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   },
+  "overrides": {
+    "@nestjs/platform-express": {
+      "multer": "^2.0.0"
+    }
+  },
   "jest": {
     "modulePaths": [
       "<rootDir>"
