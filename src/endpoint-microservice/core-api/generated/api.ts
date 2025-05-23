@@ -228,7 +228,7 @@ export interface CreateEndpointDto {
 
 export interface CreateTableDto {
   tableId: string;
-  schema: object;
+  schema: Record<string, any>;
 }
 
 export interface CreateTableResponse {
@@ -262,7 +262,7 @@ export interface RowModel {
   /** @format date-time */
   updatedAt: string;
   readonly: boolean;
-  data: object;
+  data: Record<string, any>;
 }
 
 export interface RowModelEdgeType {
@@ -278,7 +278,7 @@ export interface RowsConnection {
 
 export interface CreateRowDto {
   rowId: string;
-  data: object;
+  data: Record<string, any>;
 }
 
 export interface CreateRowResponse {
@@ -309,7 +309,7 @@ export interface RemoveRowResponse {
 }
 
 export interface UpdateRowDto {
-  data: object;
+  data: Record<string, any>;
 }
 
 export interface UpdateRowResponse {

@@ -51,7 +51,6 @@ export class RestapiEndpointService {
     }
 
     const [url, item] = [...this.map.entries()].find(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ([_, mapValue]) => mapValue.endpointId === endpointId,
     );
 

@@ -27,22 +27,25 @@ export class GraphqlEndpointController {
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
-    @Param('postfix')
-    postfix: string,
-    @Req()
-    req: Request,
+    @Param('postfix') postfix: string,
+    @Req() req: Request,
     @Res() res: Response,
-    @Next() next: NextFunction,
   ) {
-    this.run({
+    const endpoint = this.endpointService.getEndpoint({
       organizationId,
       projectName,
       branchName,
       postfix,
-      req,
-      res,
-      next,
     });
+
+    if (!endpoint) {
+      return res.status(HttpStatus.NOT_FOUND).send();
+    }
+
+    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const explorerUrl = this.buildExplorerUrl(fullUrl, endpoint.table);
+
+    return res.redirect(explorerUrl);
   }
 
   @Post()
@@ -50,13 +53,12 @@ export class GraphqlEndpointController {
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
-    @Param('postfix')
-    postfix: string | undefined,
+    @Param('postfix') postfix: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
     @Next() next: NextFunction,
   ) {
-    this.run({
+    this.handleRequest({
       organizationId,
       projectName,
       branchName,
@@ -67,7 +69,7 @@ export class GraphqlEndpointController {
     });
   }
 
-  private run({
+  private handleRequest({
     organizationId,
     projectName,
     branchName,
@@ -79,22 +81,54 @@ export class GraphqlEndpointController {
     organizationId: string;
     projectName: string;
     branchName: string;
-    postfix: string | undefined;
+    postfix?: string;
     req: Request;
     res: Response;
     next: NextFunction;
   }) {
-    const endpointMiddleware = this.endpointService.getEndpointMiddleware(
+    const endpoint = this.endpointService.getEndpoint({
       organizationId,
       projectName,
       branchName,
       postfix,
-    );
+    });
 
-    if (!endpointMiddleware) {
+    if (!endpoint) {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
-    endpointMiddleware(req, res, next);
+    endpoint.middleware(req, res, next);
+  }
+
+  private buildExplorerUrl(endpointUrl: string, table: string): string {
+    const url = new URL('https://studio.apollographql.com/sandbox/explorer');
+
+    url.searchParams.set('endpoint', endpointUrl);
+    url.searchParams.set('document', this.buildExampleQuery(table));
+    url.searchParams.set(
+      'headers',
+      JSON.stringify({ 'Cache-Control': 'no-cache' }),
+    );
+
+    return url.toString();
+  }
+
+  private buildExampleQuery(table: string): string {
+    return `query ExampleQuery {
+  ${table} {
+    edges {
+      node {
+        id
+      }
+    }
+    pageInfo {
+      startCursor
+      endCursor
+      hasPreviousPage
+      hasNextPage
+    }
+    totalCount
+  }
+}`;
   }
 }
