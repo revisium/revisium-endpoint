@@ -24,17 +24,17 @@ export class GraphqlEndpointController {
 
   @Get()
   get(
-    @Param('organizationId') organizationId: string,
-    @Param('projectName') projectName: string,
-    @Param('branchName') branchName: string,
+    @Param('organizationId') orgId: string,
+    @Param('projectName') project: string,
+    @Param('branchName') branch: string,
     @Param('postfix') postfix: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     const endpoint = this.endpointService.getEndpoint(
-      organizationId,
-      projectName,
-      branchName,
+      orgId,
+      project,
+      branch,
       postfix,
     );
 
@@ -42,14 +42,72 @@ export class GraphqlEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
-    const graphqlUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const explorerUrl = this.buildExplorerUrl(fullUrl, endpoint.table);
 
+    return res.redirect(explorerUrl);
+  }
+
+  @Post()
+  post(
+    @Param('organizationId') orgId: string,
+    @Param('projectName') project: string,
+    @Param('branchName') branch: string,
+    @Param('postfix') postfix: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response,
+    @Next() next: NextFunction,
+  ) {
+    this.handleRequest({ orgId, project, branch, postfix, req, res, next });
+  }
+
+  private handleRequest({
+    orgId,
+    project,
+    branch,
+    postfix,
+    req,
+    res,
+    next,
+  }: {
+    orgId: string;
+    project: string;
+    branch: string;
+    postfix?: string;
+    req: Request;
+    res: Response;
+    next: NextFunction;
+  }) {
+    const endpoint = this.endpointService.getEndpoint(
+      orgId,
+      project,
+      branch,
+      postfix,
+    );
+
+    if (!endpoint) {
+      return res.status(HttpStatus.NOT_FOUND).send();
+    }
+
+    endpoint.middleware(req, res, next);
+  }
+
+  private buildExplorerUrl(endpointUrl: string, table: string): string {
     const url = new URL('https://studio.apollographql.com/sandbox/explorer');
-    url.searchParams.set('endpoint', graphqlUrl);
+
+    url.searchParams.set('endpoint', endpointUrl);
+    url.searchParams.set('document', this.buildExampleQuery(table));
     url.searchParams.set(
-      'document',
-      `query ExampleQuery {
-  ${endpoint.table} {
+      'headers',
+      JSON.stringify({ 'Cache-Control': 'no-cache' }),
+    );
+
+    return url.toString();
+  }
+
+  private buildExampleQuery(table: string): string {
+    return `query ExampleQuery {
+  ${table} {
     edges {
       node {
         id
@@ -63,68 +121,6 @@ export class GraphqlEndpointController {
     }
     totalCount
   }
-}`,
-    );
-    url.searchParams.set(
-      'headers',
-      JSON.stringify({
-        'Cache-Control': 'no-cache',
-      }),
-    );
-
-    return res.redirect(url.toString());
-  }
-
-  @Post()
-  post(
-    @Param('organizationId') organizationId: string,
-    @Param('projectName') projectName: string,
-    @Param('branchName') branchName: string,
-    @Param('postfix')
-    postfix: string | undefined,
-    @Req() req: Request,
-    @Res() res: Response,
-    @Next() next: NextFunction,
-  ) {
-    this.run({
-      organizationId,
-      projectName,
-      branchName,
-      postfix,
-      req,
-      res,
-      next,
-    });
-  }
-
-  private run({
-    organizationId,
-    projectName,
-    branchName,
-    postfix,
-    req,
-    res,
-    next,
-  }: {
-    organizationId: string;
-    projectName: string;
-    branchName: string;
-    postfix: string | undefined;
-    req: Request;
-    res: Response;
-    next: NextFunction;
-  }) {
-    const endpoint = this.endpointService.getEndpoint(
-      organizationId,
-      projectName,
-      branchName,
-      postfix,
-    );
-
-    if (!endpoint) {
-      return res.status(HttpStatus.NOT_FOUND).send();
-    }
-
-    endpoint.middleware(req, res, next);
+}`;
   }
 }
