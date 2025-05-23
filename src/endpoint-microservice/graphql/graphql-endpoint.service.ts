@@ -9,6 +9,34 @@ import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries
 import { GraphqlMetricsPlugin } from 'src/endpoint-microservice/metrics/graphql/graphql-metrics.plugin';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
 
+interface SchemaGenerationContext {
+  projectId: string;
+  projectName: string;
+  endpointId: string;
+  isDraft: boolean;
+  revisionId: string;
+}
+
+interface RevisionContext {
+  revision: {
+    id: string;
+    isHead: boolean;
+    isDraft: boolean;
+  };
+  project: {
+    name: string;
+    organizationId: string;
+  };
+  branchName: string;
+}
+
+interface RouteKey {
+  organizationId: string;
+  projectName: string;
+  branchName: string;
+  postfix: string;
+}
+
 @Injectable()
 export class GraphqlEndpointService {
   private readonly logger = new Logger(GraphqlEndpointService.name);
@@ -31,13 +59,8 @@ export class GraphqlEndpointService {
     private readonly graphqlMetricsPlugin: GraphqlMetricsPlugin,
   ) {}
 
-  public getEndpoint(
-    organizationId: string,
-    projectName: string,
-    branchName: string,
-    postfix: string,
-  ) {
-    const url = this.buildUrl(organizationId, projectName, branchName, postfix);
+  public getEndpoint(routeKey: RouteKey) {
+    const url = this.buildUrl(routeKey);
     return this.endpointMap.get(url);
   }
 
@@ -50,13 +73,13 @@ export class GraphqlEndpointService {
       throw new Error(`${endpointId} is not started`);
     }
 
-    const [url, entry] =
+    const [url, endpoint] =
       [...this.endpointMap.entries()].find(
         ([, value]) => value.endpointId === endpointId,
       ) ?? [];
 
-    if (entry) {
-      await entry.apollo.stop();
+    if (endpoint) {
+      await endpoint.apollo.stop();
       this.endpointMap.delete(url);
       this.startedEndpointIds = this.startedEndpointIds.filter(
         (id) => id !== endpointId,
@@ -71,11 +94,14 @@ export class GraphqlEndpointService {
     }
 
     const dbEndpoint = await this.fetchDbEndpoint(endpointId);
-    const {
-      revision: { branch, ...revision },
-    } = dbEndpoint;
+    const revision = dbEndpoint.revision;
+    const branch = dbEndpoint.revision.branch;
 
-    const url = this.getEndpointRouteKey(revision, branch.project, branch.name);
+    const url = this.getEndpointRouteKey({
+      revision,
+      project: branch.project,
+      branchName: branch.name,
+    });
 
     const { apollo, table } = await this.createApolloServerWithSchema({
       projectId: branch.projectId,
@@ -96,30 +122,22 @@ export class GraphqlEndpointService {
     this.logger.log(`started endpoint name=${url} endpointId=${endpointId}`);
   }
 
-  private async createApolloServerWithSchema(options: {
-    projectId: string;
-    projectName: string;
-    endpointId: string;
-    isDraft: boolean;
-    revisionId: string;
-  }): Promise<{ apollo: ApolloServer; table: string }> {
+  private async createApolloServerWithSchema(
+    context: SchemaGenerationContext,
+  ): Promise<{ apollo: ApolloServer; table: string }> {
     const { schema, defaultTable } =
-      await this.getSchemaAndDefaultTable(options);
+      await this.getSchemaAndDefaultTable(context);
     const apollo = await this.buildApolloServer(schema);
     return { apollo, table: defaultTable };
   }
 
-  private async getSchemaAndDefaultTable(options: {
-    projectId: string;
-    projectName: string;
-    endpointId: string;
-    isDraft: boolean;
-    revisionId: string;
-  }): Promise<{ schema: GraphQLSchema; defaultTable: string }> {
+  private async getSchemaAndDefaultTable(
+    context: SchemaGenerationContext,
+  ): Promise<{ schema: GraphQLSchema; defaultTable: string }> {
     const schema = await this.queryBus.execute<
       GetGraphqlSchemaQuery,
       GraphQLSchema
-    >(new GetGraphqlSchemaQuery(options));
+    >(new GetGraphqlSchemaQuery(context));
 
     const fields = Object.keys(schema.getQueryType().getFields()).filter(
       (name) => name !== '_service',
@@ -156,18 +174,14 @@ export class GraphqlEndpointService {
     });
   }
 
-  private getEndpointRouteKey(
-    revision: { id: string; isHead: boolean; isDraft: boolean },
-    project: { name: string; organizationId: string },
-    branchName: string,
-  ): string {
-    const postfix = this.getRevisionPostfix(revision);
-    return this.buildUrl(
-      project.organizationId,
-      project.name,
-      branchName,
+  private getEndpointRouteKey(context: RevisionContext): string {
+    const postfix = this.getRevisionPostfix(context.revision);
+    return this.buildUrl({
+      organizationId: context.project.organizationId,
+      projectName: context.project.name,
+      branchName: context.branchName,
       postfix,
-    );
+    });
   }
 
   private getRevisionPostfix(revision: {
@@ -180,12 +194,12 @@ export class GraphqlEndpointService {
     return revision.id;
   }
 
-  private buildUrl(
-    organizationId: string,
-    projectName: string,
-    branchName: string,
-    postfix: string,
-  ): string {
+  private buildUrl({
+    organizationId,
+    projectName,
+    branchName,
+    postfix,
+  }: RouteKey): string {
     return `${organizationId}/${projectName}/${branchName}/${postfix}`;
   }
 

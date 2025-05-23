@@ -24,19 +24,19 @@ export class GraphqlEndpointController {
 
   @Get()
   get(
-    @Param('organizationId') orgId: string,
-    @Param('projectName') project: string,
-    @Param('branchName') branch: string,
+    @Param('organizationId') organizationId: string,
+    @Param('projectName') projectName: string,
+    @Param('branchName') branchName: string,
     @Param('postfix') postfix: string,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const endpoint = this.endpointService.getEndpoint(
-      orgId,
-      project,
-      branch,
+    const endpoint = this.endpointService.getEndpoint({
+      organizationId,
+      projectName,
+      branchName,
       postfix,
-    );
+    });
 
     if (!endpoint) {
       return res.status(HttpStatus.NOT_FOUND).send();
@@ -50,40 +50,48 @@ export class GraphqlEndpointController {
 
   @Post()
   post(
-    @Param('organizationId') orgId: string,
-    @Param('projectName') project: string,
-    @Param('branchName') branch: string,
+    @Param('organizationId') organizationId: string,
+    @Param('projectName') projectName: string,
+    @Param('branchName') branchName: string,
     @Param('postfix') postfix: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
     @Next() next: NextFunction,
   ) {
-    this.handleRequest({ orgId, project, branch, postfix, req, res, next });
+    this.handleRequest({
+      organizationId,
+      projectName,
+      branchName,
+      postfix,
+      req,
+      res,
+      next,
+    });
   }
 
   private handleRequest({
-    orgId,
-    project,
-    branch,
+    organizationId,
+    projectName,
+    branchName,
     postfix,
     req,
     res,
     next,
   }: {
-    orgId: string;
-    project: string;
-    branch: string;
+    organizationId: string;
+    projectName: string;
+    branchName: string;
     postfix?: string;
     req: Request;
     res: Response;
     next: NextFunction;
   }) {
-    const endpoint = this.endpointService.getEndpoint(
-      orgId,
-      project,
-      branch,
+    const endpoint = this.endpointService.getEndpoint({
+      organizationId,
+      projectName,
+      branchName,
       postfix,
-    );
+    });
 
     if (!endpoint) {
       return res.status(HttpStatus.NOT_FOUND).send();
