@@ -1,4 +1,4 @@
-import { DynamicModule, Module, OnApplicationBootstrap } from '@nestjs/common';
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus, CqrsModule } from '@nestjs/cqrs';
 import { ENDPOINT_COMMANDS } from 'src/endpoint-microservice/commands/handlers';
@@ -10,41 +10,28 @@ import { EndpointEventsModule } from 'src/endpoint-microservice/events/endpoint-
 import { GraphqlModule } from 'src/endpoint-microservice/graphql/graphql.module';
 import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 import { RestapiModule } from 'src/endpoint-microservice/restapi/restapi.module';
-import {
-  APP_OPTIONS_TOKEN,
-  AppOptions,
-} from 'src/endpoint-microservice/shared/app-mode';
 
-@Module({})
+@Module({
+  imports: [
+    CqrsModule,
+    ConfigModule.forRoot(),
+    DatabaseModule,
+    GraphqlModule,
+    RestapiModule,
+    CoreApiModule,
+    MetricsModule,
+    EndpointEventsModule,
+  ],
+  providers: [...ENDPOINT_COMMANDS],
+})
 export class EndpointMicroserviceModule implements OnApplicationBootstrap {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly internalCoreApiService: InternalCoreApiService,
   ) {}
 
-  static forRoot(options: AppOptions): DynamicModule {
-    return {
-      module: EndpointMicroserviceModule,
-      imports: [
-        CqrsModule,
-        ConfigModule.forRoot(),
-        DatabaseModule,
-        GraphqlModule,
-        RestapiModule,
-        CoreApiModule,
-        MetricsModule,
-        EndpointEventsModule.forRoot(options),
-      ],
-      providers: [
-        ...ENDPOINT_COMMANDS,
-        { provide: APP_OPTIONS_TOKEN, useValue: options },
-      ],
-      exports: [APP_OPTIONS_TOKEN],
-    };
-  }
-
   public async onApplicationBootstrap() {
-    // TODO wait for REST API
+    // wait for REST API
     setImmediate(async () => {
       await this.internalCoreApiService.initApi();
       await this.commandBus.execute(new RunAllEndpointsCommand());
