@@ -1,4 +1,4 @@
-import { Module, OnApplicationBootstrap } from '@nestjs/common';
+import { DynamicModule, Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus, CqrsModule } from '@nestjs/cqrs';
 import { ENDPOINT_COMMANDS } from 'src/endpoint-microservice/commands/handlers';
@@ -6,29 +6,42 @@ import { RunAllEndpointsCommand } from 'src/endpoint-microservice/commands/impl/
 import { CoreApiModule } from 'src/endpoint-microservice/core-api/core-api.module';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { DatabaseModule } from 'src/endpoint-microservice/database/database.module';
-import { EndpointListenerController } from 'src/endpoint-microservice/endpoint-listener.controller';
+import { EndpointEventsModule } from 'src/endpoint-microservice/events/endpoint-events.module';
 import { GraphqlModule } from 'src/endpoint-microservice/graphql/graphql.module';
 import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 import { RestapiModule } from 'src/endpoint-microservice/restapi/restapi.module';
+import {
+  APP_OPTIONS_TOKEN,
+  AppOptions,
+} from 'src/endpoint-microservice/shared/app-mode';
 
-@Module({
-  imports: [
-    CqrsModule,
-    ConfigModule.forRoot(),
-    DatabaseModule,
-    GraphqlModule,
-    RestapiModule,
-    CoreApiModule,
-    MetricsModule,
-  ],
-  controllers: [EndpointListenerController],
-  providers: [...ENDPOINT_COMMANDS],
-})
+@Module({})
 export class EndpointMicroserviceModule implements OnApplicationBootstrap {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly internalCoreApiService: InternalCoreApiService,
   ) {}
+
+  static forRoot(options: AppOptions): DynamicModule {
+    return {
+      module: EndpointMicroserviceModule,
+      imports: [
+        CqrsModule,
+        ConfigModule.forRoot(),
+        DatabaseModule,
+        GraphqlModule,
+        RestapiModule,
+        CoreApiModule,
+        MetricsModule,
+        EndpointEventsModule.forRoot(options),
+      ],
+      providers: [
+        ...ENDPOINT_COMMANDS,
+        { provide: APP_OPTIONS_TOKEN, useValue: options },
+      ],
+      exports: [APP_OPTIONS_TOKEN],
+    };
+  }
 
   public async onApplicationBootstrap() {
     // TODO wait for REST API

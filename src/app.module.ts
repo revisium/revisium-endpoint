@@ -10,7 +10,7 @@ import { MetricsApiModule } from 'src/endpoint-microservice/metrics-api/metrics-
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    EndpointMicroserviceModule,
+    EndpointMicroserviceModule.forRoot({ mode: 'microservice' }),
     MetricsApiModule,
     HealthModule,
     GracefulShutdownModule,
