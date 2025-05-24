@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AppOptionsModule } from 'src/endpoint-microservice/app-options.module';
 import { LoggingInterceptor } from 'src/endpoint-microservice/common/interceptors/logging.interceptor';
 import { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
 import { GracefulShutdownModule } from 'src/endpoint-microservice/graceful-shutdown/graceful-shutdown.module';
@@ -11,8 +10,7 @@ import { MetricsApiModule } from 'src/endpoint-microservice/metrics-api/metrics-
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    AppOptionsModule.forRoot({ mode: 'microservice' }),
-    EndpointMicroserviceModule,
+    EndpointMicroserviceModule.forRoot({ mode: 'microservice' }),
     MetricsApiModule,
     HealthModule,
     GracefulShutdownModule,
