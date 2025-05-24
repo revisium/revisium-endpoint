@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
 import {
@@ -7,6 +7,10 @@ import {
   RequestParams,
 } from 'src/endpoint-microservice/core-api/generated/api';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
+import {
+  APP_OPTIONS_TOKEN,
+  AppOptions,
+} from 'src/endpoint-microservice/shared/app-mode';
 import { DEFAULT_PORT } from 'src/endpoint-microservice/shared/default-port';
 import * as bcrypt from 'bcrypt';
 
@@ -17,11 +21,12 @@ export class InternalCoreApiService extends Api<unknown> {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    @Inject(APP_OPTIONS_TOKEN) private readonly options: AppOptions,
   ) {
     const CORE_API_URL = configService.get('CORE_API_URL');
-    const PORT = configService.get('PORT') || DEFAULT_PORT;
+    const PORT = configService.get('PORT') ?? DEFAULT_PORT;
 
-    const baseUrl = CORE_API_URL || `http://0.0.0.0:${PORT}`;
+    const baseUrl = CORE_API_URL ?? `http://0.0.0.0:${PORT}`;
 
     super({
       baseUrl,
@@ -29,9 +34,9 @@ export class InternalCoreApiService extends Api<unknown> {
   }
 
   public async initApi() {
-    const isBuild = this.configService.get('IS_BUILD') === 'true';
+    const isMonolith = this.options.mode === 'monolith';
 
-    const loginDto = isBuild
+    const loginDto = isMonolith
       ? await this.getLoginDtoInBuildMode()
       : this.getLoginDtoInCloudMode();
 
