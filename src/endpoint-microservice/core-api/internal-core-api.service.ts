@@ -37,8 +37,8 @@ export class InternalCoreApiService extends Api<unknown> {
     const isMonolith = this.options.mode === 'monolith';
 
     const loginDto = isMonolith
-      ? await this.getLoginDtoInBuildMode()
-      : this.getLoginDtoInCloudMode();
+      ? await this.getLoginDtoInMonolithMode()
+      : this.getLoginDtoInMicroserviceMode();
 
     const { data, error } = await this.api.login(loginDto);
 
@@ -58,7 +58,7 @@ export class InternalCoreApiService extends Api<unknown> {
     return params;
   }
 
-  private getLoginDtoInCloudMode(): LoginDto {
+  private getLoginDtoInMicroserviceMode(): LoginDto {
     const CORE_API_URL_USERNAME = this.configService.get(
       'CORE_API_URL_USERNAME',
     );
@@ -81,7 +81,7 @@ export class InternalCoreApiService extends Api<unknown> {
     };
   }
 
-  private async getLoginDtoInBuildMode(): Promise<LoginDto> {
+  private async getLoginDtoInMonolithMode(): Promise<LoginDto> {
     const emailOrUsername = 'endpoint';
     const password = nanoid();
     const hashedRandomPassword = await bcrypt.hash(password, 10);
