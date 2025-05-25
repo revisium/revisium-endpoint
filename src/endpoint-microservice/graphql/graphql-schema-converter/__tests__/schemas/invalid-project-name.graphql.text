@@ -1,9 +1,25 @@
 scalar DataTime
 
+input INVALID_PROJECT_NAME_1BoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input INVALID_PROJECT_NAME_1DateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  notIn: [String]
+}
+
 input INVALID_PROJECT_NAME_1GetUsersInput {
   after: String
   first: Int
   orderBy: [INVALID_PROJECT_NAME_1GetUsersOrderByInput]
+  where: INVALID_PROJECT_NAME_1UsersWhereInput
 }
 
 enum INVALID_PROJECT_NAME_1GetUsersOrderByField {
@@ -17,6 +33,22 @@ input INVALID_PROJECT_NAME_1GetUsersOrderByInput {
   field: INVALID_PROJECT_NAME_1GetUsersOrderByField!
 }
 
+input INVALID_PROJECT_NAME_1JsonFilter {
+  array_contains: [String]
+  array_ends_with: String
+  array_starts_with: String
+  equals: String
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
+  mode: String
+  path: [String]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
 type INVALID_PROJECT_NAME_1PageInfo {
   endCursor: String
   hasNextPage: Boolean!
@@ -27,6 +59,21 @@ type INVALID_PROJECT_NAME_1PageInfo {
 enum INVALID_PROJECT_NAME_1SortOrder {
   asc
   desc
+}
+
+input INVALID_PROJECT_NAME_1StringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  mode: String
+  not: String
+  notIn: [String]
+  startsWith: String
 }
 
 type INVALID_PROJECT_NAME_1User {
@@ -56,6 +103,19 @@ type INVALID_PROJECT_NAME_1UserNode {
   json: JSON
   updatedAt: DataTime!
   versionId: String!
+}
+
+input INVALID_PROJECT_NAME_1UsersWhereInput {
+  AND: [INVALID_PROJECT_NAME_1UsersWhereInput!]
+  NOT: [INVALID_PROJECT_NAME_1UsersWhereInput!]
+  OR: [INVALID_PROJECT_NAME_1UsersWhereInput!]
+  createdAt: INVALID_PROJECT_NAME_1DateTimeFilter
+  createdId: INVALID_PROJECT_NAME_1StringFilter
+  data: INVALID_PROJECT_NAME_1JsonFilter
+  id: INVALID_PROJECT_NAME_1StringFilter
+  readonly: INVALID_PROJECT_NAME_1BoolFilter
+  updatedAt: INVALID_PROJECT_NAME_1DateTimeFilter
+  versionId: INVALID_PROJECT_NAME_1StringFilter
 }
 
 scalar JSON

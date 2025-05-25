@@ -2,10 +2,26 @@ scalar DataTime
 
 scalar JSON
 
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  notIn: [String]
+}
+
 input ProjectGetPostsInput {
   after: String
   first: Int
   orderBy: [ProjectGetPostsOrderByInput]
+  where: ProjectPostsWhereInput
 }
 
 enum ProjectGetPostsOrderByField {
@@ -23,6 +39,7 @@ input ProjectGetUsersInput {
   after: String
   first: Int
   orderBy: [ProjectGetUsersOrderByInput]
+  where: ProjectUsersWhereInput
 }
 
 enum ProjectGetUsersOrderByField {
@@ -34,6 +51,22 @@ enum ProjectGetUsersOrderByField {
 input ProjectGetUsersOrderByInput {
   direction: ProjectSortOrder!
   field: ProjectGetUsersOrderByField!
+}
+
+input ProjectJsonFilter {
+  array_contains: [String]
+  array_ends_with: String
+  array_starts_with: String
+  equals: String
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
+  mode: String
+  path: [String]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
 }
 
 type ProjectPageInfo {
@@ -72,9 +105,37 @@ type ProjectPostNode {
   versionId: String!
 }
 
+input ProjectPostsWhereInput {
+  AND: [ProjectPostsWhereInput!]
+  NOT: [ProjectPostsWhereInput!]
+  OR: [ProjectPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
 enum ProjectSortOrder {
   asc
   desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  mode: String
+  not: String
+  notIn: [String]
+  startsWith: String
 }
 
 type ProjectUser {
@@ -104,6 +165,19 @@ type ProjectUserNode {
   json: JSON
   updatedAt: DataTime!
   versionId: String!
+}
+
+input ProjectUsersWhereInput {
+  AND: [ProjectUsersWhereInput!]
+  NOT: [ProjectUsersWhereInput!]
+  OR: [ProjectUsersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
 }
 
 type Query {

@@ -27,6 +27,8 @@ import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-co
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
   ContextType,
+  createScalarFilterTypes,
+  createWhereInput,
   DateTimeType,
   getPageInfoType,
   getSortOrder,
@@ -79,6 +81,8 @@ interface ValidTableType {
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
   sortOrder: GraphQLEnumType;
+  filterTypes: Record<string, GraphQLInputObjectType>;
+  whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
   validTables: Record<string, ValidTableType>;
 }
@@ -102,6 +106,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
       sortOrder: getSortOrder(getProjectName(context.projectName)),
+      filterTypes: createScalarFilterTypes(getProjectName(context.projectName)),
+      whereInputTypeMap: {},
       nodes: {},
       validTables: {},
     };
@@ -302,6 +308,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           first: data?.first || DEFAULT_FIRST,
           after: data?.after ?? undefined,
           orderBy: data?.orderBy ?? undefined,
+          where: data?.where ?? undefined,
         },
         { headers: ctx.headers },
       );
@@ -335,6 +342,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         after: { type: GraphQLString },
         orderBy: {
           type: this.generateOrderByType(`${this.projectName}Get${name}`),
+        },
+        where: {
+          type: createWhereInput(
+            this.projectName,
+            name,
+            this.context.filterTypes,
+            this.context.whereInputTypeMap,
+          ),
         },
       },
     });
