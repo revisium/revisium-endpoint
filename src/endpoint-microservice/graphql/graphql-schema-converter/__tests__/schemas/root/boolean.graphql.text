@@ -89,6 +89,17 @@ type ProjectUserEdge {
   node: ProjectUserNode!
 }
 
+type ProjectUserFlatConnection {
+  edges: [ProjectUserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserFlatEdge {
+  cursor: String!
+  node: Boolean!
+}
+
 type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
@@ -117,6 +128,7 @@ type Query {
   user(id: String!): ProjectUserNode!
   userFlat(id: String!): Boolean!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
+  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
 
 type _Service {

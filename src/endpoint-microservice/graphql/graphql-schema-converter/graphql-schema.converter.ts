@@ -58,6 +58,8 @@ import {
 
 const DATA_KEY = 'data';
 const FLAT_KEY = 'Flat';
+const CONNECTION_KEY = 'Connection';
+const EDGE_KEY = 'Edge';
 const ITEMS_POSTFIX = 'Items';
 
 type CreatingTableOptionsType = {
@@ -81,6 +83,7 @@ interface ValidTableType {
 interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
   sortOrder: GraphQLEnumType;
+  listArgsMap: Record<string, GraphQLInputObjectType>;
   filterTypes: Record<string, GraphQLInputObjectType>;
   whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
@@ -106,6 +109,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       ...context,
       pageInfo: getPageInfoType(getProjectName(context.projectName)),
       sortOrder: getSortOrder(getProjectName(context.projectName)),
+      listArgsMap: {},
       filterTypes: createScalarFilterTypes(getProjectName(context.projectName)),
       whereInputTypeMap: {},
       nodes: {},
@@ -189,10 +193,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         const pluralKey = `${validTable.fieldName.plural}`;
         const singularKey = `${validTable.fieldName.singular}`;
         const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
+        const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
 
         fields[singularKey] = this.createItemField(validTable.options);
         fields[pluralKey] = this.createListField(validTable.options);
         fields[flatSingularKey] = this.createItemFlatField(validTable.options);
+        fields[flatPluralKey] = this.createListFlatField(validTable.options);
 
         return fields;
       },
@@ -317,11 +323,89 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
+  private createListFlatField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
+    const ConnectionType = this.getFlatConnection(options);
+
+    return {
+      type: new GraphQLNonNull(ConnectionType),
+      args: {
+        data: { type: this.getListArgs(options.pluralSafetyTableId) },
+      },
+      resolve: this.getListFlatResolver(options.table),
+    };
+  }
+
+  private getListFlatResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: GetTableRowsDto },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.rows(
+        revisionId,
+        table.id,
+        {
+          first: data?.first || DEFAULT_FIRST,
+          after: data?.after ?? undefined,
+          orderBy: data?.orderBy ?? undefined,
+          where: data?.where ?? undefined,
+        },
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+
+      const flatEdges = response.edges.map((edge) => ({
+        cursor: edge.cursor,
+        node: edge.node.data,
+      }));
+
+      return {
+        edges: flatEdges,
+        pageInfo: response.pageInfo,
+        totalCount: response.totalCount,
+      };
+    };
+  }
+
+  private getFlatConnection(
+    options: CreatingTableOptionsType,
+  ): GraphQLObjectType {
+    return new GraphQLObjectType({
+      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`,
+      fields: {
+        edges: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(this.getFlatEdgeType(options))),
+          ),
+        },
+        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
+        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
+      },
+    });
+  }
+
+  private getFlatEdgeType(
+    options: CreatingTableOptionsType,
+  ): GraphQLObjectType {
+    const flatType = this.getCachedNodeType(options.table.id).dataFlat.type;
+    return new GraphQLObjectType({
+      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`,
+      fields: {
+        node: { type: flatType },
+        cursor: { type: new GraphQLNonNull(GraphQLString) },
+      },
+    });
+  }
+
   private getListConnection(
     options: CreatingTableOptionsType,
   ): GraphQLObjectType {
     return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}Connection`,
+      name: `${this.projectName}${options.safetyTableId}${CONNECTION_KEY}`,
       fields: {
         edges: {
           type: new GraphQLNonNull(
@@ -335,7 +419,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getListArgs(name: string): GraphQLInputObjectType {
-    return new GraphQLInputObjectType({
+    const typeName = `${this.projectName}Get${name}Input`;
+
+    if (this.context.listArgsMap[typeName]) {
+      return this.context.listArgsMap[typeName];
+    }
+
+    const listArgs = new GraphQLInputObjectType({
       name: `${this.projectName}Get${name}Input`,
       fields: {
         first: { type: GraphQLInt },
@@ -353,6 +443,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         },
       },
     });
+
+    this.context.listArgsMap[typeName] = listArgs;
+
+    return listArgs;
   }
 
   private generateOrderByType(prefix: string) {
@@ -378,7 +472,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
     return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}Edge`,
+      name: `${this.projectName}${options.safetyTableId}${EDGE_KEY}`,
       fields: {
         node: {
           type: new GraphQLNonNull(

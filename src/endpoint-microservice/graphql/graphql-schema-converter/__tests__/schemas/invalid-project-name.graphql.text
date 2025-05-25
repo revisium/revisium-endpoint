@@ -95,6 +95,17 @@ type INVALID_PROJECT_NAME_1UserFlat {
   name: String!
 }
 
+type INVALID_PROJECT_NAME_1UserFlatConnection {
+  edges: [INVALID_PROJECT_NAME_1UserFlatEdge!]!
+  pageInfo: INVALID_PROJECT_NAME_1PageInfo!
+  totalCount: Int!
+}
+
+type INVALID_PROJECT_NAME_1UserFlatEdge {
+  cursor: String!
+  node: INVALID_PROJECT_NAME_1UserFlat!
+}
+
 type INVALID_PROJECT_NAME_1UserNode {
   createdAt: DataTime!
   createdId: String!
@@ -125,6 +136,7 @@ type Query {
   user(id: String!): INVALID_PROJECT_NAME_1UserNode!
   userFlat(id: String!): INVALID_PROJECT_NAME_1UserFlat!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserConnection!
+  usersFlat(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserFlatConnection!
 }
 
 type _Service {

@@ -95,6 +95,17 @@ type ProjectPostFlat {
   name: String!
 }
 
+type ProjectPostFlatConnection {
+  edges: [ProjectPostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostFlatEdge {
+  cursor: String!
+  node: ProjectPostFlat!
+}
+
 type ProjectPostNode {
   createdAt: DataTime!
   createdId: String!
@@ -149,6 +160,17 @@ type ProjectUserEdge {
   node: ProjectUserNode!
 }
 
+type ProjectUserFlatConnection {
+  edges: [ProjectUserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserFlatEdge {
+  cursor: String!
+  node: [ProjectPostFlat!]!
+}
+
 type ProjectUserNode {
   createdAt: DataTime!
   createdId: String!
@@ -177,9 +199,11 @@ type Query {
   post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
+  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
   user(id: String!): ProjectUserNode!
   userFlat(id: String!): [ProjectPostFlat!]!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
+  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
 
 type _Service {
