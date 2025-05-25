@@ -298,13 +298,13 @@ export interface JsonFilterDto {
   /** JSON value that the target JSON array must end with (could be object, array, primitive) */
   array_ends_with?: object;
   /** Less-than comparison. Must be a number or numeric JSON value */
-  lt?: string;
+  lt?: number;
   /** Less-than-or-equal comparison. Must be a number or numeric JSON value */
-  lte?: string;
+  lte?: number;
   /** Greater-than comparison. Must be a number or numeric JSON value */
-  gt?: string;
+  gt?: number;
   /** Greater-than-or-equal comparison. Must be a number or numeric JSON value */
-  gte?: string;
+  gte?: number;
 }
 
 export interface RowWhereInputDto {
