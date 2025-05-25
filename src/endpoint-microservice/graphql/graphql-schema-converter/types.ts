@@ -101,7 +101,7 @@ export const createScalarFilterTypes = (
   types.JsonFilter = new GraphQLInputObjectType({
     name: `${projectName}JsonFilter`,
     fields: {
-      equals: { type: GraphQLString /* assume JSON as string*/ },
+      equals: { type: GraphQLString },
       path: { type: new GraphQLList(GraphQLString) },
       mode: { type: GraphQLString },
       string_contains: { type: GraphQLString },
