@@ -241,6 +241,101 @@ export interface OrderByDto {
   direction: "asc" | "desc";
 }
 
+export interface StringFilterDto {
+  equals?: string;
+  in?: string[];
+  notIn?: string[];
+  lt?: string;
+  lte?: string;
+  gt?: string;
+  gte?: string;
+  contains?: string;
+  startsWith?: string;
+  endsWith?: string;
+  mode?: "default" | "insensitive";
+  /** Negation filter (not): a simple string */
+  not?: string;
+}
+
+export interface BoolFilterDto {
+  equals?: boolean;
+  /** Filter negation (not). */
+  not?: BoolFilterDto | boolean;
+}
+
+export interface DateTimeFilterDto {
+  /** @format date-time */
+  equals?: string;
+  in?: string[];
+  notIn?: string[];
+  /** @format date-time */
+  lt?: string;
+  /** @format date-time */
+  lte?: string;
+  /** @format date-time */
+  gt?: string;
+  /** @format date-time */
+  gte?: string;
+}
+
+export interface JsonFilterDto {
+  /** Exact JSON match */
+  equals?: object;
+  /** Path in JSON (PostgreSQL: array of keys/indexes, e.g. ["pet1","petName"]) */
+  path?: string[];
+  /** Case sensitivity mode for string filters within JSON ("insensitive" uses ILIKE on PostgreSQL) */
+  mode?: "default" | "insensitive";
+  /** Substring match in JSON string value */
+  string_contains?: string;
+  /** Prefix match in JSON string value */
+  string_starts_with?: string;
+  /** Suffix match in JSON string value */
+  string_ends_with?: string;
+  /** Filter on arrays: target JSON array must contain *all* of these values */
+  array_contains?: object[];
+  /** JSON value that the target JSON array must start with (could be object, array, primitive) */
+  array_starts_with?: object;
+  /** JSON value that the target JSON array must end with (could be object, array, primitive) */
+  array_ends_with?: object;
+  /** Less-than comparison. Must be a number or numeric JSON value */
+  lt?: string;
+  /** Less-than-or-equal comparison. Must be a number or numeric JSON value */
+  lte?: string;
+  /** Greater-than comparison. Must be a number or numeric JSON value */
+  gt?: string;
+  /** Greater-than-or-equal comparison. Must be a number or numeric JSON value */
+  gte?: string;
+}
+
+export interface RowWhereInputDto {
+  /** AND conditions */
+  AND?: RowWhereInputDto[];
+  /** OR conditions */
+  OR?: RowWhereInputDto[];
+  /** NOT conditions */
+  NOT?: RowWhereInputDto[];
+  /** Filter by versionId */
+  versionId?: StringFilterDto;
+  /** Filter by createdId */
+  createdId?: StringFilterDto;
+  /** Filter by id */
+  id?: StringFilterDto;
+  /** Filter by readonly */
+  readonly?: BoolFilterDto;
+  /** Filter by createdAt */
+  createdAt?: DateTimeFilterDto;
+  /** Filter by updatedAt */
+  updatedAt?: DateTimeFilterDto;
+  /** Filter by data */
+  data?: JsonFilterDto;
+  /** Filter by meta */
+  meta?: JsonFilterDto;
+  /** Filter by hash */
+  hash?: StringFilterDto;
+  /** Filter by schemaHash */
+  schemaHash?: StringFilterDto;
+}
+
 export interface GetTableRowsDto {
   /** @default 100 */
   first: number;
@@ -251,6 +346,8 @@ export interface GetTableRowsDto {
    * @example [{"field":"id","direction":"asc"}]
    */
   orderBy?: OrderByDto[];
+  /** Row filtering conditions */
+  where?: RowWhereInputDto;
 }
 
 export interface RowModel {
@@ -686,7 +783,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 1.1.0
+ * @version 1.2.0
  * @contact
  */
 export class Api<
