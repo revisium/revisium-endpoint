@@ -2,10 +2,26 @@ scalar DataTime
 
 scalar JSON
 
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  notIn: [String]
+}
+
 input ProjectGetInvalid_table_name____usersInput {
   after: String
   first: Int
   orderBy: [ProjectGetInvalid_table_name____usersOrderByInput]
+  where: ProjectInvalid_table_name____usersWhereInput
 }
 
 enum ProjectGetInvalid_table_name____usersOrderByField {
@@ -48,6 +64,35 @@ type ProjectInvalid_table_name____userNode {
   versionId: String!
 }
 
+input ProjectInvalid_table_name____usersWhereInput {
+  AND: [ProjectInvalid_table_name____usersWhereInput!]
+  NOT: [ProjectInvalid_table_name____usersWhereInput!]
+  OR: [ProjectInvalid_table_name____usersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+input ProjectJsonFilter {
+  array_contains: [String]
+  array_ends_with: String
+  array_starts_with: String
+  equals: String
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
+  mode: String
+  path: [String]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
 type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!
@@ -58,6 +103,21 @@ type ProjectPageInfo {
 enum ProjectSortOrder {
   asc
   desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  mode: String
+  not: String
+  notIn: [String]
+  startsWith: String
 }
 
 type Query {
