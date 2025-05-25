@@ -1,6 +1,9 @@
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLScalarType,
@@ -34,8 +37,6 @@ export const ServiceType = new GraphQLObjectType({
   },
 });
 
-export type InputType = { data?: { first?: number; after?: string } };
-
 export type ContextType = { headers: Record<string, string> };
 
 export enum SortDirection {
@@ -51,4 +52,106 @@ export const getSortOrder = (projectName: string) => {
       desc: { value: SortDirection.DESC },
     },
   });
+};
+
+export const createScalarFilterTypes = (
+  projectName: string,
+): Record<string, GraphQLInputObjectType> => {
+  const types: Record<string, GraphQLInputObjectType> = {};
+
+  types.StringFilter = new GraphQLInputObjectType({
+    name: `${projectName}StringFilter`,
+    fields: {
+      equals: { type: GraphQLString },
+      in: { type: new GraphQLList(GraphQLString) },
+      notIn: { type: new GraphQLList(GraphQLString) },
+      lt: { type: GraphQLString },
+      lte: { type: GraphQLString },
+      gt: { type: GraphQLString },
+      gte: { type: GraphQLString },
+      contains: { type: GraphQLString },
+      startsWith: { type: GraphQLString },
+      endsWith: { type: GraphQLString },
+      mode: { type: GraphQLString },
+      not: { type: GraphQLString },
+    },
+  });
+
+  types.BoolFilter = new GraphQLInputObjectType({
+    name: `${projectName}BoolFilter`,
+    fields: {
+      equals: { type: GraphQLBoolean },
+      not: { type: GraphQLBoolean },
+    },
+  });
+
+  types.DateTimeFilter = new GraphQLInputObjectType({
+    name: `${projectName}DateTimeFilter`,
+    fields: {
+      equals: { type: GraphQLString },
+      in: { type: new GraphQLList(GraphQLString) },
+      notIn: { type: new GraphQLList(GraphQLString) },
+      lt: { type: GraphQLString },
+      lte: { type: GraphQLString },
+      gt: { type: GraphQLString },
+      gte: { type: GraphQLString },
+    },
+  });
+
+  types.JsonFilter = new GraphQLInputObjectType({
+    name: `${projectName}JsonFilter`,
+    fields: {
+      equals: { type: GraphQLString /* assume JSON as string*/ },
+      path: { type: new GraphQLList(GraphQLString) },
+      mode: { type: GraphQLString },
+      string_contains: { type: GraphQLString },
+      string_starts_with: { type: GraphQLString },
+      string_ends_with: { type: GraphQLString },
+      array_contains: { type: new GraphQLList(GraphQLString) },
+      array_starts_with: { type: GraphQLString },
+      array_ends_with: { type: GraphQLString },
+      lt: { type: GraphQLInt },
+      lte: { type: GraphQLInt },
+      gt: { type: GraphQLInt },
+      gte: { type: GraphQLInt },
+    },
+  });
+  return types;
+};
+
+export const createWhereInput = (
+  projectName: string,
+  typeName: string,
+  filterTypes: Record<string, GraphQLInputObjectType>,
+  whereInputTypeMap: Record<string, GraphQLInputObjectType>,
+): GraphQLInputObjectType => {
+  if (whereInputTypeMap[typeName]) {
+    return whereInputTypeMap[typeName];
+  }
+
+  const whereInput = new GraphQLInputObjectType({
+    name: `${projectName}${typeName}WhereInput`,
+    fields: () => ({
+      AND: {
+        type: new GraphQLList(new GraphQLNonNull(whereInput)),
+      },
+      OR: {
+        type: new GraphQLList(new GraphQLNonNull(whereInput)),
+      },
+      NOT: {
+        type: new GraphQLList(new GraphQLNonNull(whereInput)),
+      },
+      versionId: { type: filterTypes.StringFilter },
+      createdId: { type: filterTypes.StringFilter },
+      id: { type: filterTypes.StringFilter },
+      readonly: { type: filterTypes.BoolFilter },
+      createdAt: { type: filterTypes.DateTimeFilter },
+      updatedAt: { type: filterTypes.DateTimeFilter },
+      data: { type: filterTypes.JsonFilter },
+    }),
+  });
+
+  whereInputTypeMap[typeName] = whereInput;
+
+  return whereInput;
 };
