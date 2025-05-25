@@ -115,6 +115,17 @@ type ProjectUsERFlat {
   name: String!
 }
 
+type ProjectUsERFlatConnection {
+  edges: [ProjectUsERFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUsERFlatEdge {
+  cursor: String!
+  node: ProjectUsERFlat!
+}
+
 type ProjectUsERNode {
   createdAt: DataTime!
   createdId: String!
@@ -157,6 +168,17 @@ type ProjectuSerFlat {
   name: String!
 }
 
+type ProjectuSerFlatConnection {
+  edges: [ProjectuSerFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectuSerFlatEdge {
+  cursor: String!
+  node: ProjectuSerFlat!
+}
+
 type ProjectuSerNode {
   createdAt: DataTime!
   createdId: String!
@@ -184,10 +206,12 @@ type Query {
   UsER(id: String!): ProjectUsERNode!
   UsERFlat(id: String!): ProjectUsERFlat!
   UsERs(data: ProjectGetUsERsInput): ProjectUsERConnection!
+  UsERsFlat(data: ProjectGetUsERsInput): ProjectUsERFlatConnection!
   _service: _Service
   uSer(id: String!): ProjectuSerNode!
   uSerFlat(id: String!): ProjectuSerFlat!
   uSers(data: ProjectGetuSersInput): ProjectuSerConnection!
+  uSersFlat(data: ProjectGetuSersInput): ProjectuSerFlatConnection!
 }
 
 type _Service {

@@ -99,6 +99,17 @@ type ProjectUserFlat {
   naMe: ProjectUserFlatnaMe!
 }
 
+type ProjectUserFlatConnection {
+  edges: [ProjectUserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserFlatEdge {
+  cursor: String!
+  node: ProjectUserFlat!
+}
+
 type ProjectUserFlatNAmE {
   name: String!
 }
@@ -143,6 +154,7 @@ type Query {
   user(id: String!): ProjectUserNode!
   userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
+  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
 
 type _Service {
