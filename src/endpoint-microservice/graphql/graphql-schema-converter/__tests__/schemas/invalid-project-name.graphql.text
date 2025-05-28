@@ -15,6 +15,11 @@ input INVALID_PROJECT_NAME_1DateTimeFilter {
   notIn: [String]
 }
 
+enum INVALID_PROJECT_NAME_1FilterStringMode {
+  default
+  insensitive
+}
+
 input INVALID_PROJECT_NAME_1GetUsersInput {
   after: String
   first: Int
@@ -34,14 +39,14 @@ input INVALID_PROJECT_NAME_1GetUsersOrderByInput {
 }
 
 input INVALID_PROJECT_NAME_1JsonFilter {
-  array_contains: [String]
-  array_ends_with: String
-  array_starts_with: String
-  equals: String
-  gt: Int
-  gte: Int
-  lt: Int
-  lte: Int
+  array_contains: [JSON]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
   mode: String
   path: [String]
   string_contains: String
@@ -70,7 +75,7 @@ input INVALID_PROJECT_NAME_1StringFilter {
   in: [String]
   lt: String
   lte: String
-  mode: String
+  mode: INVALID_PROJECT_NAME_1FilterStringMode
   not: String
   notIn: [String]
   startsWith: String

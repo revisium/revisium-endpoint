@@ -2,7 +2,7 @@ import {
   GraphQLBoolean,
   GraphQLEnumType,
   GraphQLInputObjectType,
-  GraphQLInt,
+  GraphQLFloat,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -72,7 +72,15 @@ export const createScalarFilterTypes = (
       contains: { type: GraphQLString },
       startsWith: { type: GraphQLString },
       endsWith: { type: GraphQLString },
-      mode: { type: GraphQLString },
+      mode: {
+        type: new GraphQLEnumType({
+          name: `${projectName}FilterStringMode`,
+          values: {
+            default: { value: 'default' },
+            insensitive: { value: 'insensitive' },
+          },
+        }),
+      },
       not: { type: GraphQLString },
     },
   });
@@ -101,19 +109,19 @@ export const createScalarFilterTypes = (
   types.JsonFilter = new GraphQLInputObjectType({
     name: `${projectName}JsonFilter`,
     fields: {
-      equals: { type: GraphQLString },
+      equals: { type: JsonType },
       path: { type: new GraphQLList(GraphQLString) },
       mode: { type: GraphQLString },
       string_contains: { type: GraphQLString },
       string_starts_with: { type: GraphQLString },
       string_ends_with: { type: GraphQLString },
-      array_contains: { type: new GraphQLList(GraphQLString) },
-      array_starts_with: { type: GraphQLString },
-      array_ends_with: { type: GraphQLString },
-      lt: { type: GraphQLInt },
-      lte: { type: GraphQLInt },
-      gt: { type: GraphQLInt },
-      gte: { type: GraphQLInt },
+      array_contains: { type: new GraphQLList(JsonType) },
+      array_starts_with: { type: JsonType },
+      array_ends_with: { type: JsonType },
+      lt: { type: GraphQLFloat },
+      lte: { type: GraphQLFloat },
+      gt: { type: GraphQLFloat },
+      gte: { type: GraphQLFloat },
     },
   });
   return types;
