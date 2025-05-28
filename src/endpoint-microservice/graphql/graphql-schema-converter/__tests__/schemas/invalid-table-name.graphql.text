@@ -17,6 +17,11 @@ input ProjectDateTimeFilter {
   notIn: [String]
 }
 
+enum ProjectFilterStringMode {
+  default
+  insensitive
+}
+
 input ProjectGetInvalid_table_name____usersInput {
   after: String
   first: Int
@@ -89,14 +94,14 @@ input ProjectInvalid_table_name____usersWhereInput {
 }
 
 input ProjectJsonFilter {
-  array_contains: [String]
-  array_ends_with: String
-  array_starts_with: String
-  equals: String
-  gt: Int
-  gte: Int
-  lt: Int
-  lte: Int
+  array_contains: [JSON]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
   mode: String
   path: [String]
   string_contains: String
@@ -125,7 +130,7 @@ input ProjectStringFilter {
   in: [String]
   lt: String
   lte: String
-  mode: String
+  mode: ProjectFilterStringMode
   not: String
   notIn: [String]
   startsWith: String
