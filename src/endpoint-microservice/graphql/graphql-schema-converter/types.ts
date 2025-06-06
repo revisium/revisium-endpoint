@@ -154,6 +154,7 @@ export const createWhereInput = (
       id: { type: filterTypes.StringFilter },
       readonly: { type: filterTypes.BoolFilter },
       createdAt: { type: filterTypes.DateTimeFilter },
+      publishedAt: { type: filterTypes.DateTimeFilter },
       updatedAt: { type: filterTypes.DateTimeFilter },
       data: { type: filterTypes.JsonFilter },
     }),
