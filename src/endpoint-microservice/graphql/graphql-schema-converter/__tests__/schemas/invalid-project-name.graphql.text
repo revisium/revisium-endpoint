@@ -30,6 +30,7 @@ input INVALID_PROJECT_NAME_1GetUsersInput {
 enum INVALID_PROJECT_NAME_1GetUsersOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -117,6 +118,7 @@ type INVALID_PROJECT_NAME_1UserNode {
   data: INVALID_PROJECT_NAME_1User!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }
@@ -129,6 +131,7 @@ input INVALID_PROJECT_NAME_1UsersWhereInput {
   createdId: INVALID_PROJECT_NAME_1StringFilter
   data: INVALID_PROJECT_NAME_1JsonFilter
   id: INVALID_PROJECT_NAME_1StringFilter
+  publishedAt: INVALID_PROJECT_NAME_1DateTimeFilter
   readonly: INVALID_PROJECT_NAME_1BoolFilter
   updatedAt: INVALID_PROJECT_NAME_1DateTimeFilter
   versionId: INVALID_PROJECT_NAME_1StringFilter

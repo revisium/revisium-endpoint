@@ -499,9 +499,13 @@ describe('GraphQL Schema Converter', () => {
       'utf8',
     );
 
-    expect(printSchema(schema)).toBe(file);
-  }
+    const normalizeLineEndings = (str: string) =>
+      str.replace(/\r\n|\r/g, '\n').trim();
 
+    expect(normalizeLineEndings(printSchema(schema))).toBe(
+      normalizeLineEndings(file),
+    );
+  }
   const revisionId = '1';
   let converter: GraphQLSchemaConverter;
 

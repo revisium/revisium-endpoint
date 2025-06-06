@@ -32,6 +32,7 @@ input ProjectGetPostsInput {
 enum ProjectGetPostsOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -50,6 +51,7 @@ input ProjectGetUsersInput {
 enum ProjectGetUsersOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -117,6 +119,7 @@ type ProjectPostNode {
   data: ProjectPost!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }
@@ -129,6 +132,7 @@ input ProjectPostsWhereInput {
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
   id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
   readonly: ProjectBoolFilter
   updatedAt: ProjectDateTimeFilter
   versionId: ProjectStringFilter
@@ -190,6 +194,7 @@ type ProjectUserNode {
   data: ProjectUser!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }
@@ -202,6 +207,7 @@ input ProjectUsersWhereInput {
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
   id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
   readonly: ProjectBoolFilter
   updatedAt: ProjectDateTimeFilter
   versionId: ProjectStringFilter

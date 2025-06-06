@@ -455,6 +455,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       values: {
         createdAt: { value: 'createdAt' },
         updatedAt: { value: 'updatedAt' },
+        publishedAt: { value: 'publishedAt' },
         id: { value: 'id' },
       },
     });
@@ -520,6 +521,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         id: { type: new GraphQLNonNull(GraphQLString) },
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
+        publishedAt: { type: new GraphQLNonNull(DateTimeType) },
         [DATA_KEY]: data,
         json: { type: JsonType, resolve: (parent) => parent.data },
       }),
