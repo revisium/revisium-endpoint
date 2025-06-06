@@ -17,6 +17,11 @@ input ProjectDateTimeFilter {
   notIn: [String]
 }
 
+enum ProjectFilterJsonMode {
+  default
+  insensitive
+}
+
 enum ProjectFilterStringMode {
   default
   insensitive
@@ -102,7 +107,7 @@ input ProjectJsonFilter {
   gte: Float
   lt: Float
   lte: Float
-  mode: String
+  mode: ProjectFilterJsonMode
   path: [String]
   string_contains: String
   string_ends_with: String

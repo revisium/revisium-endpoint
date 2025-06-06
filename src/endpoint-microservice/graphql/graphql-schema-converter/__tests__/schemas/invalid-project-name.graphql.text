@@ -15,6 +15,11 @@ input INVALID_PROJECT_NAME_1DateTimeFilter {
   notIn: [String]
 }
 
+enum INVALID_PROJECT_NAME_1FilterJsonMode {
+  default
+  insensitive
+}
+
 enum INVALID_PROJECT_NAME_1FilterStringMode {
   default
   insensitive
@@ -47,7 +52,7 @@ input INVALID_PROJECT_NAME_1JsonFilter {
   gte: Float
   lt: Float
   lte: Float
-  mode: String
+  mode: INVALID_PROJECT_NAME_1FilterJsonMode
   path: [String]
   string_contains: String
   string_ends_with: String
