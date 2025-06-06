@@ -30,6 +30,7 @@ input INVALID_PROJECT_NAME_1GetUsersInput {
 enum INVALID_PROJECT_NAME_1GetUsersOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -117,6 +118,7 @@ type INVALID_PROJECT_NAME_1UserNode {
   data: INVALID_PROJECT_NAME_1User!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }

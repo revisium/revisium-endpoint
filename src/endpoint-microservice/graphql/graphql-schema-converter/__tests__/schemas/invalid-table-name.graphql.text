@@ -32,6 +32,7 @@ input ProjectGetInvalid_table_name____usersInput {
 enum ProjectGetInvalid_table_name____usersOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -76,6 +77,7 @@ type ProjectInvalid_table_name____userNode {
   data: ProjectInvalid_table_name____user!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }

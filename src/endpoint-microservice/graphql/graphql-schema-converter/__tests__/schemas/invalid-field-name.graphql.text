@@ -32,6 +32,7 @@ input ProjectGetUsersInput {
 enum ProjectGetUsersOrderByField {
   createdAt
   id
+  publishedAt
   updatedAt
 }
 
@@ -127,6 +128,7 @@ type ProjectUserNode {
   data: ProjectUser!
   id: String!
   json: JSON
+  publishedAt: DataTime!
   updatedAt: DataTime!
   versionId: String!
 }
