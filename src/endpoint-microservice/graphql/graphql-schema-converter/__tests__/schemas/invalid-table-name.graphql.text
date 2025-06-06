@@ -90,6 +90,7 @@ input ProjectInvalid_table_name____usersWhereInput {
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
   id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
   readonly: ProjectBoolFilter
   updatedAt: ProjectDateTimeFilter
   versionId: ProjectStringFilter

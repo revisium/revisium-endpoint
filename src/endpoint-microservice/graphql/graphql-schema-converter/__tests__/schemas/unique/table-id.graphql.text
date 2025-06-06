@@ -152,6 +152,7 @@ input ProjectUsERsWhereInput {
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
   id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
   readonly: ProjectBoolFilter
   updatedAt: ProjectDateTimeFilter
   versionId: ProjectStringFilter
@@ -206,6 +207,7 @@ input ProjectuSersWhereInput {
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
   id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
   readonly: ProjectBoolFilter
   updatedAt: ProjectDateTimeFilter
   versionId: ProjectStringFilter
