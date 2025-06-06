@@ -111,7 +111,15 @@ export const createScalarFilterTypes = (
     fields: {
       equals: { type: JsonType },
       path: { type: new GraphQLList(GraphQLString) },
-      mode: { type: GraphQLString },
+      mode: {
+        type: new GraphQLEnumType({
+          name: `${projectName}FilterJsonMode`,
+          values: {
+            default: { value: 'default' },
+            insensitive: { value: 'insensitive' },
+          },
+        }),
+      },
       string_contains: { type: GraphQLString },
       string_starts_with: { type: GraphQLString },
       string_ends_with: { type: GraphQLString },
