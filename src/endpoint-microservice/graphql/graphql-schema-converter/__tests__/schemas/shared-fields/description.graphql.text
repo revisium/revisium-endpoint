@@ -1,0 +1,159 @@
+scalar DataTime
+
+scalar JSON
+
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  notIn: [String]
+}
+
+enum ProjectFilterJsonMode {
+  default
+  insensitive
+}
+
+enum ProjectFilterStringMode {
+  default
+  insensitive
+}
+
+input ProjectGetPostsInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetPostsOrderByInput]
+  where: ProjectPostsWhereInput
+}
+
+enum ProjectGetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetPostsOrderByField!
+}
+
+input ProjectJsonFilter {
+  array_contains: [JSON]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: ProjectFilterJsonMode
+  path: [String]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectPost {
+  """description"""
+  name: String!
+}
+
+type ProjectPostConnection {
+  edges: [ProjectPostEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostEdge {
+  cursor: String!
+  node: ProjectPostNode!
+}
+
+type ProjectPostFlat {
+  """description"""
+  name: String!
+}
+
+type ProjectPostFlatConnection {
+  edges: [ProjectPostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostFlatEdge {
+  cursor: String!
+  node: ProjectPostFlat!
+}
+
+type ProjectPostNode {
+  createdAt: DataTime!
+  createdId: String!
+  data: ProjectPost!
+  id: String!
+  json: JSON
+  publishedAt: DataTime!
+  updatedAt: DataTime!
+  versionId: String!
+}
+
+input ProjectPostsWhereInput {
+  AND: [ProjectPostsWhereInput!]
+  NOT: [ProjectPostsWhereInput!]
+  OR: [ProjectPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  mode: ProjectFilterStringMode
+  not: String
+  notIn: [String]
+  startsWith: String
+}
+
+type Query {
+  _service: _Service
+  post(id: String!): ProjectPostNode!
+  postFlat(id: String!): ProjectPostFlat!
+  posts(data: ProjectGetPostsInput): ProjectPostConnection!
+  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
+}
+
+type _Service {
+  sdl: String
+}

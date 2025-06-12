@@ -8,7 +8,9 @@ import {
   getBooleanSchema,
   getNumberSchema,
   getObjectSchema,
+  getRefSchema,
   getStringSchema,
+  resolveRefs,
 } from 'src/endpoint-microservice/shared/schema';
 import * as fs from 'node:fs/promises';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
@@ -17,6 +19,7 @@ import {
   ConverterContextType,
   ConverterTable,
 } from 'src/endpoint-microservice/shared/converter';
+import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
 
 describe('GraphQL Schema Converter', () => {
   it('empty schema', async () => {
@@ -476,6 +479,92 @@ describe('GraphQL Schema Converter', () => {
         }),
       );
       await check(schema, 'foreign-key/root-array-string.graphql.text');
+    });
+  });
+
+  describe('description and deprecated', () => {
+    it('description', async () => {
+      const name = getStringSchema();
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name,
+        }),
+      };
+
+      name.description = 'description';
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [post],
+        }),
+      );
+      await check(schema, 'shared-fields/description.graphql.text');
+    });
+
+    it('description and deprecated', async () => {
+      const name = getStringSchema();
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          name,
+        }),
+      };
+
+      name.description = 'description';
+      name.deprecated = true;
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [post],
+        }),
+      );
+      await check(schema, 'shared-fields/description-deprecated.graphql.text');
+    });
+
+    it('nested description', async () => {
+      const name = getStringSchema();
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          nested: getObjectSchema({
+            name,
+          }),
+        }),
+      };
+
+      name.description = 'description';
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [post],
+        }),
+      );
+      await check(schema, 'shared-fields/nested-description.graphql.text');
+    });
+  });
+
+  describe('refs', () => {
+    it('file', async () => {
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: resolveRefs(
+          getObjectSchema({
+            file: getRefSchema(SystemSchemaIds.File),
+          }),
+        ),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [post],
+        }),
+      );
+      await check(schema, 'refs/file.graphql.text');
     });
   });
 
