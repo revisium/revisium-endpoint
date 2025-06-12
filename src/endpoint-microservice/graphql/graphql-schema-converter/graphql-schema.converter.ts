@@ -264,7 +264,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createItemFlatField(options: CreatingTableOptionsType) {
+  private createItemFlatField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     const dataConfig = this.getCachedNodeType(options.table.id).dataFlat;
 
     return {
@@ -276,7 +278,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createItemField(options: CreatingTableOptionsType) {
+  private createItemField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     return {
       type: new GraphQLNonNull(this.getCachedNodeType(options.table.id).node),
       args: {
@@ -286,7 +290,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createListField(options: CreatingTableOptionsType) {
+  private createListField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     const ConnectionType = this.getListConnection(options);
     return {
       type: new GraphQLNonNull(ConnectionType),
