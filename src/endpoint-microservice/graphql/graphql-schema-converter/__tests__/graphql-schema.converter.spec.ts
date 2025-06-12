@@ -219,6 +219,57 @@ describe('GraphQL Schema Converter', () => {
     await check(schemaUserPost, 'empty-object.graphql.text');
   });
 
+  it('nested empty object', async () => {
+    const user: ConverterTable = {
+      id: 'user',
+      versionId: '1',
+      schema: getObjectSchema({
+        name: getStringSchema(),
+      }),
+    };
+
+    const post: ConverterTable = {
+      id: 'post',
+      versionId: '1',
+      schema: getObjectSchema({
+        nested: getObjectSchema({}),
+      }),
+    };
+
+    const schemaUserPost = await converter.convert(
+      getContext({
+        tables: [user, post],
+      }),
+    );
+    await check(schemaUserPost, 'nested-empty-object.graphql.text');
+  });
+
+  it('nested empty object with field', async () => {
+    const user: ConverterTable = {
+      id: 'user',
+      versionId: '1',
+      schema: getObjectSchema({
+        name: getStringSchema(),
+      }),
+    };
+
+    const post: ConverterTable = {
+      id: 'post',
+      versionId: '1',
+      schema: getObjectSchema({
+        field: getStringSchema(),
+        nested: getObjectSchema({}),
+      }),
+    };
+
+    const schemaUserPost = await converter.convert(
+      getContext({
+        tables: [user, post],
+      }),
+    );
+    await check(schemaUserPost, 'nested-empty-object-with-field.graphql.text');
+  });
+
   describe('root', () => {
     it('string root', async () => {
       const table: ConverterTable = {

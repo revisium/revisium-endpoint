@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UpdateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/commands/impl';
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
@@ -6,6 +7,8 @@ import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphq
 export class UpdateGraphqlEndpointHandler
   implements ICommandHandler<UpdateGraphqlEndpointCommand>
 {
+  private readonly logger = new Logger(UpdateGraphqlEndpointHandler.name);
+
   public constructor(private readonly service: GraphqlEndpointService) {}
 
   public async execute({
@@ -15,7 +18,11 @@ export class UpdateGraphqlEndpointHandler
       throw new Error(`${endpointId} does not exist`);
     }
 
-    await this.service.stopEndpoint(endpointId);
-    await this.service.runEndpoint(endpointId);
+    try {
+      await this.service.stopEndpoint(endpointId);
+      await this.service.runEndpoint(endpointId);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 }

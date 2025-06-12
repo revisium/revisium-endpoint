@@ -6,8 +6,16 @@ export const isEmptyObject = (schema: JsonSchema): boolean => {
     return false;
   }
 
-  if (schema.type === 'object' && !Object.keys(schema.properties).length) {
-    return true;
+  if (schema.type === 'object') {
+    const countProperties = Object.keys(schema.properties).length;
+
+    if (countProperties === 0) {
+      return true;
+    } else {
+      return Object.values(schema.properties).every((property) =>
+        isEmptyObject(property),
+      );
+    }
   }
 
   if (schema.type === 'array') {
