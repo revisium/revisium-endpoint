@@ -108,5 +108,54 @@ describe('JsonObjectStore', () => {
     expect(store.getPlainSchema()).toStrictEqual({
       $ref: 'ref.json',
     });
+
+    store.deprecated = true;
+    store.title = 'title';
+    store.description = 'description';
+    expect(store.getPlainSchema()).toStrictEqual({
+      $ref: 'ref.json',
+      deprecated: true,
+      description: 'description',
+      title: 'title',
+    });
+  });
+
+  it('title', () => {
+    const store = new JsonObjectStore();
+    store.title = 'title';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'object',
+      additionalProperties: false,
+      properties: {},
+      required: [],
+      title: 'title',
+    });
+  });
+
+  it('description', () => {
+    const store = new JsonObjectStore();
+    store.description = 'description';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'object',
+      additionalProperties: false,
+      properties: {},
+      required: [],
+      description: 'description',
+    });
+  });
+
+  it('deprecated', () => {
+    const store = new JsonObjectStore();
+    store.deprecated = true;
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'object',
+      additionalProperties: false,
+      properties: {},
+      required: [],
+      deprecated: true,
+    });
   });
 });

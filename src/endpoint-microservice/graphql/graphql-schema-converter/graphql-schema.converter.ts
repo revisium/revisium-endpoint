@@ -264,7 +264,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createItemFlatField(options: CreatingTableOptionsType) {
+  private createItemFlatField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     const dataConfig = this.getCachedNodeType(options.table.id).dataFlat;
 
     return {
@@ -276,7 +278,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createItemField(options: CreatingTableOptionsType) {
+  private createItemField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     return {
       type: new GraphQLNonNull(this.getCachedNodeType(options.table.id).node),
       args: {
@@ -286,7 +290,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     };
   }
 
-  private createListField(options: CreatingTableOptionsType) {
+  private createListField(
+    options: CreatingTableOptionsType,
+  ): GraphQLFieldConfig<any, any> {
     const ConnectionType = this.getListConnection(options);
     return {
       type: new GraphQLNonNull(ConnectionType),
@@ -647,9 +653,17 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     const type = this.mapSchemaTypeToGraphQL(typeName, schema, '', isFlat);
 
-    return {
+    const config: GraphQLFieldConfig<any, any> = {
       type,
     };
+
+    if (schema.deprecated && schema.description) {
+      config.deprecationReason = schema.description;
+    } else if (schema.description) {
+      config.description = schema.description;
+    }
+
+    return config;
   }
 
   private tryGettingForeignKeyFieldConfig(
@@ -661,12 +675,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       !('$ref' in schema) && schema.type === 'string' && schema.foreignKey;
 
     if (isForeignKey) {
-      return {
+      const config: GraphQLFieldConfig<any, any> = {
         type: isFlat
           ? this.getCachedNodeType(schema.foreignKey).dataFlat.type
           : new GraphQLNonNull(this.getCachedNodeType(schema.foreignKey).node),
         resolve: this.getFieldResolver(schema.foreignKey, field, isFlat),
       };
+
+      if (schema.deprecated && schema.description) {
+        config.deprecationReason = schema.description;
+      } else if (schema.description) {
+        config.description = schema.description;
+      }
+
+      return config;
     }
 
     return null;
@@ -684,7 +706,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       schema.items.type === 'string' &&
       schema.items.foreignKey
     ) {
-      return {
+      const config: GraphQLFieldConfig<any, any> = {
         type: new GraphQLNonNull(
           new GraphQLList(
             isFlat
@@ -700,6 +722,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           isFlat,
         ),
       };
+
+      if (schema.deprecated && schema.description) {
+        config.deprecationReason = schema.description;
+      } else if (schema.description) {
+        config.description = schema.description;
+      }
+
+      return config;
     }
 
     return null;

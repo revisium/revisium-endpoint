@@ -29,5 +29,83 @@ describe('JsonNumberStore', () => {
     expect(store.getPlainSchema()).toStrictEqual({
       $ref: 'ref.json',
     });
+
+    store.deprecated = true;
+    store.title = 'title';
+    store.description = 'description';
+    expect(store.getPlainSchema()).toStrictEqual({
+      $ref: 'ref.json',
+      deprecated: true,
+      description: 'description',
+      title: 'title',
+    });
+  });
+
+  it('title', () => {
+    const store = new JsonNumberStore();
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+    });
+
+    store.title = 'title';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+      title: 'title',
+    });
+  });
+
+  it('description', () => {
+    const store = new JsonNumberStore();
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+    });
+
+    store.description = 'description';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+      description: 'description',
+    });
+  });
+
+  it('deprecated', () => {
+    const store = new JsonNumberStore();
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+    });
+
+    store.deprecated = true;
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+      deprecated: true,
+    });
+  });
+
+  it('readOnly', () => {
+    const store = new JsonNumberStore();
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+    });
+
+    store.readOnly = true;
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'number',
+      default: 0,
+      readOnly: true,
+    });
   });
 });
