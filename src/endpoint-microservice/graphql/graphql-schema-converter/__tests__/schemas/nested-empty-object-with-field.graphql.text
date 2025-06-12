@@ -1,0 +1,235 @@
+scalar DataTime
+
+scalar JSON
+
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  notIn: [String]
+}
+
+enum ProjectFilterJsonMode {
+  default
+  insensitive
+}
+
+enum ProjectFilterStringMode {
+  default
+  insensitive
+}
+
+input ProjectGetPostsInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetPostsOrderByInput]
+  where: ProjectPostsWhereInput
+}
+
+enum ProjectGetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetPostsOrderByField!
+}
+
+input ProjectGetUsersInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetUsersOrderByInput]
+  where: ProjectUsersWhereInput
+}
+
+enum ProjectGetUsersOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsersOrderByField!
+}
+
+input ProjectJsonFilter {
+  array_contains: [JSON]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: ProjectFilterJsonMode
+  path: [String]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectPost {
+  field: String!
+}
+
+type ProjectPostConnection {
+  edges: [ProjectPostEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostEdge {
+  cursor: String!
+  node: ProjectPostNode!
+}
+
+type ProjectPostFlat {
+  field: String!
+}
+
+type ProjectPostFlatConnection {
+  edges: [ProjectPostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostFlatEdge {
+  cursor: String!
+  node: ProjectPostFlat!
+}
+
+type ProjectPostNode {
+  createdAt: DataTime!
+  createdId: String!
+  data: ProjectPost!
+  id: String!
+  json: JSON
+  publishedAt: DataTime!
+  updatedAt: DataTime!
+  versionId: String!
+}
+
+input ProjectPostsWhereInput {
+  AND: [ProjectPostsWhereInput!]
+  NOT: [ProjectPostsWhereInput!]
+  OR: [ProjectPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String]
+  lt: String
+  lte: String
+  mode: ProjectFilterStringMode
+  not: String
+  notIn: [String]
+  startsWith: String
+}
+
+type ProjectUser {
+  name: String!
+}
+
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserEdge {
+  cursor: String!
+  node: ProjectUserNode!
+}
+
+type ProjectUserFlat {
+  name: String!
+}
+
+type ProjectUserFlatConnection {
+  edges: [ProjectUserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserFlatEdge {
+  cursor: String!
+  node: ProjectUserFlat!
+}
+
+type ProjectUserNode {
+  createdAt: DataTime!
+  createdId: String!
+  data: ProjectUser!
+  id: String!
+  json: JSON
+  publishedAt: DataTime!
+  updatedAt: DataTime!
+  versionId: String!
+}
+
+input ProjectUsersWhereInput {
+  AND: [ProjectUsersWhereInput!]
+  NOT: [ProjectUsersWhereInput!]
+  OR: [ProjectUsersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+type Query {
+  _service: _Service
+  post(id: String!): ProjectPostNode!
+  postFlat(id: String!): ProjectPostFlat!
+  posts(data: ProjectGetPostsInput): ProjectPostConnection!
+  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
+  user(id: String!): ProjectUserNode!
+  userFlat(id: String!): ProjectUserFlat!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
+  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
+}
+
+type _Service {
+  sdl: String
+}

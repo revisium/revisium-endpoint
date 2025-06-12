@@ -588,12 +588,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     schema: JsonObjectSchema,
     isFlat: boolean = false,
   ): GraphQLObjectType {
-    const ids = Object.keys(schema.properties);
+    const validEntries = Object.entries(schema.properties).filter(
+      ([_, propertySchema]) => !isEmptyObject(propertySchema),
+    );
+
+    const ids = validEntries.map(([key]) => key);
 
     return new GraphQLObjectType({
       name,
       fields: () =>
-        Object.entries(schema.properties).reduce(
+        validEntries.reduce(
           (fields, [key, itemSchema]) => {
             if (!isValidName(key)) {
               return fields;
