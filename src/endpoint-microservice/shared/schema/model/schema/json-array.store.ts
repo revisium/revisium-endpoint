@@ -7,6 +7,7 @@ import {
   JsonRefSchema,
   JsonSchemaTypeName,
 } from 'src/endpoint-microservice/shared/schema';
+import { addSharedFieldsFromState } from 'src/endpoint-microservice/shared/schema/lib/addSharedFieldsFromStore';
 
 export type MigrateItemsEvent = {
   items: JsonSchemaStore;
@@ -25,6 +26,10 @@ export class JsonArrayStore implements JsonArraySchema {
   public name: string = '';
   public parent: JsonSchemaStore | null = null;
   public default: JsonArray[] = [];
+
+  public title?: string;
+  public description?: string;
+  public deprecated?: boolean;
 
   private readonly valuesMap: Map<string, JsonArrayValueStore[]> = new Map<
     string,
@@ -84,13 +89,16 @@ export class JsonArrayStore implements JsonArraySchema {
     skip$Ref?: boolean;
   }): JsonArraySchema | JsonRefSchema {
     if (this.$ref && options?.skip$Ref !== true) {
-      return { $ref: this.$ref };
+      return addSharedFieldsFromState({ $ref: this.$ref }, this);
     }
 
-    return {
-      type: this.type,
-      items: this.items.getPlainSchema(options),
-    };
+    return addSharedFieldsFromState(
+      {
+        type: this.type,
+        items: this.items.getPlainSchema(options),
+      },
+      this,
+    );
   }
 
   private getOrCreateValues(rowId: string): JsonArrayValueStore[] {

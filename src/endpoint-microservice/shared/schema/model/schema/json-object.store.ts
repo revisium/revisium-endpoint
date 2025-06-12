@@ -8,6 +8,7 @@ import {
   JsonSchema,
   JsonSchemaTypeName,
 } from 'src/endpoint-microservice/shared/schema';
+import { addSharedFieldsFromState } from 'src/endpoint-microservice/shared/schema/lib/addSharedFieldsFromStore';
 
 export type AddedPropertyEvent = { name: string; property: JsonSchemaStore };
 export type MigratePropertyEvent = {
@@ -29,6 +30,10 @@ export class JsonObjectStore implements JsonObjectSchema {
   public name: string = '';
   public parent: JsonSchemaStore | null = null;
   public default: JsonObject = {};
+
+  public title?: string;
+  public description?: string;
+  public deprecated?: boolean;
 
   public readonly additionalProperties = false;
   public readonly required: string[] = [];
@@ -186,20 +191,23 @@ export class JsonObjectStore implements JsonObjectSchema {
     skip$Ref?: boolean;
   }): JsonObjectSchema | JsonRefSchema {
     if (this.$ref && options?.skip$Ref !== true) {
-      return { $ref: this.$ref };
+      return addSharedFieldsFromState({ $ref: this.$ref }, this);
     }
 
-    return {
-      type: this.type,
-      additionalProperties: this.additionalProperties,
-      required: this.required,
-      properties: Object.entries<JsonSchemaStore>(this.properties).reduce<
-        Record<string, JsonSchema>
-      >((result, [name, store]) => {
-        result[name] = store.getPlainSchema(options);
-        return result;
-      }, {}),
-    };
+    return addSharedFieldsFromState(
+      {
+        type: this.type,
+        additionalProperties: this.additionalProperties,
+        required: this.required,
+        properties: Object.entries<JsonSchemaStore>(this.properties).reduce<
+          Record<string, JsonSchema>
+        >((result, [name, store]) => {
+          result[name] = store.getPlainSchema(options);
+          return result;
+        }, {}),
+      },
+      this,
+    );
   }
 
   private getOrCreateValues(rowId: string): JsonObjectValueStore[] {

@@ -107,5 +107,57 @@ describe('JsonArrayStore', () => {
     expect(store.getPlainSchema()).toStrictEqual({
       $ref: 'ref.json',
     });
+
+    store.deprecated = true;
+    store.title = 'title';
+    store.description = 'description';
+    expect(store.getPlainSchema()).toStrictEqual({
+      $ref: 'ref.json',
+      deprecated: true,
+      description: 'description',
+      title: 'title',
+    });
+  });
+
+  it('title', () => {
+    const store = new JsonArrayStore(new JsonStringStore());
+    store.title = 'title';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'array',
+      items: {
+        type: 'string',
+        default: '',
+      },
+      title: 'title',
+    });
+  });
+
+  it('description', () => {
+    const store = new JsonArrayStore(new JsonStringStore());
+    store.description = 'description';
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'array',
+      items: {
+        type: 'string',
+        default: '',
+      },
+      description: 'description',
+    });
+  });
+
+  it('deprecated', () => {
+    const store = new JsonArrayStore(new JsonStringStore());
+    store.deprecated = true;
+
+    expect(store.getPlainSchema()).toStrictEqual({
+      type: 'array',
+      items: {
+        type: 'string',
+        default: '',
+      },
+      deprecated: true,
+    });
   });
 });

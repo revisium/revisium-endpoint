@@ -7,6 +7,7 @@ import {
   JsonSchemaTypeName,
   JsonBooleanSchema,
 } from 'src/endpoint-microservice/shared/schema';
+import { addSharedFieldsFromState } from 'src/endpoint-microservice/shared/schema/lib/addSharedFieldsFromStore';
 
 export class JsonBooleanStore
   extends EventEmitter
@@ -19,6 +20,10 @@ export class JsonBooleanStore
   public parent: JsonSchemaStore | null = null;
 
   public default: boolean = false;
+  public readOnly?: boolean;
+  public title?: string;
+  public description?: string;
+  public deprecated?: boolean;
 
   private readonly valuesMap: Map<string, JsonBooleanValueStore[]> = new Map<
     string,
@@ -45,13 +50,17 @@ export class JsonBooleanStore
     skip$Ref?: boolean;
   }): JsonBooleanSchema | JsonRefSchema {
     if (this.$ref && options?.skip$Ref !== true) {
-      return { $ref: this.$ref };
+      return addSharedFieldsFromState({ $ref: this.$ref }, this);
     }
 
-    return {
-      type: this.type,
-      default: this.default,
-    };
+    return addSharedFieldsFromState(
+      {
+        type: this.type,
+        default: this.default,
+        ...(this.readOnly ? { readOnly: this.readOnly } : {}),
+      },
+      this,
+    );
   }
 
   private getOrCreateValues(rowId: string): JsonBooleanValueStore[] {

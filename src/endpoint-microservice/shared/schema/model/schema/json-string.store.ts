@@ -7,6 +7,7 @@ import {
   JsonSchemaTypeName,
   JsonStringSchema,
 } from 'src/endpoint-microservice/shared/schema';
+import { addSharedFieldsFromState } from 'src/endpoint-microservice/shared/schema/lib/addSharedFieldsFromStore';
 
 export class JsonStringStore extends EventEmitter implements JsonStringSchema {
   public readonly type = JsonSchemaTypeName.String;
@@ -16,7 +17,16 @@ export class JsonStringStore extends EventEmitter implements JsonStringSchema {
   public parent: JsonSchemaStore | null = null;
 
   public default: string = '';
+  public readOnly?: boolean;
+  public title?: string;
+  public description?: string;
+  public deprecated?: boolean;
   public foreignKey?: string;
+  public pattern?: string;
+  public enum?: string[];
+  public format?: JsonStringSchema['format'];
+  public contentMediaType?: JsonStringSchema['contentMediaType'];
+
   private readonly valuesMap: Map<string, JsonStringValueStore[]> = new Map<
     string,
     JsonStringValueStore[]
@@ -42,19 +52,24 @@ export class JsonStringStore extends EventEmitter implements JsonStringSchema {
     skip$Ref?: boolean;
   }): JsonStringSchema | JsonRefSchema {
     if (this.$ref && options?.skip$Ref !== true) {
-      return { $ref: this.$ref };
+      return addSharedFieldsFromState({ $ref: this.$ref }, this);
     }
 
-    const schema: JsonStringSchema = {
-      type: this.type,
-      default: this.default,
-    };
-
-    if (this.foreignKey) {
-      schema.foreignKey = this.foreignKey;
-    }
-
-    return schema;
+    return addSharedFieldsFromState(
+      {
+        type: this.type,
+        default: this.default,
+        ...(this.foreignKey ? { foreignKey: this.foreignKey } : {}),
+        ...(this.readOnly ? { readOnly: this.readOnly } : {}),
+        ...(this.pattern ? { pattern: this.pattern } : {}),
+        ...(this.enum ? { enum: this.enum } : {}),
+        ...(this.format ? { format: this.format } : {}),
+        ...(this.contentMediaType
+          ? { contentMediaType: this.contentMediaType }
+          : {}),
+      },
+      this,
+    );
   }
 
   private getOrCreateValues(rowId: string): JsonStringValueStore[] {

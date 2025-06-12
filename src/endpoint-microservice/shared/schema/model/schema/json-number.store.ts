@@ -7,6 +7,7 @@ import {
   JsonRefSchema,
   JsonSchemaTypeName,
 } from 'src/endpoint-microservice/shared/schema';
+import { addSharedFieldsFromState } from 'src/endpoint-microservice/shared/schema/lib/addSharedFieldsFromStore';
 
 export class JsonNumberStore extends EventEmitter implements JsonNumberSchema {
   public readonly type = JsonSchemaTypeName.Number;
@@ -16,6 +17,10 @@ export class JsonNumberStore extends EventEmitter implements JsonNumberSchema {
   public parent: JsonSchemaStore | null = null;
 
   public default: number = 0;
+  public readOnly?: boolean;
+  public title?: string;
+  public description?: string;
+  public deprecated?: boolean;
 
   private readonly valuesMap: Map<string, JsonNumberValueStore[]> = new Map<
     string,
@@ -42,13 +47,17 @@ export class JsonNumberStore extends EventEmitter implements JsonNumberSchema {
     skip$Ref?: boolean;
   }): JsonNumberSchema | JsonRefSchema {
     if (this.$ref && options?.skip$Ref !== true) {
-      return { $ref: this.$ref };
+      return addSharedFieldsFromState({ $ref: this.$ref }, this);
     }
 
-    return {
-      type: this.type,
-      default: this.default,
-    };
+    return addSharedFieldsFromState(
+      {
+        type: this.type,
+        default: this.default,
+        ...(this.readOnly ? { readOnly: this.readOnly } : {}),
+      },
+      this,
+    );
   }
 
   private getOrCreateValues(rowId: string): JsonNumberValueStore[] {
