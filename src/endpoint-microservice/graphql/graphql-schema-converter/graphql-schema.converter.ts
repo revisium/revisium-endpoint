@@ -19,11 +19,14 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
+import { ClsService } from 'nestjs-cls';
 import {
   GetTableRowsDto,
+  RequestParams,
   RowModel,
 } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
   ContextType,
@@ -102,6 +105,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly proxyCoreApi: ProxyCoreApiService,
+    private readonly cls: ClsService<GraphqlCachedRowsClsStore>,
   ) {}
 
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
@@ -238,13 +242,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const revisionId = this.context.revisionId;
 
     return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      const { data: response, error } = await this.proxyCoreApi.api.row(
-        revisionId,
-        table.id,
-        id,
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
+      const response = await this.getCachedRow(revisionId, table.id, id, {
+        headers: ctx.headers,
+      });
       return response.data;
     };
   }
@@ -253,14 +253,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const revisionId = this.context.revisionId;
 
     return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      const { data: response, error } = await this.proxyCoreApi.api.row(
-        revisionId,
-        table.id,
-        id,
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-      return response;
+      return this.getCachedRow(revisionId, table.id, id, {
+        headers: ctx.headers,
+      });
     };
   }
 
@@ -746,8 +741,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   ) {
     const revisionId = this.context.revisionId;
 
-    return async (parent: Record<string, string>, _, context: ContextType) => {
-      const { data: response, error } = await this.proxyCoreApi.api.row(
+    return async (
+      parent: Record<string, string>,
+      _: unknown,
+      context: ContextType,
+    ) => {
+      const response = await this.getCachedRow(
         revisionId,
         foreignTableId,
         parent[field],
@@ -755,7 +754,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
           headers: context.headers,
         },
       );
-      if (error) throw this.toGraphQLError(error);
       return isFlat ? response.data : response;
     };
   }
@@ -769,14 +767,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
     return async (
       parent: Record<string, string[]>,
-      _,
+      _: unknown,
       context: ContextType,
     ) => {
       const ids = parent[field];
       if (!ids?.length) return [];
 
       const promises = ids.map(async (id) => {
-        const { data: response, error } = await this.proxyCoreApi.api.row(
+        const response = await this.getCachedRow(
           revisionId,
           foreignTableId,
           id,
@@ -784,12 +782,32 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
             headers: context.headers,
           },
         );
-        if (error) throw this.toGraphQLError(error);
         return isFlat ? response.data : response;
       });
 
       return Promise.all(promises);
     };
+  }
+
+  private async getCachedRow(
+    revisionId: string,
+    tableId: string,
+    id: string,
+    params: RequestParams = {},
+  ) {
+    const cacheKey = `${revisionId}:${tableId}:${id}`;
+    const cachedRows = this.cls.get('cachedRows');
+    let promise = cachedRows.get(cacheKey);
+
+    if (!promise) {
+      promise = this.proxyCoreApi.api.row(revisionId, tableId, id, params);
+      cachedRows.set(cacheKey, promise);
+    }
+
+    const { data: response, error } = await promise;
+    if (error) throw this.toGraphQLError(error);
+
+    return response;
   }
 
   private get projectName(): string {

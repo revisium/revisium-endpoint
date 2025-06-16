@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLSchema } from 'graphql/type';
+import { ClsService } from 'nestjs-cls';
 import { join } from 'path';
 import { printSchema } from 'graphql/utilities';
+import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
 import {
   getArraySchema,
   getBooleanSchema,
@@ -657,6 +659,10 @@ describe('GraphQL Schema Converter', () => {
         {
           provide: AsyncLocalStorage,
           useValue: new AsyncLocalStorage(),
+        },
+        {
+          provide: ClsService<GraphqlCachedRowsClsStore>,
+          useValue: { cachedRows: new Map() },
         },
       ],
     })

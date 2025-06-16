@@ -12,8 +12,10 @@ import {
 import { ApiExcludeController } from '@nestjs/swagger';
 import { NextFunction, Request, Response } from 'express';
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
+import { GraphqlCachedRowsInterceptor } from 'src/endpoint-microservice/graphql/graphql-cached-rows.interceptor';
 import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 
+@UseInterceptors(GraphqlCachedRowsInterceptor)
 @UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
 @Controller(

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AsyncLocalStorage } from 'async_hooks';
+import { ClsModule } from 'nestjs-cls';
 import { CoreApiModule } from 'src/endpoint-microservice/core-api/core-api.module';
 import { DatabaseModule } from 'src/endpoint-microservice/database/database.module';
 import { GRAPHQL_COMMANDS } from 'src/endpoint-microservice/graphql/commands/handlers';
@@ -11,7 +12,16 @@ import { GRAPHQL_QUERIES } from 'src/endpoint-microservice/graphql/queries/handl
 import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 
 @Module({
-  imports: [CqrsModule, DatabaseModule, CoreApiModule, MetricsModule],
+  imports: [
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+    }),
+    CqrsModule,
+    DatabaseModule,
+    CoreApiModule,
+    MetricsModule,
+  ],
   providers: [
     {
       provide: AsyncLocalStorage,
