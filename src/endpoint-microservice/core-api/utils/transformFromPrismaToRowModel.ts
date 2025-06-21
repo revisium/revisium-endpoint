@@ -10,6 +10,7 @@ export const excludeDataFromRowModel = (
     id: data.id,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
+    publishedAt: data.publishedAt,
     readonly: data.readonly,
   };
 };
