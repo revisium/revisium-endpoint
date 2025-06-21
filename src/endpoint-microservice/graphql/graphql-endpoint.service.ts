@@ -1,10 +1,14 @@
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { RequestHandler } from 'express';
 import { GraphQLSchema } from 'graphql/type';
-import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
+import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
 import { GraphqlMetricsPlugin } from 'src/endpoint-microservice/metrics/graphql/graphql-metrics.plugin';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
@@ -54,9 +58,9 @@ export class GraphqlEndpointService {
   private startedEndpointIds: string[] = [];
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly queryBus: QueryBus,
     private readonly graphqlMetricsPlugin: GraphqlMetricsPlugin,
+    private readonly internalCoreApi: InternalCoreApiService,
   ) {}
 
   public getEndpoint(routeKey: RouteKey) {
@@ -93,19 +97,18 @@ export class GraphqlEndpointService {
       throw new Error(`${endpointId} already started`);
     }
 
-    const dbEndpoint = await this.fetchDbEndpoint(endpointId);
-    const revision = dbEndpoint.revision;
-    const branch = dbEndpoint.revision.branch;
+    const { revision, project, branch } =
+      await this.fetchDbEndpoint(endpointId);
 
     const url = this.getEndpointRouteKey({
       revision,
-      project: branch.project,
+      project,
       branchName: branch.name,
     });
 
     const { apollo, table } = await this.createApolloServerWithSchema({
       projectId: branch.projectId,
-      projectName: branch.project.name,
+      projectName: project.name,
       endpointId,
       isDraft: revision.isDraft,
       revisionId: revision.id,
@@ -203,20 +206,15 @@ export class GraphqlEndpointService {
     return `${organizationId}/${projectName}/${branchName}/${postfix}`;
   }
 
-  private fetchDbEndpoint(endpointId: string) {
-    return this.prisma.endpoint.findUniqueOrThrow({
-      where: { id: endpointId },
-      include: {
-        revision: {
-          include: {
-            branch: {
-              include: {
-                project: true,
-              },
-            },
-          },
-        },
-      },
-    });
+  private async fetchDbEndpoint(endpointId: string) {
+    const { data, error } =
+      await this.internalCoreApi.api.endpointRelatives(endpointId);
+
+    if (error) {
+      this.logger.error(endpointId);
+      throw new InternalServerErrorException(error, error.statusCode);
+    }
+
+    return data;
   }
 }

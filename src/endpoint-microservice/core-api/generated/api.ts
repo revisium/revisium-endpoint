@@ -125,6 +125,11 @@ export interface BranchesConnection {
   pageInfo: PageInfo;
 }
 
+export interface SuccessModelDto {
+  /** @example true */
+  success: boolean;
+}
+
 export interface UpdateProjectDto {
   isPublic: boolean;
 }
@@ -149,6 +154,11 @@ export interface UsersProjectConnection {
 export interface AddUserToProjectDto {
   userId: string;
   roleId: "developer" | "editor" | "reader";
+}
+
+export interface TouchedModelDto {
+  /** @example true */
+  touched: boolean;
 }
 
 export interface Id {
@@ -237,7 +247,7 @@ export interface CreateTableResponse {
 }
 
 export interface OrderByDto {
-  field: "createdAt" | "updatedAt" | "id";
+  field: "createdAt" | "updatedAt" | "publishedAt" | "id";
   direction: "asc" | "desc";
 }
 
@@ -326,6 +336,8 @@ export interface RowWhereInputDto {
   createdAt?: DateTimeFilterDto;
   /** Filter by updatedAt */
   updatedAt?: DateTimeFilterDto;
+  /** Filter by publishedAt */
+  publishedAt?: DateTimeFilterDto;
   /** Filter by data */
   data?: JsonFilterDto;
   /** Filter by meta */
@@ -358,6 +370,8 @@ export interface RowModel {
   createdAt: string;
   /** @format date-time */
   updatedAt: string;
+  /** @format date-time */
+  publishedAt: string;
   readonly: boolean;
   data: Record<string, any>;
 }
@@ -432,6 +446,13 @@ export interface UploadFileResponse {
   previousVersionTableId?: string;
   row?: RowModel;
   previousVersionRowId?: string;
+}
+
+export interface GetEndpointResultDto {
+  endpoint: EndpointModel;
+  revision: RevisionModel;
+  branch: BranchModel;
+  project: ProjectModel;
 }
 
 export interface GoogleOauth {
@@ -783,7 +804,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 1.2.0
+ * @version 1.4.1
  * @contact
  */
 export class Api<
@@ -1010,7 +1031,7 @@ export class Api<
       projectName: string,
       params: RequestParams = {},
     ) =>
-      this.request<boolean, any>({
+      this.request<SuccessModelDto, any>({
         path: `/api/organization/${organizationId}/projects/${projectName}`,
         method: "DELETE",
         secure: true,
@@ -1032,7 +1053,7 @@ export class Api<
       data: UpdateProjectDto,
       params: RequestParams = {},
     ) =>
-      this.request<boolean, any>({
+      this.request<SuccessModelDto, any>({
         path: `/api/organization/${organizationId}/projects/${projectName}`,
         method: "PUT",
         body: data,
@@ -1119,7 +1140,7 @@ export class Api<
       data: AddUserToProjectDto,
       params: RequestParams = {},
     ) =>
-      this.request<boolean, any>({
+      this.request<SuccessModelDto, any>({
         path: `/api/organization/${organizationId}/projects/${projectName}/users`,
         method: "POST",
         body: data,
@@ -1143,7 +1164,7 @@ export class Api<
       userId: string,
       params: RequestParams = {},
     ) =>
-      this.request<boolean, any>({
+      this.request<SuccessModelDto, any>({
         path: `/api/organization/${organizationId}/projects/${projectName}/users/${userId}`,
         method: "DELETE",
         secure: true,
@@ -1187,7 +1208,7 @@ export class Api<
       branchName: string,
       params: RequestParams = {},
     ) =>
-      this.request<boolean, any>({
+      this.request<TouchedModelDto, any>({
         path: `/api/organization/${organizationId}/projects/${projectName}/branches/${branchName}/touched`,
         method: "GET",
         secure: true,
@@ -1991,6 +2012,24 @@ export class Api<
         body: data,
         secure: true,
         type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Endpoint
+     * @name EndpointRelatives
+     * @summary Retrieve all related entities for a given endpoint
+     * @request GET:/api/endpoints/{endpointId}/relatives
+     * @secure
+     */
+    endpointRelatives: (endpointId: string, params: RequestParams = {}) =>
+      this.request<GetEndpointResultDto, any>({
+        path: `/api/endpoints/${endpointId}/relatives`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),
