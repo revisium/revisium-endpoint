@@ -2021,6 +2021,7 @@ export class Api<
      *
      * @tags Endpoint
      * @name EndpointRelatives
+     * @summary Retrieve all related entities for a given endpoint
      * @request GET:/api/endpoints/{endpointId}/relatives
      * @secure
      */
