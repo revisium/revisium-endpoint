@@ -34,7 +34,9 @@ import { getSortOrder } from 'src/endpoint-microservice/graphql/graphql-schema-c
 import { JsonType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/jsonType';
 import { createValidTables } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/createValidTables';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
+import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
+import { isStringForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isStringForeignSchema';
 import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isValidName';
 import {
   Converter,
@@ -125,6 +127,31 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private createValidTables() {
     this.context.validTables = createValidTables(this.context.tables);
+
+    const table = Object.values(this.context.validTables);
+
+    for (const { options } of table) {
+      const schema = options.table.schema;
+
+      if (
+        isStringForeignSchema(schema) ||
+        (isArraySchema(schema) && isStringForeignSchema(schema.items))
+      ) {
+        continue;
+      }
+      this.buildNodeCache(options.table.id);
+    }
+
+    for (const { options } of table) {
+      const schema = options.table.schema;
+
+      if (
+        isStringForeignSchema(schema) ||
+        (isArraySchema(schema) && isStringForeignSchema(schema.items))
+      ) {
+        this.buildNodeCache(options.table.id);
+      }
+    }
   }
 
   private createFieldsFromNodes(): Record<string, any> {
@@ -306,10 +333,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getCachedNodeType(tableId: string) {
-    if (!this.context.nodes[tableId]) {
-      this.buildNodeCache(tableId);
-    }
-
     return this.context.nodes[tableId];
   }
 
@@ -473,8 +496,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     field: string,
     isFlat: boolean = false,
   ): GraphQLFieldConfig<any, any> | null {
-    const isForeignKey =
-      !('$ref' in schema) && schema.type === 'string' && schema.foreignKey;
+    const isForeignKey = isStringForeignSchema(schema);
 
     if (isForeignKey) {
       const config: GraphQLFieldConfig<any, any> = {
@@ -505,13 +527,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     field: string,
     isFlat: boolean = false,
   ): GraphQLFieldConfig<any, any> | null {
-    if (
-      !('$ref' in schema) &&
-      schema.type === 'array' &&
-      !('$ref' in schema.items) &&
-      schema.items.type === 'string' &&
-      schema.items.foreignKey
-    ) {
+    if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
       const config: GraphQLFieldConfig<any, any> = {
         type: new GraphQLNonNull(
           new GraphQLList(
