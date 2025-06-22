@@ -63,33 +63,70 @@ export const createMockSchemaTableData = () => ({
   error: null,
 });
 
+export const user1 = {
+  id: 'user-1',
+  data: {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com',
+    address: {
+      city: 'city 1',
+      street: 'street 1',
+      zipCode: 123456,
+    },
+    posts: [
+      {
+        value: 1,
+        post: 'post-1',
+      },
+      {
+        value: 2,
+        post: 'post-2',
+      },
+    ],
+  },
+};
+
+export const user2 = {
+  id: 'user-2',
+  data: {
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'jane@example.com',
+    address: {
+      city: 'city 2',
+      street: 'street 2',
+      zipCode: 654321,
+    },
+    posts: [
+      {
+        value: 3,
+        post: 'post-1',
+      },
+      {
+        value: 4,
+        post: 'post-2',
+      },
+      {
+        value: 5,
+        post: 'post-2',
+      },
+      {
+        value: 6,
+        post: 'post-2',
+      },
+    ],
+  },
+};
+
 export const createMockUserTableData = () => ({
   data: {
     edges: [
       {
-        node: {
-          id: 'user-1',
-          data: {
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john@example.com',
-          },
-          address: {
-            city: 'city 1',
-            street: 'street 1',
-            zipCode: 123456,
-          },
-        },
+        node: user1,
       },
       {
-        node: {
-          id: 'user-2',
-          data: {
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane@example.com',
-          },
-        },
+        node: user2,
       },
     ],
     totalCount: 2,
@@ -97,26 +134,30 @@ export const createMockUserTableData = () => ({
   error: null,
 });
 
+export const post1 = {
+  id: 'post-1',
+  data: {
+    title: 'Hello World',
+    content: 'This is my first post',
+  },
+};
+
+export const post2 = {
+  id: 'post-2',
+  data: {
+    title: 'GraphQL is awesome',
+    content: 'Learning about GraphQL endpoints',
+  },
+};
+
 export const createMockPostTableData = () => ({
   data: {
     edges: [
       {
-        node: {
-          id: 'post-1',
-          data: {
-            title: 'Hello World',
-            content: 'This is my first post',
-          },
-        },
+        node: post1,
       },
       {
-        node: {
-          id: 'post-2',
-          data: {
-            title: 'GraphQL is awesome',
-            content: 'Learning about GraphQL endpoints',
-          },
-        },
+        node: post2,
       },
     ],
     totalCount: 2,
@@ -150,6 +191,34 @@ export const createRowsMock = () => {
         return Promise.resolve(mockPostTableData);
     }
   });
+};
+
+export const createRowMock = () => {
+  const mockUserTableData = createMockUserTableData();
+  const mockPostTableData = createMockPostTableData();
+
+  return jest
+    .fn()
+    .mockImplementation(
+      (revisionId: string, tableId: string, rowId: string) => {
+        switch (tableId) {
+          case USER_TABLE_ID: {
+            const value = mockUserTableData.data.edges.find(
+              (edge) => edge.node.id === rowId,
+            ).node;
+
+            return Promise.resolve({ data: value });
+          }
+          case POST_TABLE_ID: {
+            const value = mockPostTableData.data.edges.find(
+              (edge) => edge.node.id === rowId,
+            ).node;
+
+            return Promise.resolve({ data: value });
+          }
+        }
+      },
+    );
 };
 
 export const createMockCoreApiResponse = () => ({
@@ -199,5 +268,6 @@ export const createMockProxyCoreApiService = () => ({
   api: {
     endpointRelatives: jest.fn().mockResolvedValue(createMockCoreApiResponse()),
     rows: createRowsMock(),
+    row: createRowMock(),
   },
 });

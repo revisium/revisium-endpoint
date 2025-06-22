@@ -13,11 +13,14 @@ import {
   ORGANIZATION_ID,
   PROJECT_NAME,
   BRANCH_NAME,
-  createMockUserTableData,
+  user1,
+  post1,
+  post2,
+  user2,
 } from './test-utils';
 
 describe('graphql controller', () => {
-  it('should have proper test query structure for User table', async () => {
+  it('should have proper test query structure for post table and post resolvers ', async () => {
     const testQuery = getUsersQuery();
 
     const result = await graphqlQuery(getUrl(), {
@@ -26,9 +29,40 @@ describe('graphql controller', () => {
     });
 
     expect(result.users.totalCount).toBe(2);
-    expect(result.users.edges[0].node.data).toStrictEqual(
-      createMockUserTableData().data.edges[0].node.data,
-    );
+    expect(result.users.edges[0].node.data).toStrictEqual({
+      ...user1.data,
+      posts: [
+        {
+          post: post1,
+          value: 1,
+        },
+        {
+          post: post2,
+          value: 2,
+        },
+      ],
+    });
+    expect(result.users.edges[1].node.data).toStrictEqual({
+      ...user2.data,
+      posts: [
+        {
+          post: post1,
+          value: 3,
+        },
+        {
+          post: post2,
+          value: 4,
+        },
+        {
+          post: post2,
+          value: 5,
+        },
+        {
+          post: post2,
+          value: 6,
+        },
+      ],
+    });
   });
 
   function getUsersQuery() {
@@ -42,6 +76,21 @@ describe('graphql controller', () => {
                   firstName
                   lastName
                   email
+                  address {
+                    city
+                    street
+                    zipCode
+                  }
+                  posts {
+                    value
+                    post {
+                      id
+                      data {
+                        title
+                        content
+                      }
+                    }
+                  }
                 }
               }
             }
