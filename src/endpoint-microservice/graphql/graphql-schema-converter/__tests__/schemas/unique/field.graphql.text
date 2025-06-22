@@ -1,4 +1,4 @@
-scalar DataTime
+scalar DateTime
 
 scalar JSON
 
@@ -134,13 +134,13 @@ type ProjectUserNAmE {
 }
 
 type ProjectUserNode {
-  createdAt: DataTime!
+  createdAt: DateTime!
   createdId: String!
   data: ProjectUser!
   id: String!
   json: JSON
-  publishedAt: DataTime!
-  updatedAt: DataTime!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
   versionId: String!
 }
 
