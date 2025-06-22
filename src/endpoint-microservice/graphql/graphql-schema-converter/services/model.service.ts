@@ -9,6 +9,7 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
@@ -17,6 +18,7 @@ import { JsonType } from 'src/endpoint-microservice/graphql/graphql-schema-conve
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
+import { isRootForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isRootForeignSchema';
 import { isStringForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isStringForeignSchema';
 import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isValidName';
 import {
@@ -37,7 +39,13 @@ export class ModelService {
   constructor(
     private readonly contextService: ContextService,
     private readonly resolver: ResolverService,
+    private readonly cacheService: CacheService,
   ) {}
+
+  public create(options: CreatingTableOptionsType[]) {
+    this.createNotRootForeignKey(options);
+    this.createRootForeignKey(options);
+  }
 
   public getNodeType(options: CreatingTableOptionsType) {
     const node = new GraphQLObjectType<RowModel>({
@@ -123,8 +131,8 @@ export class ModelService {
     if (isForeignKey) {
       const config: GraphQLFieldConfig<any, any> = {
         type: isFlat
-          ? this.getCachedNodeType(schema.foreignKey).dataFlat.type
-          : new GraphQLNonNull(this.getCachedNodeType(schema.foreignKey).node),
+          ? this.cacheService.get(schema.foreignKey).dataFlat.type
+          : new GraphQLNonNull(this.cacheService.get(schema.foreignKey).node),
         resolve: this.resolver.getFieldResolver(
           schema.foreignKey,
           field,
@@ -154,9 +162,9 @@ export class ModelService {
         type: new GraphQLNonNull(
           new GraphQLList(
             isFlat
-              ? this.getCachedNodeType(schema.items.foreignKey).dataFlat.type
+              ? this.cacheService.get(schema.items.foreignKey).dataFlat.type
               : new GraphQLNonNull(
-                  this.getCachedNodeType(schema.items.foreignKey).node,
+                  this.cacheService.get(schema.items.foreignKey).node,
                 ),
           ),
         ),
@@ -260,12 +268,40 @@ export class ModelService {
     });
   }
 
-  private get projectName(): string {
-    return getProjectName(this.context.projectName);
+  private createNotRootForeignKey(options: CreatingTableOptionsType[]) {
+    for (const option of options) {
+      const schema = option.table.schema;
+
+      if (isRootForeignSchema(schema)) {
+        continue;
+      }
+
+      this.createNodeCache(option);
+    }
   }
 
-  private getCachedNodeType(tableId: string) {
-    return this.context.nodes[tableId];
+  private createRootForeignKey(options: CreatingTableOptionsType[]) {
+    for (const option of options) {
+      const schema = option.table.schema;
+
+      if (isRootForeignSchema(schema)) {
+        this.createNodeCache(option);
+      }
+    }
+  }
+
+  private createNodeCache(option: CreatingTableOptionsType): void {
+    const { node } = this.getNodeType(option);
+    const dataFlat = this.getDataFlatType(option);
+
+    this.cacheService.add(option.table.id, {
+      node,
+      dataFlat,
+    });
+  }
+
+  private get projectName(): string {
+    return getProjectName(this.context.projectName);
   }
 
   private get context() {

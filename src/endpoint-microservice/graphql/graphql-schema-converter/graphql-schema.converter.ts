@@ -9,7 +9,7 @@ import {
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
-import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
+import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
@@ -44,7 +44,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
-    private readonly cacheService: CacheService,
+    private readonly movelService: ModelService,
   ) {}
 
   private get context(): GraphQLSchemaConverterContext {
@@ -109,7 +109,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       (validTable) => validTable.options,
     );
 
-    this.cacheService.build(options);
+    this.movelService.create(options);
   }
 
   private createQueries(
