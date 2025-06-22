@@ -17,6 +17,8 @@ import {
   post1,
   post2,
   user2,
+  REVISION_ID,
+  POST_TABLE_ID,
 } from './test-utils';
 
 describe('graphql controller', () => {
@@ -63,6 +65,37 @@ describe('graphql controller', () => {
         },
       ],
     });
+  });
+
+  it('should have proper caching for row requests', async () => {
+    const testQuery = getUsersQuery();
+
+    const result = await graphqlQuery(getUrl(), {
+      ...testQuery,
+      app,
+    });
+
+    const headers = { headers: { authorization: 'Bearer undefined' } };
+
+    const countSecondPostsInUser = result.users.edges[1].node.data.posts.filter(
+      (item) => item.post.id === 'post-2',
+    ).length;
+    expect(countSecondPostsInUser).toBe(3);
+    expect(mockProxyCoreApiService.api.row).toHaveBeenCalledTimes(2);
+    expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
+      1,
+      REVISION_ID,
+      POST_TABLE_ID,
+      'post-1',
+      headers,
+    );
+    expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
+      2,
+      REVISION_ID,
+      POST_TABLE_ID,
+      'post-2',
+      headers,
+    );
   });
 
   function getUsersQuery() {
@@ -137,5 +170,9 @@ describe('graphql controller', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(async () => {
+    jest.clearAllMocks();
   });
 });
