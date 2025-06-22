@@ -57,7 +57,6 @@ const ITEMS_POSTFIX = 'Items';
 
 export interface CacheNode {
   node: GraphQLObjectType<RowModel>;
-  data: GraphQLFieldConfig<any, any>;
   dataFlat: GraphQLFieldConfig<any, any>;
 }
 
@@ -297,12 +296,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private buildNodeCache(tableId: string): void {
     const validTable = this.context.validTables[tableId];
 
-    const { data, node } = this.getNodeType(validTable.options);
+    const { node } = this.getNodeType(validTable.options);
     const dataFlat = this.getDataFlatType(validTable.options);
 
     this.context.nodes[tableId] = {
       node,
-      data,
       dataFlat,
     };
   }
@@ -316,12 +314,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private getNodeType(options: CreatingTableOptionsType) {
-    const data = this.getSchemaConfig(
-      options.table.schema,
-      DATA_KEY,
-      `${this.projectName}${options.safetyTableId}`,
-    );
-
     const node = new GraphQLObjectType<RowModel>({
       name: `${this.projectName}${options.safetyTableId}Node`,
       fields: () => ({
@@ -331,13 +323,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
         publishedAt: { type: new GraphQLNonNull(DateTimeType) },
-        [DATA_KEY]: data,
+        [DATA_KEY]: this.getSchemaConfig(
+          options.table.schema,
+          DATA_KEY,
+          `${this.projectName}${options.safetyTableId}`,
+        ),
         json: { type: JsonType, resolve: (parent) => parent.data },
       }),
     });
 
     return {
-      data,
       node,
     };
   }
