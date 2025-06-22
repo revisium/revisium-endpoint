@@ -7,6 +7,7 @@ import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/inter
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
 import { CreateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/commands/impl';
+import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 import {
   createMockInternalCoreApiService,
   createMockProxyCoreApiService,
@@ -224,11 +225,12 @@ describe('graphql controller', () => {
   }
 
   let app: INestApplication;
-
   const mockInternalCoreApiService = createMockInternalCoreApiService();
   const mockProxyCoreApiService = createMockProxyCoreApiService();
 
   beforeAll(async () => {
+    process.env.NODE_ENV = 'test';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [EndpointMicroserviceModule.forRoot({ mode: 'monolith' })],
     })
@@ -250,9 +252,9 @@ describe('graphql controller', () => {
 
   afterAll(async () => {
     await app.close();
-  });
+  }, 10000);
 
-  afterEach(async () => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 });

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationShutdown } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { AsyncLocalStorage } from 'async_hooks';
 import { ClsModule } from 'nestjs-cls';
@@ -34,4 +34,12 @@ import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module'
   ],
   controllers: [GraphqlEndpointController],
 })
-export class GraphqlModule {}
+export class GraphqlModule implements OnApplicationShutdown {
+  constructor(
+    private readonly graphqlEndpointService: GraphqlEndpointService,
+  ) {}
+
+  async onApplicationShutdown() {
+    await this.graphqlEndpointService.shutdown();
+  }
+}

@@ -217,4 +217,28 @@ export class GraphqlEndpointService {
 
     return data;
   }
+
+  async shutdown() {
+    this.logger.log('Shutting down all GraphQL endpoints...');
+
+    const shutdownPromises = Array.from(this.endpointMap.values()).map(
+      async (endpoint) => {
+        try {
+          await endpoint.apollo.stop();
+          this.logger.log(
+            `Stopped Apollo Server for endpoint ${endpoint.endpointId}`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error stopping Apollo Server for endpoint ${endpoint.endpointId}:`,
+            error,
+          );
+        }
+      },
+    );
+
+    await Promise.all(shutdownPromises);
+
+    this.logger.log('All GraphQL endpoints shut down');
+  }
 }
