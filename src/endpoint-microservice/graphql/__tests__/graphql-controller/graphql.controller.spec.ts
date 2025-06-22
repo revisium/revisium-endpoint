@@ -7,7 +7,6 @@ import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/inter
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
 import { CreateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/commands/impl';
-import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 import {
   createMockInternalCoreApiService,
   createMockProxyCoreApiService,
@@ -29,6 +28,7 @@ describe('graphql controller', () => {
     const result = await graphqlQuery(getUrl(), {
       ...testQuery,
       app,
+      token: 'test-token',
     });
 
     expect(result.users.totalCount).toBe(2);
@@ -76,6 +76,7 @@ describe('graphql controller', () => {
     const result = await graphqlQuery(getUrl(), {
       ...testQuery,
       app,
+      token: 'test-token',
     });
 
     expect(result.usersFlat.totalCount).toBe(2);
@@ -118,7 +119,7 @@ describe('graphql controller', () => {
   });
 
   function checkCachingRows(posts: any) {
-    const headers = { headers: { authorization: 'Bearer undefined' } };
+    const headers = { headers: { authorization: 'Bearer test-token' } };
 
     const countSecondPostsInUser = posts.filter(
       (item) => item.post.id === 'post-2',
