@@ -1,9 +1,11 @@
 import { nanoid } from 'nanoid';
+import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
 import {
   getObjectSchema,
   getStringSchema,
   getNumberSchema,
   getArraySchema,
+  getRefSchema,
 } from 'src/endpoint-microservice/shared/schema/schema.mocks';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
@@ -38,6 +40,7 @@ export const createUserSchema = () =>
 
 export const createPostSchema = () =>
   getObjectSchema({
+    id: getRefSchema(SystemSchemaIds.RowId),
     title: getStringSchema(),
     content: getStringSchema(),
   });
@@ -137,6 +140,7 @@ export const createMockUserTableData = () => ({
 export const post1 = {
   id: 'post-1',
   data: {
+    id: 'post-1',
     title: 'Hello World',
     content: 'This is my first post',
   },
@@ -145,6 +149,7 @@ export const post1 = {
 export const post2 = {
   id: 'post-2',
   data: {
+    id: 'post-2',
     title: 'GraphQL is awesome',
     content: 'Learning about GraphQL endpoints',
   },

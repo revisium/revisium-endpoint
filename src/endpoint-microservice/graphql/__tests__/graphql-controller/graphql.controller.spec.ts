@@ -65,19 +65,61 @@ describe('graphql controller', () => {
         },
       ],
     });
+
+    checkCachingRows(result.users.edges[1].node.data.posts);
   });
 
-  it('should have proper caching for row requests', async () => {
-    const testQuery = getUsersQuery();
+  it('should have proper test query structure for post table and post resolvers (flat)', async () => {
+    const testQuery = getUsersFlatQuery();
 
     const result = await graphqlQuery(getUrl(), {
       ...testQuery,
       app,
     });
 
+    expect(result.usersFlat.totalCount).toBe(2);
+    expect(result.usersFlat.edges[0].node).toStrictEqual({
+      ...user1.data,
+      posts: [
+        {
+          post: post1.data,
+          value: 1,
+        },
+        {
+          post: post2.data,
+          value: 2,
+        },
+      ],
+    });
+    expect(result.usersFlat.edges[1].node).toStrictEqual({
+      ...user2.data,
+      posts: [
+        {
+          post: post1.data,
+          value: 3,
+        },
+        {
+          post: post2.data,
+          value: 4,
+        },
+        {
+          post: post2.data,
+          value: 5,
+        },
+        {
+          post: post2.data,
+          value: 6,
+        },
+      ],
+    });
+
+    checkCachingRows(result.usersFlat.edges[1].node.posts);
+  });
+
+  function checkCachingRows(posts: any) {
     const headers = { headers: { authorization: 'Bearer undefined' } };
 
-    const countSecondPostsInUser = result.users.edges[1].node.data.posts.filter(
+    const countSecondPostsInUser = posts.filter(
       (item) => item.post.id === 'post-2',
     ).length;
     expect(countSecondPostsInUser).toBe(3);
@@ -96,7 +138,7 @@ describe('graphql controller', () => {
       'post-2',
       headers,
     );
-  });
+  }
 
   function getUsersQuery() {
     return {
@@ -119,10 +161,48 @@ describe('graphql controller', () => {
                     post {
                       id
                       data {
+                        id
                         title
                         content
                       }
                     }
+                  }
+                }
+              }
+            }
+            totalCount
+          }
+        }
+      `,
+      variables: {
+        data: {
+          first: 100,
+        },
+      },
+    };
+  }
+
+  function getUsersFlatQuery() {
+    return {
+      query: gql`
+        query Users($data: BlogGetUsersInput) {
+          usersFlat(data: $data) {
+            edges {
+              node {
+                firstName
+                lastName
+                email
+                address {
+                  city
+                  street
+                  zipCode
+                }
+                posts {
+                  value
+                  post {
+                    id
+                    title
+                    content
                   }
                 }
               }
