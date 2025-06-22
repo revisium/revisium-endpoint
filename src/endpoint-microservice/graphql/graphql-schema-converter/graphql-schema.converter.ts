@@ -4,7 +4,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -19,17 +18,9 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
-import { ClsService } from 'nestjs-cls';
+import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import {
-  GetTableRowsDto,
-  RequestParams,
-  RowModel,
-} from 'src/endpoint-microservice/core-api/generated/api';
-import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
-import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
-import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
-import {
-  ContextType,
   CreatingTableOptionsType,
   ValidTableType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
@@ -48,7 +39,6 @@ import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-co
 import {
   Converter,
   ConverterContextType,
-  ConverterTable,
 } from 'src/endpoint-microservice/shared/converter';
 import {
   JsonObjectSchema,
@@ -65,13 +55,13 @@ const CONNECTION_KEY = 'Connection';
 const EDGE_KEY = 'Edge';
 const ITEMS_POSTFIX = 'Items';
 
-interface CacheNode {
+export interface CacheNode {
   node: GraphQLObjectType<RowModel>;
   data: GraphQLFieldConfig<any, any>;
   dataFlat: GraphQLFieldConfig<any, any>;
 }
 
-interface GraphQLSchemaConverterContext extends ConverterContextType {
+export interface GraphQLSchemaConverterContext extends ConverterContextType {
   pageInfo: GraphQLObjectType;
   sortOrder: GraphQLEnumType;
   listArgsMap: Record<string, GraphQLInputObjectType>;
@@ -87,8 +77,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
-    private readonly proxyCoreApi: ProxyCoreApiService,
-    private readonly cls: ClsService<GraphqlCachedRowsClsStore>,
+    private readonly resolver: ResolverService,
   ) {}
 
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
@@ -158,27 +147,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     );
   }
 
-  private getItemFlatResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      const response = await this.getCachedRow(revisionId, table.id, id, {
-        headers: ctx.headers,
-      });
-      return response.data;
-    };
-  }
-
-  private getItemResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      return this.getCachedRow(revisionId, table.id, id, {
-        headers: ctx.headers,
-      });
-    };
-  }
-
   private createItemFlatField(
     options: CreatingTableOptionsType,
   ): GraphQLFieldConfig<any, any> {
@@ -189,7 +157,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       args: {
         id: { type: new GraphQLNonNull(GraphQLString) },
       },
-      resolve: dataConfig.resolve ?? this.getItemFlatResolver(options.table),
+      resolve:
+        dataConfig.resolve ?? this.resolver.getItemFlatResolver(options.table),
     };
   }
 
@@ -201,7 +170,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       args: {
         id: { type: new GraphQLNonNull(GraphQLString) },
       },
-      resolve: this.getItemResolver(options.table),
+      resolve: this.resolver.getItemResolver(options.table),
     };
   }
 
@@ -212,35 +181,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return {
       type: new GraphQLNonNull(ConnectionType),
       args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
-      resolve: this.getListResolver(options.table),
-    };
-  }
-
-  private getListResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      _: unknown,
-      {
-        data,
-      }: {
-        data: GetTableRowsDto;
-      },
-      ctx: ContextType,
-    ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
-        revisionId,
-        table.id,
-        {
-          first: data?.first || DEFAULT_FIRST,
-          after: data?.after ?? undefined,
-          orderBy: data?.orderBy ?? undefined,
-          where: data?.where ?? undefined,
-        },
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-      return response;
+      resolve: this.resolver.getListResolver(options.table),
     };
   }
 
@@ -254,41 +195,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       args: {
         data: { type: this.getListArgs(options.pluralSafetyTableId) },
       },
-      resolve: this.getListFlatResolver(options.table),
-    };
-  }
-
-  private getListFlatResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      _: unknown,
-      { data }: { data: GetTableRowsDto },
-      ctx: ContextType,
-    ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
-        revisionId,
-        table.id,
-        {
-          first: data?.first || DEFAULT_FIRST,
-          after: data?.after ?? undefined,
-          orderBy: data?.orderBy ?? undefined,
-          where: data?.where ?? undefined,
-        },
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-
-      const flatEdges = response.edges.map((edge) => ({
-        cursor: edge.cursor,
-        node: edge.node.data,
-      }));
-
-      return {
-        edges: flatEdges,
-        pageInfo: response.pageInfo,
-        totalCount: response.totalCount,
-      };
+      resolve: this.resolver.getListFlatResolver(options.table),
     };
   }
 
@@ -579,7 +486,11 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         type: isFlat
           ? this.getCachedNodeType(schema.foreignKey).dataFlat.type
           : new GraphQLNonNull(this.getCachedNodeType(schema.foreignKey).node),
-        resolve: this.getFieldResolver(schema.foreignKey, field, isFlat),
+        resolve: this.resolver.getFieldResolver(
+          schema.foreignKey,
+          field,
+          isFlat,
+        ),
       };
 
       if (schema.deprecated && schema.description) {
@@ -616,7 +527,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
                 ),
           ),
         ),
-        resolve: this.getFieldArrayItemResolver(
+        resolve: this.resolver.getFieldArrayItemResolver(
           schema.items.foreignKey,
           field,
           isFlat,
@@ -635,91 +546,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return null;
   }
 
-  private getFieldResolver(
-    foreignTableId: string,
-    field: string,
-    isFlat: boolean = false,
-  ) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      parent: Record<string, string>,
-      _: unknown,
-      context: ContextType,
-    ) => {
-      const response = await this.getCachedRow(
-        revisionId,
-        foreignTableId,
-        parent[field],
-        {
-          headers: context.headers,
-        },
-      );
-      return isFlat ? response.data : response;
-    };
-  }
-
-  private getFieldArrayItemResolver(
-    foreignTableId: string,
-    field: string,
-    isFlat: boolean = false,
-  ) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      parent: Record<string, string[]>,
-      _: unknown,
-      context: ContextType,
-    ) => {
-      const ids = parent[field];
-      if (!ids?.length) return [];
-
-      const promises = ids.map(async (id) => {
-        const response = await this.getCachedRow(
-          revisionId,
-          foreignTableId,
-          id,
-          {
-            headers: context.headers,
-          },
-        );
-        return isFlat ? response.data : response;
-      });
-
-      return Promise.all(promises);
-    };
-  }
-
-  private async getCachedRow(
-    revisionId: string,
-    tableId: string,
-    id: string,
-    params: RequestParams = {},
-  ) {
-    const cacheKey = `${revisionId}:${tableId}:${id}`;
-    const cachedRows = this.cls.get('cachedRows');
-    let promise = cachedRows.get(cacheKey);
-
-    if (!promise) {
-      promise = this.proxyCoreApi.api.row(revisionId, tableId, id, params);
-      cachedRows.set(cacheKey, promise);
-    }
-
-    const { data: response, error } = await promise;
-    if (error) throw this.toGraphQLError(error);
-
-    return response;
-  }
-
   private get projectName(): string {
     return getProjectName(this.context.projectName);
-  }
-
-  private toGraphQLError(err: any): GraphQLError {
-    this.logger.error(err);
-    return new GraphQLError(err.message, {
-      extensions: { code: err.error, originalError: err },
-    });
   }
 
   private get context(): GraphQLSchemaConverterContext {
