@@ -44,7 +44,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
-    private readonly movelService: ModelService,
+    private readonly modelService: ModelService,
   ) {}
 
   private get context(): GraphQLSchemaConverterContext {
@@ -109,7 +109,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       (validTable) => validTable.options,
     );
 
-    this.movelService.create(options);
+    this.modelService.create(options);
   }
 
   private createQueries(
