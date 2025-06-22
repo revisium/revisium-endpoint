@@ -23,24 +23,11 @@ export class ResolverService {
   ) {}
 
   public getItemResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      return this.getCachedRow(revisionId, table.id, id, {
-        headers: ctx.headers,
-      });
-    };
+    return this.getItemBaseResolver(table.id, false);
   }
 
   public getItemFlatResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      const response = await this.getCachedRow(revisionId, table.id, id, {
-        headers: ctx.headers,
-      });
-      return response.data;
-    };
+    return this.getItemBaseResolver(table.id, true);
   }
 
   public getFieldResolver(
@@ -99,34 +86,14 @@ export class ResolverService {
   }
 
   public getListResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      _: unknown,
-      {
-        data,
-      }: {
-        data: GetTableRowsDto;
-      },
-      ctx: ContextType,
-    ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
-        revisionId,
-        table.id,
-        {
-          first: data?.first || DEFAULT_FIRST,
-          after: data?.after ?? undefined,
-          orderBy: data?.orderBy ?? undefined,
-          where: data?.where ?? undefined,
-        },
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-      return response;
-    };
+    return this.getListBaseResolver(table, false);
   }
 
   public getListFlatResolver(table: ConverterTable) {
+    return this.getListBaseResolver(table, true);
+  }
+
+  private getListBaseResolver(table: ConverterTable, isFlat: boolean) {
     const revisionId = this.context.revisionId;
 
     return async (
@@ -147,6 +114,10 @@ export class ResolverService {
       );
       if (error) throw this.toGraphQLError(error);
 
+      if (!isFlat) {
+        return response;
+      }
+
       const flatEdges = response.edges.map((edge) => ({
         cursor: edge.cursor,
         node: edge.node.data,
@@ -157,6 +128,17 @@ export class ResolverService {
         pageInfo: response.pageInfo,
         totalCount: response.totalCount,
       };
+    };
+  }
+
+  private getItemBaseResolver(tableId: string, isFlat: boolean) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const response = await this.getCachedRow(revisionId, tableId, id, {
+        headers: ctx.headers,
+      });
+      return isFlat ? response.data : response;
     };
   }
 

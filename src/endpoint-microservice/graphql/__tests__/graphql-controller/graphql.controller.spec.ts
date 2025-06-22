@@ -19,10 +19,11 @@ import {
   user2,
   REVISION_ID,
   POST_TABLE_ID,
+  USER_TABLE_ID,
 } from './test-utils';
 
 describe('graphql controller', () => {
-  it('should have proper test query structure for post table and post resolvers ', async () => {
+  it('should have proper test list query structure for user table and post resolvers ', async () => {
     const testQuery = getUsersQuery();
 
     const result = await graphqlQuery(getUrl(), {
@@ -67,10 +68,10 @@ describe('graphql controller', () => {
       ],
     });
 
-    checkCachingRows(result.users.edges[1].node.data.posts);
+    checkCachingRowsForList(result.users.edges[1].node.data.posts);
   });
 
-  it('should have proper test query structure for post table and post resolvers (flat)', async () => {
+  it('should have proper test list query structure for user table and post resolvers (flat)', async () => {
     const testQuery = getUsersFlatQuery();
 
     const result = await graphqlQuery(getUrl(), {
@@ -115,10 +116,78 @@ describe('graphql controller', () => {
       ],
     });
 
-    checkCachingRows(result.usersFlat.edges[1].node.posts);
+    checkCachingRowsForList(result.usersFlat.edges[1].node.posts);
   });
 
-  function checkCachingRows(posts: any) {
+  it('should have proper test row query structure for user table and post resolvers', async () => {
+    const testQuery = getUserQuery('user-2');
+
+    const result = await graphqlQuery(getUrl(), {
+      ...testQuery,
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.user.data).toStrictEqual({
+      ...user2.data,
+      posts: [
+        {
+          post: post1,
+          value: 3,
+        },
+        {
+          post: post2,
+          value: 4,
+        },
+        {
+          post: post2,
+          value: 5,
+        },
+        {
+          post: post2,
+          value: 6,
+        },
+      ],
+    });
+
+    checkCachingRows(result.user.data.posts);
+  });
+
+  it('should have proper test row query structure for user table and post resolvers (flat)', async () => {
+    const testQuery = getUserFlatQuery('user-2');
+
+    const result = await graphqlQuery(getUrl(), {
+      ...testQuery,
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.userFlat).toStrictEqual({
+      ...user2.data,
+      posts: [
+        {
+          post: post1.data,
+          value: 3,
+        },
+        {
+          post: post2.data,
+          value: 4,
+        },
+        {
+          post: post2.data,
+          value: 5,
+        },
+        {
+          post: post2.data,
+          value: 6,
+        },
+      ],
+    });
+
+    checkCachingRows(result.userFlat.posts);
+  });
+
+  function checkCachingRowsForList(posts: any) {
     const headers = { headers: { authorization: 'Bearer test-token' } };
 
     const countSecondPostsInUser = posts.filter(
@@ -135,6 +204,37 @@ describe('graphql controller', () => {
     );
     expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
       2,
+      REVISION_ID,
+      POST_TABLE_ID,
+      'post-2',
+      headers,
+    );
+  }
+
+  function checkCachingRows(posts: any) {
+    const headers = { headers: { authorization: 'Bearer test-token' } };
+
+    const countSecondPostsInUser = posts.filter(
+      (item) => item.post.id === 'post-2',
+    ).length;
+    expect(countSecondPostsInUser).toBe(3);
+    expect(mockProxyCoreApiService.api.row).toHaveBeenCalledTimes(3);
+    expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
+      1,
+      REVISION_ID,
+      USER_TABLE_ID,
+      'user-2',
+      headers,
+    );
+    expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
+      2,
+      REVISION_ID,
+      POST_TABLE_ID,
+      'post-1',
+      headers,
+    );
+    expect(mockProxyCoreApiService.api.row).toHaveBeenNthCalledWith(
+      3,
       REVISION_ID,
       POST_TABLE_ID,
       'post-2',
@@ -217,6 +317,72 @@ describe('graphql controller', () => {
         data: {
           first: 100,
         },
+      },
+    };
+  }
+
+  function getUserQuery(userId: string) {
+    return {
+      query: gql`
+        query User($id: String!) {
+          user(id: $id) {
+            id
+            data {
+              firstName
+              lastName
+              email
+              address {
+                city
+                street
+                zipCode
+              }
+              posts {
+                value
+                post {
+                  id
+                  data {
+                    id
+                    title
+                    content
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        id: userId,
+      },
+    };
+  }
+
+  function getUserFlatQuery(userId: string) {
+    return {
+      query: gql`
+        query User($id: String!) {
+          userFlat(id: $id) {
+            firstName
+            lastName
+            email
+            address {
+              city
+              street
+              zipCode
+            }
+            posts {
+              value
+              post {
+                id
+                title
+                content
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        id: userId,
       },
     };
   }
