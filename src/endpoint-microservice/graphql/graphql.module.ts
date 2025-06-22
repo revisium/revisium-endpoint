@@ -1,6 +1,5 @@
 import { Module, OnApplicationShutdown } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { AsyncLocalStorage } from 'async_hooks';
 import { ClsModule } from 'nestjs-cls';
 import { CoreApiModule } from 'src/endpoint-microservice/core-api/core-api.module';
 import { DatabaseModule } from 'src/endpoint-microservice/database/database.module';

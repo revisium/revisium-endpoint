@@ -4,7 +4,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { GraphQLError } from 'graphql/error';
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -19,10 +18,7 @@ import {
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
-import { ClsService } from 'nestjs-cls';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
-import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
-import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import {
   CreatingTableOptionsType,
@@ -81,8 +77,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
-    private readonly proxyCoreApi: ProxyCoreApiService,
-    private readonly cls: ClsService<GraphqlCachedRowsClsStore>,
     private readonly resolver: ResolverService,
   ) {}
 
@@ -554,13 +548,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private get projectName(): string {
     return getProjectName(this.context.projectName);
-  }
-
-  private toGraphQLError(err: any): GraphQLError {
-    this.logger.error(err);
-    return new GraphQLError(err.message, {
-      extensions: { code: err.error, originalError: err },
-    });
   }
 
   private get context(): GraphQLSchemaConverterContext {
