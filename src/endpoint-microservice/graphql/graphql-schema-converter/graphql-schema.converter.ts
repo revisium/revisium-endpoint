@@ -30,20 +30,21 @@ import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/gra
 import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import {
   ContextType,
-  createScalarFilterTypes,
-  createWhereInput,
-  DateTimeType,
-  getPageInfoType,
-  getSortOrder,
-  JsonType,
-  ServiceType,
+  CreatingTableOptionsType,
+  ValidTableType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import {
-  getProjectName,
-  getSafetyName,
-  isEmptyObject,
-  isValidName,
-} from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils';
+import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
+import { createServiceField } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createServiceField';
+import { createWhereInput } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createWhereInput';
+import { DateTimeType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/dateTimeType';
+import { generateOrderByType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/generateOrderByType';
+import { getPageInfoType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getPageInfoType';
+import { getSortOrder } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getSortOrder';
+import { JsonType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/jsonType';
+import { createValidTables } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/createValidTables';
+import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
+import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
+import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isValidName';
 import {
   Converter,
   ConverterContextType,
@@ -56,7 +57,6 @@ import {
 import {
   capitalize,
   hasDuplicateKeyCaseInsensitive,
-  pluralize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 const DATA_KEY = 'data';
@@ -65,22 +65,10 @@ const CONNECTION_KEY = 'Connection';
 const EDGE_KEY = 'Edge';
 const ITEMS_POSTFIX = 'Items';
 
-type CreatingTableOptionsType = {
-  table: ConverterTable;
-  safetyTableId: string;
-  pluralSafetyTableId: string;
-};
-
 interface CacheNode {
   node: GraphQLObjectType<RowModel>;
   data: GraphQLFieldConfig<any, any>;
   dataFlat: GraphQLFieldConfig<any, any>;
-}
-
-interface ValidTableType {
-  fieldName: { singular: string; plural: string };
-  typeNames: { singular: string; plural: string };
-  options: CreatingTableOptionsType;
 }
 
 interface GraphQLSchemaConverterContext extends ConverterContextType {
@@ -91,11 +79,6 @@ interface GraphQLSchemaConverterContext extends ConverterContextType {
   whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
   validTables: Record<string, ValidTableType>;
-}
-
-interface FieldAndTypeNames {
-  fieldName: { singular: string; plural: string };
-  typeNames: { singular: string; plural: string };
 }
 
 @Injectable()
@@ -139,7 +122,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         name: 'Query',
         fields: () => ({
           ...this.createFieldsFromNodes(),
-          _service: this.createServiceField(() => {
+          _service: createServiceField(() => {
             if (!cachedSdl) {
               cachedSdl = printSchema(schema);
             }
@@ -152,43 +135,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return schema;
   }
 
-  private createServiceField(
-    resolver: () => { sdl: string },
-  ): GraphQLFieldConfig<any, any> {
-    return {
-      type: ServiceType,
-      resolve: resolver,
-    };
-  }
-
   private createValidTables() {
-    const validTables = this.context.tables.filter(
-      (table) => !isEmptyObject(table.schema),
-    );
-
-    const validTableIds = validTables.map((table) => table.id);
-
-    this.context.validTables = validTables.reduce<
-      Record<string, ValidTableType>
-    >((acc, table) => {
-      const { fieldName, typeNames } = this.generateFieldAndTypeNames(
-        table.id,
-        validTableIds,
-      );
-
-      const options: CreatingTableOptionsType = {
-        table,
-        safetyTableId: typeNames.singular,
-        pluralSafetyTableId: typeNames.plural,
-      };
-
-      acc[table.id] = {
-        fieldName,
-        typeNames,
-        options,
-      };
-      return acc;
-    }, {});
+    this.context.validTables = createValidTables(this.context.tables);
   }
 
   private createFieldsFromNodes(): Record<string, any> {
@@ -208,34 +156,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       },
       {},
     );
-  }
-
-  private generateFieldAndTypeNames(
-    tableId: string,
-    allTableIds: string[],
-  ): FieldAndTypeNames {
-    const hasDuplicate = hasDuplicateKeyCaseInsensitive(allTableIds, tableId);
-
-    const safeName = hasDuplicate
-      ? getSafetyName(tableId, 'INVALID_TABLE_NAME')
-      : getSafetyName(tableId.toLowerCase(), 'INVALID_TABLE_NAME');
-
-    const singularFieldName = safeName;
-    const pluralFieldName = pluralize(safeName);
-
-    const singularTypeName = hasDuplicate ? safeName : capitalize(safeName);
-    const pluralTypeName = pluralize(singularTypeName);
-
-    return {
-      fieldName: {
-        singular: singularFieldName,
-        plural: pluralFieldName,
-      },
-      typeNames: {
-        singular: singularTypeName,
-        plural: pluralTypeName,
-      },
-    };
   }
 
   private getItemFlatResolver(table: ConverterTable) {
@@ -432,7 +352,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         first: { type: GraphQLInt },
         after: { type: GraphQLString },
         orderBy: {
-          type: this.generateOrderByType(`${this.projectName}Get${name}`),
+          type: generateOrderByType(
+            `${this.projectName}Get${name}`,
+            this.context.sortOrder,
+          ),
         },
         where: {
           type: createWhereInput(
@@ -448,28 +371,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     this.context.listArgsMap[typeName] = listArgs;
 
     return listArgs;
-  }
-
-  private generateOrderByType(prefix: string) {
-    const OrderByFieldEnum = new GraphQLEnumType({
-      name: `${prefix}OrderByField`,
-      values: {
-        createdAt: { value: 'createdAt' },
-        updatedAt: { value: 'updatedAt' },
-        publishedAt: { value: 'publishedAt' },
-        id: { value: 'id' },
-      },
-    });
-
-    const OrderByFieldInput = new GraphQLInputObjectType({
-      name: `${prefix}OrderByInput`,
-      fields: {
-        field: { type: new GraphQLNonNull(OrderByFieldEnum) },
-        direction: { type: new GraphQLNonNull(this.context.sortOrder) },
-      },
-    });
-
-    return new GraphQLList(OrderByFieldInput);
   }
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
