@@ -1,32 +1,19 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import {
   GraphQLEnumType,
   GraphQLInputObjectType,
-  GraphQLInt,
-  GraphQLList,
-  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
-  GraphQLString,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
-import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
-import {
-  CreatingTableOptionsType,
-  ValidTableType,
-} from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
+import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
+import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
 import { createServiceField } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createServiceField';
-import { createWhereInput } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createWhereInput';
-import { generateOrderByType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/generateOrderByType';
 import { getPageInfoType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getPageInfoType';
 import { getSortOrder } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getSortOrder';
 import { createValidTables } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/createValidTables';
@@ -37,8 +24,6 @@ import {
 } from 'src/endpoint-microservice/shared/converter';
 
 const FLAT_KEY = 'Flat';
-const CONNECTION_KEY = 'Connection';
-const EDGE_KEY = 'Edge';
 
 export interface CacheNode {
   node: GraphQLObjectType<RowModel>;
@@ -56,13 +41,23 @@ export interface GraphQLSchemaConverterContext extends ConverterContextType {
 
 @Injectable()
 export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
-  private readonly logger = new Logger(GraphQLSchemaConverter.name);
-
   constructor(
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
-    private readonly resolver: ResolverService,
+    private readonly queriesService: QueriesService,
     private readonly cacheService: CacheService,
   ) {}
+
+  private get context(): GraphQLSchemaConverterContext {
+    const context = this.asyncLocalStorage.getStore();
+
+    if (!context) {
+      throw new InternalServerErrorException(
+        'GraphQLSchemaConverterContext not found. It appears that an attempt was made to access a context outside of AsyncLocalStorage.run.',
+      );
+    }
+
+    return context;
+  }
 
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
@@ -95,7 +90,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       query: new GraphQLObjectType({
         name: 'Query',
         fields: () => ({
-          ...this.createFieldsFromNodes(validTables),
+          ...this.createQueries(validTables),
           _service: createServiceField(() => {
             if (!cachedSdl) {
               cachedSdl = printSchema(schema);
@@ -117,7 +112,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     this.cacheService.build(options);
   }
 
-  private createFieldsFromNodes(
+  private createQueries(
     validTables: Record<string, ValidTableType>,
   ): Record<string, any> {
     return Object.values(validTables).reduce((fields, validTable) => {
@@ -126,175 +121,20 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
       const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
 
-      fields[singularKey] = this.createItemField(validTable.options);
-      fields[pluralKey] = this.createListField(validTable.options);
-      fields[flatSingularKey] = this.createItemFlatField(validTable.options);
-      fields[flatPluralKey] = this.createListFlatField(validTable.options);
+      fields[singularKey] = this.queriesService.createItemField(
+        validTable.options,
+      );
+      fields[pluralKey] = this.queriesService.createListField(
+        validTable.options,
+      );
+      fields[flatSingularKey] = this.queriesService.createItemFlatField(
+        validTable.options,
+      );
+      fields[flatPluralKey] = this.queriesService.createListFlatField(
+        validTable.options,
+      );
 
       return fields;
     }, {});
-  }
-
-  private createItemFlatField(
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const dataConfig = this.cacheService.get(options.table.id).dataFlat;
-
-    return {
-      type: dataConfig.type,
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve:
-        dataConfig.resolve ?? this.resolver.getItemFlatResolver(options.table),
-    };
-  }
-
-  private createItemField(
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    return {
-      type: new GraphQLNonNull(this.cacheService.get(options.table.id).node),
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: this.resolver.getItemResolver(options.table),
-    };
-  }
-
-  private createListField(
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getListConnection(options);
-    return {
-      type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
-      resolve: this.resolver.getListResolver(options.table),
-    };
-  }
-
-  private createListFlatField(
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getFlatConnection(options);
-
-    return {
-      type: new GraphQLNonNull(ConnectionType),
-      args: {
-        data: { type: this.getListArgs(options.pluralSafetyTableId) },
-      },
-      resolve: this.resolver.getListFlatResolver(options.table),
-    };
-  }
-
-  private getFlatConnection(
-    options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getFlatEdgeType(options))),
-          ),
-        },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
-      },
-    });
-  }
-
-  private getFlatEdgeType(
-    options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    const flatType = this.cacheService.get(options.table.id).dataFlat.type;
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`,
-      fields: {
-        node: { type: flatType },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
-      },
-    });
-  }
-
-  private getListConnection(
-    options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${CONNECTION_KEY}`,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getEdgeType(options))),
-          ),
-        },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
-      },
-    });
-  }
-
-  private getListArgs(name: string): GraphQLInputObjectType {
-    const typeName = `${this.projectName}Get${name}Input`;
-
-    if (this.context.listArgsMap[typeName]) {
-      return this.context.listArgsMap[typeName];
-    }
-
-    const listArgs = new GraphQLInputObjectType({
-      name: `${this.projectName}Get${name}Input`,
-      fields: {
-        first: { type: GraphQLInt },
-        after: { type: GraphQLString },
-        orderBy: {
-          type: generateOrderByType(
-            `${this.projectName}Get${name}`,
-            this.context.sortOrder,
-          ),
-        },
-        where: {
-          type: createWhereInput(
-            this.projectName,
-            name,
-            this.context.filterTypes,
-            this.context.whereInputTypeMap,
-          ),
-        },
-      },
-    });
-
-    this.context.listArgsMap[typeName] = listArgs;
-
-    return listArgs;
-  }
-
-  private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${EDGE_KEY}`,
-      fields: {
-        node: {
-          type: new GraphQLNonNull(
-            this.cacheService.get(options.table.id).node,
-          ),
-        },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
-      },
-    });
-  }
-
-  private get projectName(): string {
-    return getProjectName(this.context.projectName);
-  }
-
-  private get context(): GraphQLSchemaConverterContext {
-    const context = this.asyncLocalStorage.getStore();
-
-    if (!context) {
-      throw new InternalServerErrorException(
-        'GraphQLSchemaConverterContext not found. It appears that an attempt was made to access a context outside of AsyncLocalStorage.run.',
-      );
-    }
-
-    return context;
   }
 }
