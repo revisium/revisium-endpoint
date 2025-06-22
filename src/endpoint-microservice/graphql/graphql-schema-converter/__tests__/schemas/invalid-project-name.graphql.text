@@ -1,4 +1,4 @@
-scalar DataTime
+scalar DateTime
 
 input INVALID_PROJECT_NAME_1BoolFilter {
   equals: Boolean
@@ -118,13 +118,13 @@ type INVALID_PROJECT_NAME_1UserFlatEdge {
 }
 
 type INVALID_PROJECT_NAME_1UserNode {
-  createdAt: DataTime!
+  createdAt: DateTime!
   createdId: String!
   data: INVALID_PROJECT_NAME_1User!
   id: String!
   json: JSON
-  publishedAt: DataTime!
-  updatedAt: DataTime!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
   versionId: String!
 }
 

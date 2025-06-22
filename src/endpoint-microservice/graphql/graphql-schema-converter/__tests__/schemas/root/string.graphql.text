@@ -1,4 +1,4 @@
-scalar DataTime
+scalar DateTime
 
 scalar JSON
 
@@ -112,13 +112,13 @@ type ProjectUserFlatEdge {
 }
 
 type ProjectUserNode {
-  createdAt: DataTime!
+  createdAt: DateTime!
   createdId: String!
   data: String!
   id: String!
   json: JSON
-  publishedAt: DataTime!
-  updatedAt: DataTime!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
   versionId: String!
 }
 

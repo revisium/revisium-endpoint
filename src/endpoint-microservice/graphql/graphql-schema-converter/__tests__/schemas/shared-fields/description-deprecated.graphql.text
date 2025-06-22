@@ -1,4 +1,4 @@
-scalar DataTime
+scalar DateTime
 
 scalar JSON
 
@@ -100,13 +100,13 @@ type ProjectPostFlatEdge {
 }
 
 type ProjectPostNode {
-  createdAt: DataTime!
+  createdAt: DateTime!
   createdId: String!
   data: ProjectPost!
   id: String!
   json: JSON
-  publishedAt: DataTime!
-  updatedAt: DataTime!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
   versionId: String!
 }
 

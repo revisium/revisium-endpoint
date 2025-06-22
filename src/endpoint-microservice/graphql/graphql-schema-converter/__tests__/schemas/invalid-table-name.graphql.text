@@ -1,4 +1,4 @@
-scalar DataTime
+scalar DateTime
 
 scalar JSON
 
@@ -77,13 +77,13 @@ type ProjectInvalid_table_name____userFlatEdge {
 }
 
 type ProjectInvalid_table_name____userNode {
-  createdAt: DataTime!
+  createdAt: DateTime!
   createdId: String!
   data: ProjectInvalid_table_name____user!
   id: String!
   json: JSON
-  publishedAt: DataTime!
-  updatedAt: DataTime!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
   versionId: String!
 }
 
