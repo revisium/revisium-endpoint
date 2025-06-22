@@ -20,16 +20,11 @@ import {
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { ClsService } from 'nestjs-cls';
-import {
-  GetTableRowsDto,
-  RowModel,
-} from 'src/endpoint-microservice/core-api/generated/api';
+import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
-import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import {
-  ContextType,
   CreatingTableOptionsType,
   ValidTableType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
@@ -48,7 +43,6 @@ import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-co
 import {
   Converter,
   ConverterContextType,
-  ConverterTable,
 } from 'src/endpoint-microservice/shared/converter';
 import {
   JsonObjectSchema,
@@ -193,35 +187,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return {
       type: new GraphQLNonNull(ConnectionType),
       args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
-      resolve: this.getListResolver(options.table),
-    };
-  }
-
-  private getListResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      _: unknown,
-      {
-        data,
-      }: {
-        data: GetTableRowsDto;
-      },
-      ctx: ContextType,
-    ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
-        revisionId,
-        table.id,
-        {
-          first: data?.first || DEFAULT_FIRST,
-          after: data?.after ?? undefined,
-          orderBy: data?.orderBy ?? undefined,
-          where: data?.where ?? undefined,
-        },
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-      return response;
+      resolve: this.resolver.getListResolver(options.table),
     };
   }
 
@@ -235,41 +201,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       args: {
         data: { type: this.getListArgs(options.pluralSafetyTableId) },
       },
-      resolve: this.getListFlatResolver(options.table),
-    };
-  }
-
-  private getListFlatResolver(table: ConverterTable) {
-    const revisionId = this.context.revisionId;
-
-    return async (
-      _: unknown,
-      { data }: { data: GetTableRowsDto },
-      ctx: ContextType,
-    ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
-        revisionId,
-        table.id,
-        {
-          first: data?.first || DEFAULT_FIRST,
-          after: data?.after ?? undefined,
-          orderBy: data?.orderBy ?? undefined,
-          where: data?.where ?? undefined,
-        },
-        { headers: ctx.headers },
-      );
-      if (error) throw this.toGraphQLError(error);
-
-      const flatEdges = response.edges.map((edge) => ({
-        cursor: edge.cursor,
-        node: edge.node.data,
-      }));
-
-      return {
-        edges: flatEdges,
-        pageInfo: response.pageInfo,
-        totalCount: response.totalCount,
-      };
+      resolve: this.resolver.getListFlatResolver(options.table),
     };
   }
 

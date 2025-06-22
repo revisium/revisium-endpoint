@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GraphQLError } from 'graphql/error';
 import { ClsService } from 'nestjs-cls';
-import { RequestParams } from 'src/endpoint-microservice/core-api/generated/api';
+import {
+  GetTableRowsDto,
+  RequestParams,
+} from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
+import { DEFAULT_FIRST } from 'src/endpoint-microservice/graphql/graphql-schema-converter/constants';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ContextType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
@@ -91,6 +95,68 @@ export class ResolverService {
       });
 
       return Promise.all(promises);
+    };
+  }
+
+  public getListResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      {
+        data,
+      }: {
+        data: GetTableRowsDto;
+      },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.rows(
+        revisionId,
+        table.id,
+        {
+          first: data?.first || DEFAULT_FIRST,
+          after: data?.after ?? undefined,
+          orderBy: data?.orderBy ?? undefined,
+          where: data?.where ?? undefined,
+        },
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+      return response;
+    };
+  }
+
+  public getListFlatResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: GetTableRowsDto },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.rows(
+        revisionId,
+        table.id,
+        {
+          first: data?.first || DEFAULT_FIRST,
+          after: data?.after ?? undefined,
+          orderBy: data?.orderBy ?? undefined,
+          where: data?.where ?? undefined,
+        },
+        { headers: ctx.headers },
+      );
+      if (error) throw this.toGraphQLError(error);
+
+      const flatEdges = response.edges.map((edge) => ({
+        cursor: edge.cursor,
+        node: edge.node.data,
+      }));
+
+      return {
+        edges: flatEdges,
+        pageInfo: response.pageInfo,
+        totalCount: response.totalCount,
+      };
     };
   }
 
