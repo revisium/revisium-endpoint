@@ -5,6 +5,7 @@ import { ClsService } from 'nestjs-cls';
 import { join } from 'path';
 import { printSchema } from 'graphql/utilities';
 import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
+import { GRAPHQL_SCHEMA_CONVERTER_SERVICES } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services';
 import {
   getArraySchema,
   getBooleanSchema,
@@ -655,6 +656,7 @@ describe('GraphQL Schema Converter', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GraphQLSchemaConverter,
+        ...GRAPHQL_SCHEMA_CONVERTER_SERVICES,
         ProxyCoreApiService,
         {
           provide: AsyncLocalStorage,

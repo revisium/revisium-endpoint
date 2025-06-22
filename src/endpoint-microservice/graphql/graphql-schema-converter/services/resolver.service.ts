@@ -1,0 +1,128 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { GraphQLError } from 'graphql/error';
+import { ClsService } from 'nestjs-cls';
+import { RequestParams } from 'src/endpoint-microservice/core-api/generated/api';
+import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
+import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
+import { ContextType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
+import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
+
+@Injectable()
+export class ResolverService {
+  private readonly logger = new Logger(ResolverService.name);
+
+  constructor(
+    private readonly contextService: ContextService,
+    private readonly proxyCoreApi: ProxyCoreApiService,
+    private readonly cls: ClsService<GraphqlCachedRowsClsStore>,
+  ) {}
+
+  public getItemResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      return this.getCachedRow(revisionId, table.id, id, {
+        headers: ctx.headers,
+      });
+    };
+  }
+
+  public getItemFlatResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const response = await this.getCachedRow(revisionId, table.id, id, {
+        headers: ctx.headers,
+      });
+      return response.data;
+    };
+  }
+
+  public getFieldResolver(
+    foreignTableId: string,
+    field: string,
+    isFlat: boolean = false,
+  ) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      parent: Record<string, string>,
+      _: unknown,
+      context: ContextType,
+    ) => {
+      const response = await this.getCachedRow(
+        revisionId,
+        foreignTableId,
+        parent[field],
+        {
+          headers: context.headers,
+        },
+      );
+      return isFlat ? response.data : response;
+    };
+  }
+
+  public getFieldArrayItemResolver(
+    foreignTableId: string,
+    field: string,
+    isFlat: boolean = false,
+  ) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      parent: Record<string, string[]>,
+      _: unknown,
+      context: ContextType,
+    ) => {
+      const ids = parent[field];
+      if (!ids?.length) return [];
+
+      const promises = ids.map(async (id) => {
+        const response = await this.getCachedRow(
+          revisionId,
+          foreignTableId,
+          id,
+          {
+            headers: context.headers,
+          },
+        );
+        return isFlat ? response.data : response;
+      });
+
+      return Promise.all(promises);
+    };
+  }
+
+  private async getCachedRow(
+    revisionId: string,
+    tableId: string,
+    id: string,
+    params: RequestParams = {},
+  ) {
+    const cacheKey = `${revisionId}:${tableId}:${id}`;
+    const cachedRows = this.cls.get('cachedRows');
+    let promise = cachedRows.get(cacheKey);
+
+    if (!promise) {
+      promise = this.proxyCoreApi.api.row(revisionId, tableId, id, params);
+      cachedRows.set(cacheKey, promise);
+    }
+
+    const { data: response, error } = await promise;
+    if (error) throw this.toGraphQLError(error);
+
+    return response;
+  }
+
+  private toGraphQLError(err: any): GraphQLError {
+    this.logger.error(err);
+    return new GraphQLError(err.message, {
+      extensions: { code: err.error, originalError: err },
+    });
+  }
+
+  private get context() {
+    return this.contextService.context;
+  }
+}
