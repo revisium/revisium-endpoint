@@ -107,7 +107,7 @@ export class GraphqlEndpointService {
     });
 
     const { apollo, table } = await this.createApolloServerWithSchema({
-      projectId: branch.projectId,
+      projectId: project.id,
       projectName: project.name,
       endpointId,
       isDraft: revision.isDraft,
