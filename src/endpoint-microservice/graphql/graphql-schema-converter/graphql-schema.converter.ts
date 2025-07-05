@@ -9,9 +9,14 @@ import {
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
-import { BuilderService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/builder.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
+import {
+  Schema,
+  TypeModel,
+  TypeModelField,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
+import { SchemaToBuilderConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema-to-builder.converter';
 import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
 import { getPageInfoType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getPageInfoType';
@@ -27,7 +32,9 @@ const FLAT_KEY = 'Flat';
 
 export interface CacheNode {
   node: GraphQLObjectType<RowModel>;
+  nodeType: TypeModel;
   dataFlat: GraphQLFieldConfig<any, any>;
+  dataFlatRoot?: TypeModelField;
 }
 
 export interface GraphQLSchemaConverterContext extends ConverterContextType {
@@ -37,7 +44,7 @@ export interface GraphQLSchemaConverterContext extends ConverterContextType {
   filterTypes: Record<string, GraphQLInputObjectType>;
   whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
-  builderService: BuilderService;
+  schema: Schema;
 }
 
 @Injectable()
@@ -69,9 +76,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       filterTypes: createScalarFilterTypes(getProjectName(context.projectName)),
       whereInputTypeMap: {},
       nodes: {},
-      builderService: new BuilderService({
-        projectName: context.projectName,
-      }),
+      schema: new Schema(),
     };
 
     return this.asyncLocalStorage.run(
@@ -79,13 +84,23 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       async () => {
         const schema = await this.createSchema();
 
-        console.log(
-          printSchema(
-            graphQLSchemaConverterContext.builderService.builder.toSchema(),
-          ),
+        const schemaToBuilderConverter = new SchemaToBuilderConverter(
+          graphQLSchemaConverterContext.schema,
         );
 
-        return lexicographicSortSchema(schema);
+        schemaToBuilderConverter.convert();
+
+        const schemaNext = schemaToBuilderConverter.builder.toSchema();
+
+        console.log(printSchema(schemaNext));
+
+        // console.log(
+        //   printSchema(
+        //     graphQLSchemaConverterContext.builderService.builder.toSchema(),
+        //   ),
+        // );
+
+        return lexicographicSortSchema(schemaNext);
       },
     );
   }
@@ -123,15 +138,19 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
 
       fields[singularKey] = this.queriesService.createItemField(
+        singularKey,
         validTable.options,
       );
       fields[pluralKey] = this.queriesService.createListField(
+        pluralKey,
         validTable.options,
       );
       fields[flatSingularKey] = this.queriesService.createItemFlatField(
+        flatSingularKey,
         validTable.options,
       );
       fields[flatPluralKey] = this.queriesService.createListFlatField(
+        flatPluralKey,
         validTable.options,
       );
 

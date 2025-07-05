@@ -20,7 +20,7 @@ export class ContextService {
     return context;
   }
 
-  public get builder() {
-    return this.context.builderService.builder;
+  public get schema() {
+    return this.context.schema;
   }
 }

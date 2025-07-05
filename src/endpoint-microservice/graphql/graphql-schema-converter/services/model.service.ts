@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -12,9 +13,15 @@ import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
+import {
+  FieldRefType,
+  FieldType,
+  TypeModelField,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { DateTimeType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/dateTimeType';
 import { JsonType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/jsonType';
+import { SortDirection } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/sortDirection';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
@@ -43,13 +50,56 @@ export class ModelService {
   ) {}
 
   public create(options: CreatingTableOptionsType[]) {
+    this.createCommon();
     this.createNotRootForeignKey(options);
     this.createRootForeignKey(options);
   }
 
   public getNodeType(options: CreatingTableOptionsType) {
+    const name = `${this.projectName}${options.safetyTableId}Node`;
+
+    const nodeType = this.contextService.schema.addType(name).addFields([
+      { name: 'versionId', type: FieldType.string },
+      { name: 'createdId', type: FieldType.string },
+      { name: 'id', type: FieldType.string },
+      {
+        name: 'createdAt',
+        type: FieldType.ref,
+        refType: FieldRefType.scalar,
+        value: 'DateTime',
+      },
+      {
+        name: 'updatedAt',
+        type: FieldType.ref,
+        refType: FieldRefType.scalar,
+        value: 'DateTime',
+      },
+      {
+        name: 'publishedAt',
+        type: FieldType.ref,
+        refType: FieldRefType.scalar,
+        value: 'DateTime',
+      },
+      {
+        name: 'json',
+        type: FieldType.ref,
+        refType: FieldRefType.scalar,
+        value: 'JSON',
+      },
+    ]);
+
+    const data = this.getSchemaConfig(
+      options,
+      options.table.schema,
+      DATA_KEY,
+      `${this.projectName}${options.safetyTableId}`,
+      false,
+      DATA_KEY,
+      name,
+    );
+
     const node = new GraphQLObjectType<RowModel>({
-      name: `${this.projectName}${options.safetyTableId}Node`,
+      name,
       fields: () => ({
         versionId: { type: new GraphQLNonNull(GraphQLString) },
         createdId: { type: new GraphQLNonNull(GraphQLString) },
@@ -57,35 +107,42 @@ export class ModelService {
         createdAt: { type: new GraphQLNonNull(DateTimeType) },
         updatedAt: { type: new GraphQLNonNull(DateTimeType) },
         publishedAt: { type: new GraphQLNonNull(DateTimeType) },
-        [DATA_KEY]: this.getSchemaConfig(
-          options.table.schema,
-          DATA_KEY,
-          `${this.projectName}${options.safetyTableId}`,
-        ),
+        [DATA_KEY]: data.config,
         json: { type: JsonType, resolve: (parent) => parent.data },
       }),
     });
 
     return {
       node,
+      nodeType,
     };
   }
 
-  public getDataFlatType(options: CreatingTableOptionsType) {
+  public getDataFlatType(
+    options: CreatingTableOptionsType,
+    flatType: string,
+    parentType: string,
+  ) {
     return this.getSchemaConfig(
+      options,
       options.table.schema,
       DATA_KEY,
-      `${this.projectName}${options.safetyTableId}${FLAT_KEY}`,
+      flatType,
       true,
+      'userFlat',
+      parentType,
     );
   }
 
   private getSchemaConfig(
+    options: CreatingTableOptionsType,
     schema: JsonSchema,
     field: string,
     typeName: string,
-    isFlat: boolean = false,
-  ): GraphQLFieldConfig<any, any> {
+    isFlat: boolean,
+    fieldNameInParentObject: string,
+    parentType: string,
+  ): { config: GraphQLFieldConfig<any, any>; field?: TypeModelField } {
     const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
       schema,
       field,
@@ -93,7 +150,7 @@ export class ModelService {
     );
 
     if (foreignKeyConfig) {
-      return foreignKeyConfig;
+      return { config: foreignKeyConfig.config };
     }
 
     const foreignKeyArrayConfig = this.tryGettingForeignKeyArrayFieldConfig(
@@ -103,13 +160,22 @@ export class ModelService {
     );
 
     if (foreignKeyArrayConfig) {
-      return foreignKeyArrayConfig;
+      return { config: foreignKeyArrayConfig.config };
     }
 
-    const type = this.mapSchemaTypeToGraphQL(typeName, schema, '', isFlat);
+    const type = this.mapSchemaTypeToGraphQL(
+      options,
+      typeName,
+      schema,
+      '',
+      isFlat,
+      fieldNameInParentObject,
+      parentType,
+      false,
+    );
 
     const config: GraphQLFieldConfig<any, any> = {
-      type,
+      type: type.config,
     };
 
     if (schema.deprecated && schema.description) {
@@ -118,14 +184,14 @@ export class ModelService {
       config.description = schema.description;
     }
 
-    return config;
+    return { config, field: type.field };
   }
 
   private tryGettingForeignKeyFieldConfig(
     schema: JsonSchema,
     field: string,
     isFlat: boolean = false,
-  ): GraphQLFieldConfig<any, any> | null {
+  ): { config: GraphQLFieldConfig<any, any> } | null {
     const isForeignKey = isStringForeignSchema(schema);
 
     if (isForeignKey) {
@@ -146,7 +212,7 @@ export class ModelService {
         config.description = schema.description;
       }
 
-      return config;
+      return { config };
     }
 
     return null;
@@ -156,7 +222,7 @@ export class ModelService {
     schema: JsonSchema,
     field: string,
     isFlat: boolean = false,
-  ): GraphQLFieldConfig<any, any> | null {
+  ): { config: GraphQLFieldConfig<any, any> } | null {
     if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
       const config: GraphQLFieldConfig<any, any> = {
         type: new GraphQLNonNull(
@@ -181,18 +247,22 @@ export class ModelService {
         config.description = schema.description;
       }
 
-      return config;
+      return { config };
     }
 
     return null;
   }
 
   private mapSchemaTypeToGraphQL(
+    options: CreatingTableOptionsType,
     typeName: string,
     schema: JsonSchema,
-    postfix: string = '',
-    isFlat: boolean = false,
-  ): GraphQLNonNull<any> {
+    postfix: string,
+    isFlat: boolean,
+    fieldNameInParentObject: string,
+    parentType: string,
+    inList: boolean,
+  ): { config: GraphQLNonNull<any>; field: TypeModelField } {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
         `endpointId: ${this.context.endpointId}, unsupported $ref in schema: ${JSON.stringify(schema)}`,
@@ -200,27 +270,73 @@ export class ModelService {
     }
 
     switch (schema.type) {
-      case 'string':
-        return new GraphQLNonNull(GraphQLString);
-      case 'number':
-        return new GraphQLNonNull(GraphQLFloat);
-      case 'boolean':
-        return new GraphQLNonNull(GraphQLBoolean);
-      case 'object':
-        return new GraphQLNonNull(
-          this.getObjectSchema(`${typeName}${postfix}`, schema, isFlat),
+      case 'string': {
+        const field: TypeModelField = {
+          name: fieldNameInParentObject,
+          type: inList ? FieldType.stringList : FieldType.string,
+        };
+
+        if (parentType && fieldNameInParentObject) {
+          this.contextService.schema.getType(parentType).addField(field);
+        }
+
+        return { config: new GraphQLNonNull(GraphQLString), field };
+      }
+      case 'number': {
+        const field: TypeModelField = {
+          name: fieldNameInParentObject,
+          type: inList ? FieldType.floatList : FieldType.float,
+        };
+
+        if (parentType && fieldNameInParentObject) {
+          this.contextService.schema.getType(parentType).addField(field);
+        }
+
+        return { config: new GraphQLNonNull(GraphQLFloat), field };
+      }
+      case 'boolean': {
+        const field: TypeModelField = {
+          name: fieldNameInParentObject,
+          type: inList ? FieldType.booleanList : FieldType.boolean,
+        };
+
+        if (parentType && fieldNameInParentObject) {
+          this.contextService.schema.getType(parentType).addField(field);
+        }
+        return { config: new GraphQLNonNull(GraphQLBoolean), field };
+      }
+      case 'object': {
+        const objectConfig = this.getObjectSchema(
+          options,
+          `${typeName}${postfix}`,
+          schema,
+          isFlat,
+          fieldNameInParentObject,
+          parentType,
+          inList,
         );
-      case 'array':
-        return new GraphQLNonNull(
-          new GraphQLList(
-            this.mapSchemaTypeToGraphQL(
-              `${typeName}${postfix}`,
-              schema.items,
-              ITEMS_POSTFIX,
-              isFlat,
-            ),
-          ),
+
+        return {
+          config: new GraphQLNonNull(objectConfig.config),
+          field: objectConfig.field,
+        };
+      }
+      case 'array': {
+        const arrayConfig = this.mapSchemaTypeToGraphQL(
+          options,
+          `${typeName}${postfix}`,
+          schema.items,
+          ITEMS_POSTFIX,
+          isFlat,
+          fieldNameInParentObject,
+          parentType,
+          true,
         );
+        return {
+          config: new GraphQLNonNull(new GraphQLList(arrayConfig.config)),
+          field: arrayConfig.field,
+        };
+      }
       default:
         throw new InternalServerErrorException(
           `endpointId: ${this.context.endpointId}, unknown schema: ${JSON.stringify(schema)}`,
@@ -229,17 +345,33 @@ export class ModelService {
   }
 
   private getObjectSchema(
+    options: CreatingTableOptionsType,
     name: string,
     schema: JsonObjectSchema,
-    isFlat: boolean = false,
-  ): GraphQLObjectType {
+    isFlat: boolean,
+    fieldNameInParentObject: string,
+    parentType: string,
+    inList: boolean,
+  ): { config: GraphQLObjectType; field: TypeModelField } {
     const validEntries = Object.entries(schema.properties).filter(
       ([_, propertySchema]) => !isEmptyObject(propertySchema),
     );
 
     const ids = validEntries.map(([key]) => key);
 
-    return new GraphQLObjectType({
+    const field: TypeModelField = {
+      name: fieldNameInParentObject,
+      type: inList ? FieldType.refList : FieldType.ref,
+      refType: FieldRefType.type,
+      value: name,
+    };
+
+    if (parentType && fieldNameInParentObject) {
+      this.contextService.schema.getType(parentType).addField(field);
+    }
+    this.contextService.schema.addType(name);
+
+    const type = new GraphQLObjectType({
       name,
       fields: () =>
         validEntries.reduce(
@@ -255,17 +387,27 @@ export class ModelService {
               ? key
               : capitalize(key);
 
-            fields[key] = this.getSchemaConfig(
+            const config = this.getSchemaConfig(
+              options,
               itemSchema,
               key,
               `${name}${capitalizedSafetyKey}`,
               isFlat,
+              key,
+              name,
             );
+
+            fields[key] = config.config;
             return fields;
           },
           {} as Record<string, any>,
         ),
     });
+
+    return {
+      config: type,
+      field,
+    };
   }
 
   private createNotRootForeignKey(options: CreatingTableOptionsType[]) {
@@ -291,12 +433,16 @@ export class ModelService {
   }
 
   private createNodeCache(option: CreatingTableOptionsType): void {
-    const { node } = this.getNodeType(option);
-    const dataFlat = this.getDataFlatType(option);
+    const flatType = `${this.projectName}${option.safetyTableId}${FLAT_KEY}`;
+
+    const { node, nodeType } = this.getNodeType(option);
+    const dataFlat = this.getDataFlatType(option, flatType, '');
 
     this.cacheService.add(option.table.id, {
       node,
-      dataFlat,
+      nodeType,
+      dataFlat: dataFlat.config,
+      dataFlatRoot: dataFlat.field,
     });
   }
 
@@ -306,5 +452,239 @@ export class ModelService {
 
   private get context() {
     return this.contextService.context;
+  }
+
+  private createCommon() {
+    this.addScalars();
+    this.addPageInfo();
+    this.addSortOrder();
+    this.addFilters();
+  }
+
+  private addScalars() {
+    this.contextService.schema.addScalar('JSON', JSONResolver);
+    this.contextService.schema.addScalar('DateTime', DateTimeResolver);
+  }
+
+  private addPageInfo() {
+    this.contextService.schema
+      .addType(`${this.projectName}PageInfo`)
+      .addField({
+        name: 'startCursor',
+        type: FieldType.string,
+        nullable: true,
+      })
+      .addField({
+        name: 'endCursor',
+        type: FieldType.string,
+        nullable: true,
+      })
+      .addField({
+        name: 'hasNextPage',
+        type: FieldType.boolean,
+      })
+      .addField({
+        name: 'hasPreviousPage',
+        type: FieldType.boolean,
+      });
+  }
+
+  private addSortOrder() {
+    this.contextService.schema
+      .addEnum(`${this.projectName}SortOrder`)
+      .addValues([SortDirection.ASC, SortDirection.DESC]);
+  }
+
+  private addFilters() {
+    this.addStringFilter();
+    this.addBooleanFilter();
+    this.addDateTimeFilter();
+    this.addJsonFilter();
+  }
+
+  private addStringFilter() {
+    const mode = this.contextService.schema
+      .addEnum(`${this.projectName}FilterStringMode`)
+      .addValues(['default', 'insensitive']);
+
+    this.contextService.schema
+      .addInput(`${this.projectName}StringFilter`)
+      .addFields([
+        {
+          name: 'equals',
+          type: FieldType.string,
+        },
+        {
+          name: 'in',
+          type: FieldType.stringList,
+        },
+        {
+          name: 'notIn',
+          type: FieldType.stringList,
+        },
+        {
+          name: 'lt',
+          type: FieldType.string,
+        },
+        {
+          name: 'lte',
+          type: FieldType.string,
+        },
+        {
+          name: 'gt',
+          type: FieldType.string,
+        },
+        {
+          name: 'gte',
+          type: FieldType.string,
+        },
+        {
+          name: 'contains',
+          type: FieldType.string,
+        },
+        {
+          name: 'startsWith',
+          type: FieldType.string,
+        },
+        {
+          name: 'endsWith',
+          type: FieldType.string,
+        },
+        {
+          name: 'mode',
+          type: FieldType.ref,
+          refType: FieldRefType.enum,
+          value: mode.name,
+        },
+        {
+          name: 'not',
+          type: FieldType.string,
+        },
+      ]);
+  }
+
+  private addBooleanFilter() {
+    this.contextService.schema
+      .addInput(`${this.projectName}BoolFilter`)
+      .addFields([
+        {
+          name: 'equals',
+          type: FieldType.boolean,
+        },
+        {
+          name: 'not',
+          type: FieldType.boolean,
+        },
+      ]);
+  }
+
+  private addDateTimeFilter() {
+    this.contextService.schema
+      .addInput(`${this.projectName}DateTimeFilter`)
+      .addFields([
+        {
+          name: 'equals',
+          type: FieldType.string,
+        },
+        {
+          name: 'in',
+          type: FieldType.stringList,
+        },
+        {
+          name: 'notIn',
+          type: FieldType.stringList,
+        },
+        {
+          name: 'lt',
+          type: FieldType.string,
+        },
+        {
+          name: 'lte',
+          type: FieldType.string,
+        },
+        {
+          name: 'gt',
+          type: FieldType.string,
+        },
+        {
+          name: 'gte',
+          type: FieldType.string,
+        },
+      ]);
+  }
+
+  private addJsonFilter() {
+    const mode = this.contextService.schema
+      .addEnum(`${this.projectName}FilterJsonMode`)
+      .addValues(['default', 'insensitive']);
+
+    const jsonScalar = this.contextService.schema.getScalar('JSON');
+
+    this.contextService.schema
+      .addInput(`${this.projectName}JsonFilter`)
+      .addFields([
+        {
+          name: 'equals',
+          type: FieldType.ref,
+          refType: FieldRefType.scalar,
+          value: jsonScalar.name,
+        },
+        {
+          name: 'path',
+          type: FieldType.stringList,
+        },
+        {
+          name: 'mode',
+          type: FieldType.ref,
+          refType: FieldRefType.enum,
+          value: mode.name,
+        },
+        {
+          name: 'string_contains',
+          type: FieldType.string,
+        },
+        {
+          name: 'string_starts_with',
+          type: FieldType.string,
+        },
+        {
+          name: 'string_ends_with',
+          type: FieldType.string,
+        },
+        {
+          name: 'array_contains',
+          type: FieldType.refList,
+          refType: FieldRefType.scalar,
+          value: jsonScalar.name,
+        },
+        {
+          name: 'array_starts_with',
+          type: FieldType.ref,
+          refType: FieldRefType.scalar,
+          value: jsonScalar.name,
+        },
+        {
+          name: 'array_ends_with',
+          type: FieldType.ref,
+          refType: FieldRefType.scalar,
+          value: jsonScalar.name,
+        },
+        {
+          name: 'lt',
+          type: FieldType.float,
+        },
+        {
+          name: 'lte',
+          type: FieldType.float,
+        },
+        {
+          name: 'gt',
+          type: FieldType.float,
+        },
+        {
+          name: 'gte',
+          type: FieldType.float,
+        },
+      ]);
   }
 }
