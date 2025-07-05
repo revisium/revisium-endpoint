@@ -192,7 +192,7 @@ export class ModelService {
     schema: JsonSchema,
     postfix: string = '',
     isFlat: boolean = false,
-  ) {
+  ): GraphQLNonNull<any> {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
         `endpointId: ${this.context.endpointId}, unsupported $ref in schema: ${JSON.stringify(schema)}`,

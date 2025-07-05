@@ -71,32 +71,32 @@ const replaceTransformationsMapper: ReplaceTransformationsMapper = [
   {
     fromType: JsonSchemaTypeName.Number,
     toType: JsonSchemaTypeName.String,
-    transformation: fromNumberToString,
+    transformation: fromNumberToString as Transformation,
   },
   {
     fromType: JsonSchemaTypeName.String,
     toType: JsonSchemaTypeName.Number,
-    transformation: fromStringToNumber,
+    transformation: fromStringToNumber as Transformation,
   },
   {
     fromType: JsonSchemaTypeName.Boolean,
     toType: JsonSchemaTypeName.String,
-    transformation: fromBooleanToString,
+    transformation: fromBooleanToString as Transformation,
   },
   {
     fromType: JsonSchemaTypeName.String,
     toType: JsonSchemaTypeName.Boolean,
-    transformation: fromStringToBoolean,
+    transformation: fromStringToBoolean as Transformation,
   },
   {
     fromType: JsonSchemaTypeName.Boolean,
     toType: JsonSchemaTypeName.Number,
-    transformation: fromBooleanToNumber,
+    transformation: fromBooleanToNumber as Transformation,
   },
   {
     fromType: JsonSchemaTypeName.Number,
     toType: JsonSchemaTypeName.Boolean,
-    transformation: fromNumberToBoolean,
+    transformation: fromNumberToBoolean as Transformation,
   },
 ];
 export const getTransformation = (

@@ -55,7 +55,7 @@ export class GraphqlEndpointController {
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
-    @Param('postfix') postfix: string | undefined,
+    @Param('postfix') postfix: string,
     @Req() req: Request,
     @Res() res: Response,
     @Next() next: NextFunction,
@@ -83,7 +83,7 @@ export class GraphqlEndpointController {
     organizationId: string;
     projectName: string;
     branchName: string;
-    postfix?: string;
+    postfix: string;
     req: Request;
     res: Response;
     next: NextFunction;

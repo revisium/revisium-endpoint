@@ -80,7 +80,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private async createSchema(): Promise<GraphQLSchema> {
-    let cachedSdl: string = undefined;
+    let cachedSdl: string | undefined = undefined;
 
     const validTables = createValidTables(this.context.tables);
 
@@ -115,7 +115,9 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private createQueries(
     validTables: Record<string, ValidTableType>,
   ): Record<string, any> {
-    return Object.values(validTables).reduce((fields, validTable) => {
+    return Object.values(validTables).reduce<
+      Record<string, GraphQLFieldConfig<any, any>>
+    >((fields, validTable) => {
       const pluralKey = `${validTable.fieldName.plural}`;
       const singularKey = `${validTable.fieldName.singular}`;
       const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;

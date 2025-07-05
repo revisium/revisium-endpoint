@@ -5,6 +5,7 @@ import {
   HealthIndicatorResult,
 } from '@nestjs/terminus';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { getErrorPayload } from 'src/endpoint-microservice/shared/utils/getErrorPayload';
 
 @Injectable()
 export class CoreApiIndicator extends HealthIndicator {
@@ -16,6 +17,7 @@ export class CoreApiIndicator extends HealthIndicator {
     const { data, error } = await this.fetch();
 
     const isHealthy = Boolean(data);
+
     const result = this.getStatus(key, isHealthy, data || error);
 
     if (data) {
@@ -28,10 +30,12 @@ export class CoreApiIndicator extends HealthIndicator {
   private async fetch() {
     try {
       return await this.coreApi.health.liveness();
-    } catch (e) {
+    } catch (e: unknown) {
+      const errorPayload = getErrorPayload(e);
+
       return {
         data: null,
-        error: e.error,
+        error: errorPayload,
       };
     }
   }

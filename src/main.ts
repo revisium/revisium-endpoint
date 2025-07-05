@@ -20,7 +20,7 @@ async function bootstrap() {
   const portPath = 'ENDPOINT_PORT';
   const hostPath = 'ENDPOINT_HOST';
 
-  const endpointPort = parseInt(config.get<string>(portPath));
+  const endpointPort = parseInt(config.get<string>(portPath) || '6380');
   const endpointHost = config.get<string>(hostPath);
 
   if (!endpointPort) {
