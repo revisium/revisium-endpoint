@@ -223,13 +223,8 @@ type Query {
   UsERFlat(id: String!): ProjectUsERFlat!
   UsERs(data: ProjectGetUsERsInput): ProjectUsERConnection!
   UsERsFlat(data: ProjectGetUsERsInput): ProjectUsERFlatConnection!
-  _service: _Service
   uSer(id: String!): ProjectuSerNode!
   uSerFlat(id: String!): ProjectuSerFlat!
   uSers(data: ProjectGetuSersInput): ProjectuSerConnection!
   uSersFlat(data: ProjectGetuSersInput): ProjectuSerFlatConnection!
-}
-
-type _Service {
-  sdl: String
 }

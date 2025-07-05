@@ -149,9 +149,4 @@ type Query {
   INVALID_TABLE_NAME____userFlat(id: String!): ProjectInvalid_table_name____userFlat!
   INVALID_TABLE_NAME____users(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____userConnection!
   INVALID_TABLE_NAME____usersFlat(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____userFlatConnection!
-  _service: _Service
-}
-
-type _Service {
-  sdl: String
 }

@@ -145,13 +145,8 @@ input ProjectUsersWhereInput {
 }
 
 type Query {
-  _service: _Service
   user(id: String!): ProjectUserNode!
   userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
-}
-
-type _Service {
-  sdl: String
 }

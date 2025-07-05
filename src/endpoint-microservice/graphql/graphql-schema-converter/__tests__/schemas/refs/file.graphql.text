@@ -171,13 +171,8 @@ input ProjectStringFilter {
 }
 
 type Query {
-  _service: _Service
   post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
   postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
-}
-
-type _Service {
-  sdl: String
 }

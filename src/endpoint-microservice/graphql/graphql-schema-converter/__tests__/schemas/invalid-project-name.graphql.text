@@ -145,13 +145,8 @@ input INVALID_PROJECT_NAME_1UsersWhereInput {
 scalar JSON
 
 type Query {
-  _service: _Service
   user(id: String!): INVALID_PROJECT_NAME_1UserNode!
   userFlat(id: String!): INVALID_PROJECT_NAME_1UserFlat!
   users(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserConnection!
   usersFlat(data: INVALID_PROJECT_NAME_1GetUsersInput): INVALID_PROJECT_NAME_1UserFlatConnection!
-}
-
-type _Service {
-  sdl: String
 }

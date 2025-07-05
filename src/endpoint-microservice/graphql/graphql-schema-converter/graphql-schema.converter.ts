@@ -7,13 +7,12 @@ import {
   GraphQLSchema,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
-import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
+import { lexicographicSortSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
-import { createServiceField } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createServiceField';
 import { getPageInfoType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getPageInfoType';
 import { getSortOrder } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getSortOrder';
 import { createValidTables } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/createValidTables';
@@ -80,28 +79,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private async createSchema(): Promise<GraphQLSchema> {
-    let cachedSdl: string | undefined = undefined;
-
     const validTables = createValidTables(this.context.tables);
 
     this.createValidTables(validTables);
 
-    const schema = new GraphQLSchema({
+    return new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
-        fields: () => ({
-          ...this.createQueries(validTables),
-          _service: createServiceField(() => {
-            if (!cachedSdl) {
-              cachedSdl = printSchema(schema);
-            }
-            return { sdl: cachedSdl };
-          }),
-        }),
+        fields: () => this.createQueries(validTables),
       }),
     });
-
-    return schema;
   }
 
   private createValidTables(validTables: Record<string, ValidTableType>) {

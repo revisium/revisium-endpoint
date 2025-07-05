@@ -231,7 +231,6 @@ input ProjectUsersWhereInput {
 }
 
 type Query {
-  _service: _Service
   post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
@@ -240,8 +239,4 @@ type Query {
   userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
-}
-
-type _Service {
-  sdl: String
 }
