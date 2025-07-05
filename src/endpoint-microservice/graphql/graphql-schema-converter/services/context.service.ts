@@ -19,4 +19,8 @@ export class ContextService {
 
     return context;
   }
+
+  public get builder() {
+    return this.context.builderService.builder;
+  }
 }

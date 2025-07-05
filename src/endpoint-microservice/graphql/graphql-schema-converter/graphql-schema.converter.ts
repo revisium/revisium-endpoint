@@ -7,8 +7,9 @@ import {
   GraphQLSchema,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
-import { lexicographicSortSchema } from 'graphql/utilities';
+import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import { BuilderService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/builder.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
@@ -36,6 +37,7 @@ export interface GraphQLSchemaConverterContext extends ConverterContextType {
   filterTypes: Record<string, GraphQLInputObjectType>;
   whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
+  builderService: BuilderService;
 }
 
 @Injectable()
@@ -67,12 +69,22 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       filterTypes: createScalarFilterTypes(getProjectName(context.projectName)),
       whereInputTypeMap: {},
       nodes: {},
+      builderService: new BuilderService({
+        projectName: context.projectName,
+      }),
     };
 
     return this.asyncLocalStorage.run(
       graphQLSchemaConverterContext,
       async () => {
         const schema = await this.createSchema();
+
+        console.log(
+          printSchema(
+            graphQLSchemaConverterContext.builderService.builder.toSchema(),
+          ),
+        );
+
         return lexicographicSortSchema(schema);
       },
     );
