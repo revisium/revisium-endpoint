@@ -210,14 +210,14 @@ export const createRowMock = () => {
           case USER_TABLE_ID: {
             const value = mockUserTableData.data.edges.find(
               (edge) => edge.node.id === rowId,
-            ).node;
+            )?.node;
 
             return Promise.resolve({ data: value });
           }
           case POST_TABLE_ID: {
             const value = mockPostTableData.data.edges.find(
               (edge) => edge.node.id === rowId,
-            ).node;
+            )?.node;
 
             return Promise.resolve({ data: value });
           }

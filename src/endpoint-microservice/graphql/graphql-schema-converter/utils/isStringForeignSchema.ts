@@ -6,7 +6,7 @@ import {
 
 export const isStringForeignSchema = (
   schema: JsonSchema,
-): schema is JsonStringSchema => {
+): schema is JsonStringSchema & { foreignKey: string } => {
   return (
     !('$ref' in schema) &&
     schema.type === JsonSchemaTypeName.String &&

@@ -54,7 +54,11 @@ export class InternalCoreApiService extends Api<unknown> {
     params2?: RequestParams,
   ): RequestParams {
     const params = super.mergeRequestParams(params1, params2);
-    params.headers['Authorization'] = `Bearer ${this.token}`;
+    if (!params.headers) {
+      params.headers = {};
+    }
+    (params.headers as Record<string, string>)['Authorization'] =
+      `Bearer ${this.token}`;
     return params;
   }
 

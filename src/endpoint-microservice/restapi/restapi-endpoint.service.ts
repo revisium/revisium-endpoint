@@ -1,4 +1,9 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
@@ -50,11 +55,12 @@ export class RestapiEndpointService {
       throw new Error(`${endpointId} is not started`);
     }
 
-    const [url, item] = [...this.map.entries()].find(
-      ([_, mapValue]) => mapValue.endpointId === endpointId,
-    );
+    const [url, item] =
+      [...this.map.entries()].find(
+        ([_, mapValue]) => mapValue.endpointId === endpointId,
+      ) ?? [];
 
-    if (item) {
+    if (item && url) {
       this.map.delete(url);
     }
 
@@ -142,6 +148,10 @@ export class RestapiEndpointService {
           throw new HttpException(error, error.statusCode);
         }
 
+        if (!responseData.row) {
+          throw new NotFoundException('Row not found');
+        }
+
         return responseData.row.data;
       },
       createRow: async (headers, tableId, rowId, data) => {
@@ -214,7 +224,7 @@ export class RestapiEndpointService {
     id: string;
     isHead: boolean;
     isDraft: boolean;
-  }): string | undefined {
+  }): string {
     if (revision.isHead) {
       return 'head';
     }
@@ -285,6 +295,9 @@ export class RestapiEndpointService {
 
     openApiJson.info.title = `Revisium organizationId: "${organizationId}", project: "${projectName}", branch: "${branchName}/${postfix}"`;
     const url = `/endpoint/restapi/${organizationId}/${projectName}/${branchName}/${postfix}`;
+    if (!openApiJson.servers) {
+      openApiJson.servers = [];
+    }
     openApiJson.servers.push({ url });
 
     return openApiJson;

@@ -191,7 +191,7 @@ describe('graphql controller', () => {
     const headers = { headers: { authorization: 'Bearer test-token' } };
 
     const countSecondPostsInUser = posts.filter(
-      (item) => item.post.id === 'post-2',
+      (item: any) => item.post.id === 'post-2',
     ).length;
     expect(countSecondPostsInUser).toBe(3);
     expect(mockProxyCoreApiService.api.row).toHaveBeenCalledTimes(2);
@@ -215,7 +215,7 @@ describe('graphql controller', () => {
     const headers = { headers: { authorization: 'Bearer test-token' } };
 
     const countSecondPostsInUser = posts.filter(
-      (item) => item.post.id === 'post-2',
+      (item: any) => item.post.id === 'post-2',
     ).length;
     expect(countSecondPostsInUser).toBe(3);
     expect(mockProxyCoreApiService.api.row).toHaveBeenCalledTimes(3);

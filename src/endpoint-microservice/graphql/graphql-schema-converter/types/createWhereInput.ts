@@ -14,7 +14,7 @@ export const createWhereInput = (
     return whereInputTypeMap[typeName];
   }
 
-  const whereInput = new GraphQLInputObjectType({
+  const whereInput: GraphQLInputObjectType = new GraphQLInputObjectType({
     name: `${projectName}${typeName}WhereInput`,
     fields: () => ({
       AND: {

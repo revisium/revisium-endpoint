@@ -51,7 +51,7 @@ export class GraphqlEndpointService {
       middleware: RequestHandler;
       apollo: ApolloServer;
       endpointId: string;
-      table?: string;
+      table: string;
     }
   >();
 
@@ -82,7 +82,7 @@ export class GraphqlEndpointService {
         ([, value]) => value.endpointId === endpointId,
       ) ?? [];
 
-    if (endpoint) {
+    if (endpoint && url) {
       await endpoint.apollo.stop();
       this.endpointMap.delete(url);
       this.startedEndpointIds = this.startedEndpointIds.filter(
@@ -142,7 +142,11 @@ export class GraphqlEndpointService {
       GraphQLSchema
     >(new GetGraphqlSchemaQuery(context));
 
-    const fields = Object.keys(schema.getQueryType().getFields()).filter(
+    const queryType = schema.getQueryType();
+    if (!queryType) {
+      throw new Error('Schema does not have a Query type');
+    }
+    const fields = Object.keys(queryType.getFields()).filter(
       (name) => name !== '_service',
     );
 
@@ -191,7 +195,7 @@ export class GraphqlEndpointService {
     id: string;
     isHead: boolean;
     isDraft: boolean;
-  }): string | undefined {
+  }): string {
     if (revision.isHead) return 'head';
     if (revision.isDraft) return 'draft';
     return revision.id;
