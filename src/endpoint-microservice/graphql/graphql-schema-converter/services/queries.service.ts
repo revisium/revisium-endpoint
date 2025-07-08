@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GraphQLNonNull, GraphQLObjectType } from 'graphql/type';
+import { GraphQLNonNull } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
