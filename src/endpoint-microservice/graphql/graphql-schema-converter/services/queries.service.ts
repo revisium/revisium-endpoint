@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  GraphQLInt,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql/type';
+import { GraphQLNonNull, GraphQLObjectType } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
@@ -70,12 +64,11 @@ export class QueriesService {
     pluralKey: string,
     options: CreatingTableOptionsType,
   ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getListConnection(pluralKey, options);
-
+    this.createListConnection(pluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
 
     return {
-      type: new GraphQLNonNull(ConnectionType),
+      type: new GraphQLNonNull(this.cacheService.get(options.table.id).node),
     };
   }
 
@@ -83,26 +76,21 @@ export class QueriesService {
     flatPluralKey: string,
     options: CreatingTableOptionsType,
   ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getFlatConnection(flatPluralKey, options);
-
+    this.getFlatConnection(flatPluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
 
     return {
-      type: new GraphQLNonNull(ConnectionType),
+      type: this.cacheService.get(options.table.id).dataFlat.type,
     };
   }
 
   private getFlatConnection(
     flatPluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
+  ) {
     const connectionName = `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`;
     const edgeName = `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`;
     const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
-
-    if (!nodeType) {
-      throw new Error('implement id');
-    }
 
     this.contextService.schema.addType(edgeName).addFields([
       {
@@ -145,37 +133,12 @@ export class QueriesService {
       },
       resolver: this.resolver.getListFlatResolver(options.table),
     });
-
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getFlatEdgeType(options))),
-          ),
-        },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
-      },
-    });
   }
 
-  private getFlatEdgeType(
-    options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    const flatType = this.cacheService.get(options.table.id).dataFlat.type;
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`,
-      fields: {
-        node: { type: flatType },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
-      },
-    });
-  }
-
-  private getListConnection(
+  private createListConnection(
     pluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
+  ) {
     const name = `${this.projectName}${options.safetyTableId}${CONNECTION_KEY}`;
 
     const edgeName = `${this.projectName}${options.safetyTableId}${EDGE_KEY}`;
@@ -222,18 +185,6 @@ export class QueriesService {
         value: `${this.projectName}Get${options.pluralSafetyTableId}Input`,
       },
       resolver: this.resolver.getListResolver(options.table),
-    });
-
-    return new GraphQLObjectType({
-      name,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getEdgeType(options))),
-          ),
-        },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
-      },
     });
   }
 
@@ -353,20 +304,6 @@ export class QueriesService {
         value: whereName,
       },
     ]);
-  }
-
-  private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${EDGE_KEY}`,
-      fields: {
-        node: {
-          type: new GraphQLNonNull(
-            this.cacheService.get(options.table.id).node,
-          ),
-        },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
-      },
-    });
   }
 
   private get projectName(): string {
