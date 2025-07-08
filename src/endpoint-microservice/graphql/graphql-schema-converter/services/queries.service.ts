@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { GraphQLNonNull } from 'graphql/type';
-import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
@@ -60,28 +58,17 @@ export class QueriesService {
     });
   }
 
-  public createListField(
-    pluralKey: string,
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
+  public createListField(pluralKey: string, options: CreatingTableOptionsType) {
     this.createListConnection(pluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
-
-    return {
-      type: new GraphQLNonNull(this.cacheService.get(options.table.id).node),
-    };
   }
 
   public createListFlatField(
     flatPluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
+  ) {
     this.getFlatConnection(flatPluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
-
-    return {
-      type: this.cacheService.get(options.table.id).dataFlat.type,
-    };
   }
 
   private getFlatConnection(

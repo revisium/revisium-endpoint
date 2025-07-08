@@ -1,15 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
-import {
-  GraphQLBoolean,
-  GraphQLFloat,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql/type';
-import { GraphQLFieldConfig } from 'graphql/type/definition';
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
@@ -87,7 +77,7 @@ export class ModelService {
       },
     ]);
 
-    const data = this.getSchemaConfig(
+    this.getSchemaConfig(
       options,
       options.table.schema,
       DATA_KEY,
@@ -97,15 +87,7 @@ export class ModelService {
       name,
     );
 
-    const node = new GraphQLObjectType<RowModel>({
-      name,
-      fields: () => ({
-        [DATA_KEY]: data.config,
-      }),
-    });
-
     return {
-      node,
       nodeType,
     };
   }
@@ -134,7 +116,7 @@ export class ModelService {
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
-  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } {
+  ): { field: TypeModelField } {
     const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
       schema,
       field,
@@ -144,7 +126,7 @@ export class ModelService {
     );
 
     if (foreignKeyConfig) {
-      return { config: foreignKeyConfig.config, field: foreignKeyConfig.field };
+      return { field: foreignKeyConfig.field };
     }
 
     const foreignKeyArrayConfig = this.tryGettingForeignKeyArrayFieldConfig(
@@ -157,7 +139,6 @@ export class ModelService {
 
     if (foreignKeyArrayConfig) {
       return {
-        config: foreignKeyArrayConfig.config,
         field: foreignKeyArrayConfig.field,
       };
     }
@@ -173,19 +154,13 @@ export class ModelService {
       false,
     );
 
-    const config: GraphQLFieldConfig<any, any> = {
-      type: type.config,
-    };
-
     if (schema.deprecated && schema.description) {
       type.field.deprecationReason = schema.description;
-      config.deprecationReason = schema.description;
     } else if (schema.description) {
       type.field.description = schema.description;
-      config.description = schema.description;
     }
 
-    return { config, field: type.field };
+    return { field: type.field };
   }
 
   private tryGettingForeignKeyFieldConfig(
@@ -194,7 +169,7 @@ export class ModelService {
     isFlat: boolean = false,
     fieldNameInParentObject: string,
     parentType: string,
-  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } | null {
+  ): { field: TypeModelField } | null {
     const isForeignKey = isStringForeignSchema(schema);
 
     if (isForeignKey) {
@@ -218,26 +193,13 @@ export class ModelService {
         this.contextService.schema.getType(parentType).addField(fieldType);
       }
 
-      const config: GraphQLFieldConfig<any, any> = {
-        type: isFlat
-          ? this.cacheService.get(schema.foreignKey).dataFlat.type
-          : new GraphQLNonNull(this.cacheService.get(schema.foreignKey).node),
-        resolve: this.resolver.getFieldResolver(
-          schema.foreignKey,
-          field,
-          isFlat,
-        ),
-      };
-
       if (schema.deprecated && schema.description) {
         fieldType.deprecationReason = schema.description;
-        config.deprecationReason = schema.description;
       } else if (schema.description) {
         fieldType.description = schema.description;
-        config.description = schema.description;
       }
 
-      return { config, field: fieldType };
+      return { field: fieldType };
     }
 
     return null;
@@ -267,7 +229,7 @@ export class ModelService {
     isFlat: boolean = false,
     fieldNameInParentObject: string,
     parentType: string,
-  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } | null {
+  ): { field: TypeModelField } | null {
     if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
       const fieldType: TypeModelField = {
         ...(isFlat
@@ -294,32 +256,13 @@ export class ModelService {
         this.contextService.schema.getType(parentType).addField(fieldType);
       }
 
-      const config: GraphQLFieldConfig<any, any> = {
-        type: new GraphQLNonNull(
-          new GraphQLList(
-            isFlat
-              ? this.cacheService.get(schema.items.foreignKey).dataFlat.type
-              : new GraphQLNonNull(
-                  this.cacheService.get(schema.items.foreignKey).node,
-                ),
-          ),
-        ),
-        resolve: this.resolver.getFieldArrayItemResolver(
-          schema.items.foreignKey,
-          field,
-          isFlat,
-        ),
-      };
-
       if (schema.deprecated && schema.description) {
         fieldType.deprecationReason = schema.description;
-        config.deprecationReason = schema.description;
       } else if (schema.description) {
         fieldType.description = schema.description;
-        config.description = schema.description;
       }
 
-      return { config, field: fieldType };
+      return { field: fieldType };
     }
 
     return null;
@@ -334,7 +277,7 @@ export class ModelService {
     fieldNameInParentObject: string,
     parentType: string,
     inList: boolean,
-  ): { config: GraphQLNonNull<any>; field: TypeModelField } {
+  ): { field: TypeModelField } {
     if ('$ref' in schema) {
       throw new InternalServerErrorException(
         `endpointId: ${this.context.endpointId}, unsupported $ref in schema: ${JSON.stringify(schema)}`,
@@ -352,7 +295,7 @@ export class ModelService {
           this.contextService.schema.getType(parentType).addField(field);
         }
 
-        return { config: new GraphQLNonNull(GraphQLString), field };
+        return { field };
       }
       case 'number': {
         const field: TypeModelField = {
@@ -364,7 +307,7 @@ export class ModelService {
           this.contextService.schema.getType(parentType).addField(field);
         }
 
-        return { config: new GraphQLNonNull(GraphQLFloat), field };
+        return { field };
       }
       case 'boolean': {
         const field: TypeModelField = {
@@ -375,7 +318,7 @@ export class ModelService {
         if (parentType && fieldNameInParentObject) {
           this.contextService.schema.getType(parentType).addField(field);
         }
-        return { config: new GraphQLNonNull(GraphQLBoolean), field };
+        return { field };
       }
       case 'object': {
         const objectConfig = this.getObjectSchema(
@@ -389,7 +332,6 @@ export class ModelService {
         );
 
         return {
-          config: new GraphQLNonNull(objectConfig.config),
           field: objectConfig.field,
         };
       }
@@ -405,7 +347,6 @@ export class ModelService {
           true,
         );
         return {
-          config: new GraphQLNonNull(new GraphQLList(arrayConfig.config)),
           field: arrayConfig.field,
         };
       }
@@ -424,7 +365,7 @@ export class ModelService {
     fieldNameInParentObject: string,
     parentType: string,
     inList: boolean,
-  ): { config: GraphQLObjectType; field: TypeModelField } {
+  ): { field: TypeModelField } {
     const validEntries = Object.entries(schema.properties).filter(
       ([_, propertySchema]) => !isEmptyObject(propertySchema),
     );
@@ -443,41 +384,32 @@ export class ModelService {
     }
     this.contextService.schema.addType(name);
 
-    const type = new GraphQLObjectType({
-      name,
-      fields: () =>
-        validEntries.reduce(
-          (fields, [key, itemSchema]) => {
-            if (!isValidName(key)) {
-              return fields;
-            }
+    validEntries.reduce(
+      (fields, [key, itemSchema]) => {
+        if (!isValidName(key)) {
+          return fields;
+        }
 
-            const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(
-              ids,
-              key,
-            )
-              ? key
-              : capitalize(key);
+        const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(ids, key)
+          ? key
+          : capitalize(key);
 
-            const config = this.getSchemaConfig(
-              options,
-              itemSchema,
-              key,
-              `${name}${capitalizedSafetyKey}`,
-              isFlat,
-              key,
-              name,
-            );
+        this.getSchemaConfig(
+          options,
+          itemSchema,
+          key,
+          `${name}${capitalizedSafetyKey}`,
+          isFlat,
+          key,
+          name,
+        );
 
-            fields[key] = config.config;
-            return fields;
-          },
-          {} as Record<string, any>,
-        ),
-    });
+        return fields;
+      },
+      {} as Record<string, any>,
+    );
 
     return {
-      config: type,
       field,
     };
   }
@@ -507,13 +439,11 @@ export class ModelService {
   private createNodeCache(option: CreatingTableOptionsType): void {
     const flatType = `${this.projectName}${option.safetyTableId}${FLAT_KEY}`;
 
-    const { node, nodeType } = this.getNodeType(option);
+    const { nodeType } = this.getNodeType(option);
     const dataFlat = this.getDataFlatType(option, flatType, '');
 
     this.cacheService.add(option.table.id, {
-      node,
       nodeType,
-      dataFlat: dataFlat.config,
       dataFlatRoot: dataFlat.field,
     });
   }

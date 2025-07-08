@@ -1,9 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { GraphQLObjectType, GraphQLSchema } from 'graphql/type';
+import { GraphQLSchema } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema } from 'graphql/utilities';
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import {
@@ -22,9 +21,7 @@ import {
 const FLAT_KEY = 'Flat';
 
 export interface CacheNode {
-  node: GraphQLObjectType<RowModel>;
   nodeType: TypeModel;
-  dataFlat: GraphQLFieldConfig<any, any>;
   dataFlatRoot: TypeModelField;
 }
 
@@ -82,13 +79,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const validTables = createValidTables(this.context.tables);
 
     this.createValidTables(validTables);
-
-    return new GraphQLSchema({
-      query: new GraphQLObjectType({
-        name: 'Query',
-        fields: () => this.createQueries(validTables),
-      }),
-    });
+    this.createQueries(validTables);
   }
 
   private createValidTables(validTables: Record<string, ValidTableType>) {
@@ -99,10 +90,8 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     this.modelService.create(options);
   }
 
-  private createQueries(
-    validTables: Record<string, ValidTableType>,
-  ): Record<string, any> {
-    return Object.values(validTables).reduce<
+  private createQueries(validTables: Record<string, ValidTableType>) {
+    Object.values(validTables).reduce<
       Record<string, GraphQLFieldConfig<any, any>>
     >((fields, validTable) => {
       const pluralKey = `${validTable.fieldName.plural}`;
@@ -112,15 +101,12 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
       this.queriesService.createItemField(singularKey, validTable.options);
 
-      fields[pluralKey] = this.queriesService.createListField(
-        pluralKey,
-        validTable.options,
-      );
+      this.queriesService.createListField(pluralKey, validTable.options);
       this.queriesService.createItemFlatField(
         flatSingularKey,
         validTable.options,
       );
-      fields[flatPluralKey] = this.queriesService.createListFlatField(
+      this.queriesService.createListFlatField(
         flatPluralKey,
         validTable.options,
       );
