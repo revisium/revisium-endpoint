@@ -242,6 +242,24 @@ export class ModelService {
     return null;
   }
 
+  private convertToListField(model: TypeModelField): TypeModelField {
+    const nextModel: TypeModelField = { ...model };
+
+    if (model.type === FieldType.string) {
+      nextModel.type = FieldType.stringList;
+    } else if (model.type === FieldType.int) {
+      nextModel.type = FieldType.intList;
+    } else if (model.type === FieldType.float) {
+      nextModel.type = FieldType.floatList;
+    } else if (model.type === FieldType.boolean) {
+      nextModel.type = FieldType.booleanList;
+    } else if (model.type === FieldType.ref) {
+      nextModel.type = FieldType.refList;
+    }
+
+    return nextModel;
+  }
+
   private tryGettingForeignKeyArrayFieldConfig(
     schema: JsonSchema,
     field: string,
@@ -252,7 +270,11 @@ export class ModelService {
     if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
       const fieldType: TypeModelField = {
         ...(isFlat
-          ? { ...this.cacheService.get(schema.items.foreignKey).dataFlatRoot }
+          ? {
+              ...this.convertToListField(
+                this.cacheService.get(schema.items.foreignKey).dataFlatRoot,
+              ),
+            }
           : {
               type: FieldType.refList,
               refType: FieldRefType.type,
