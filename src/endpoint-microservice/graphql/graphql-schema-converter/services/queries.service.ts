@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -16,8 +15,6 @@ import {
   FieldType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import { createWhereInput } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createWhereInput';
-import { generateOrderByType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/generateOrderByType';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 
 const FLAT_KEY = 'Flat';
@@ -97,9 +94,12 @@ export class QueriesService {
     options: CreatingTableOptionsType,
   ): GraphQLFieldConfig<any, any> {
     const ConnectionType = this.getListConnection(pluralKey, options);
+
+    this.createListArgs(options.pluralSafetyTableId);
+
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
+      // args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
       resolve: this.resolver.getListResolver(options.table),
     };
   }
@@ -110,11 +110,13 @@ export class QueriesService {
   ): GraphQLFieldConfig<any, any> {
     const ConnectionType = this.getFlatConnection(flatPluralKey, options);
 
+    this.createListArgs(options.pluralSafetyTableId);
+
     return {
       type: new GraphQLNonNull(ConnectionType),
-      args: {
-        data: { type: this.getListArgs(options.pluralSafetyTableId) },
-      },
+      // args: {
+      //   data: { type: this.getListArgs(options.pluralSafetyTableId) },
+      // },
       resolve: this.resolver.getListFlatResolver(options.table),
     };
   }
@@ -181,7 +183,6 @@ export class QueriesService {
             new GraphQLList(new GraphQLNonNull(this.getFlatEdgeType(options))),
           ),
         },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
         totalCount: { type: new GraphQLNonNull(GraphQLInt) },
       },
     });
@@ -260,17 +261,16 @@ export class QueriesService {
             new GraphQLList(new GraphQLNonNull(this.getEdgeType(options))),
           ),
         },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
         totalCount: { type: new GraphQLNonNull(GraphQLInt) },
       },
     });
   }
 
-  private getListArgs(name: string): GraphQLInputObjectType {
-    const typeName = `${this.projectName}Get${name}Input`;
+  private createListArgs(name: string) {
+    const getInputName = `${this.projectName}Get${name}Input`;
 
-    if (this.context.listArgsMap[typeName]) {
-      return this.context.listArgsMap[typeName];
+    if (this.context.schema.inputs.has(getInputName)) {
+      return;
     }
 
     const orderByEnumName = `${this.projectName}Get${name}OrderByField`;
@@ -366,7 +366,6 @@ export class QueriesService {
       },
     ]);
 
-    const getInputName = `${this.projectName}Get${name}Input`;
     this.contextService.schema.addInput(getInputName).addFields([
       { type: FieldType.int, name: 'first' },
       { type: FieldType.string, name: 'after' },
@@ -383,32 +382,6 @@ export class QueriesService {
         value: whereName,
       },
     ]);
-
-    const listArgs = new GraphQLInputObjectType({
-      name: getInputName,
-      fields: {
-        first: { type: GraphQLInt },
-        after: { type: GraphQLString },
-        orderBy: {
-          type: generateOrderByType(
-            `${this.projectName}Get${name}`,
-            this.context.sortOrder,
-          ),
-        },
-        where: {
-          type: createWhereInput(
-            this.projectName,
-            name,
-            this.context.filterTypes,
-            this.context.whereInputTypeMap,
-          ),
-        },
-      },
-    });
-
-    this.context.listArgsMap[typeName] = listArgs;
-
-    return listArgs;
   }
 
   private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {

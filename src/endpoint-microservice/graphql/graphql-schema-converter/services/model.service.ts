@@ -19,8 +19,6 @@ import {
   TypeModelField,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import { DateTimeType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/dateTimeType';
-import { JsonType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/jsonType';
 import { SortDirection } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/sortDirection';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
@@ -105,11 +103,7 @@ export class ModelService {
         versionId: { type: new GraphQLNonNull(GraphQLString) },
         createdId: { type: new GraphQLNonNull(GraphQLString) },
         id: { type: new GraphQLNonNull(GraphQLString) },
-        createdAt: { type: new GraphQLNonNull(DateTimeType) },
-        updatedAt: { type: new GraphQLNonNull(DateTimeType) },
-        publishedAt: { type: new GraphQLNonNull(DateTimeType) },
         [DATA_KEY]: data.config,
-        json: { type: JsonType, resolve: (parent) => parent.data },
       }),
     });
 

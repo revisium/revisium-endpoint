@@ -1,13 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import {
-  GraphQLEnumType,
   GraphQLInputObjectType,
   GraphQLObjectType,
   GraphQLSchema,
 } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
-import { lexicographicSortSchema, printSchema } from 'graphql/utilities';
+import { lexicographicSortSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
@@ -18,11 +17,7 @@ import {
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { SchemaToBuilderConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema-to-builder.converter';
 import { ValidTableType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import { createScalarFilterTypes } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createScalarFilterTypes';
-import { getPageInfoType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getPageInfoType';
-import { getSortOrder } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/getSortOrder';
 import { createValidTables } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/createValidTables';
-import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 import {
   Converter,
   ConverterContextType,
@@ -38,10 +33,7 @@ export interface CacheNode {
 }
 
 export interface GraphQLSchemaConverterContext extends ConverterContextType {
-  pageInfo: GraphQLObjectType;
-  sortOrder: GraphQLEnumType;
   listArgsMap: Record<string, GraphQLInputObjectType>;
-  filterTypes: Record<string, GraphQLInputObjectType>;
   whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
   schema: Schema;
@@ -70,10 +62,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
-      pageInfo: getPageInfoType(getProjectName(context.projectName)),
-      sortOrder: getSortOrder(getProjectName(context.projectName)),
       listArgsMap: {},
-      filterTypes: createScalarFilterTypes(getProjectName(context.projectName)),
       whereInputTypeMap: {},
       nodes: {},
       schema: new Schema(),
@@ -82,7 +71,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     return this.asyncLocalStorage.run(
       graphQLSchemaConverterContext,
       async () => {
-        const schema = await this.createSchema();
+        await this.createSchema();
 
         const schemaToBuilderConverter = new SchemaToBuilderConverter(
           graphQLSchemaConverterContext.schema,
@@ -97,7 +86,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     );
   }
 
-  private async createSchema(): Promise<GraphQLSchema> {
+  private async createSchema() {
     const validTables = createValidTables(this.context.tables);
 
     this.createValidTables(validTables);
@@ -129,15 +118,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
       const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
 
-      fields[singularKey] = this.queriesService.createItemField(
-        singularKey,
-        validTable.options,
-      );
+      this.queriesService.createItemField(singularKey, validTable.options);
+
       fields[pluralKey] = this.queriesService.createListField(
         pluralKey,
         validTable.options,
       );
-      fields[flatSingularKey] = this.queriesService.createItemFlatField(
+      this.queriesService.createItemFlatField(
         flatSingularKey,
         validTable.options,
       );
