@@ -79,6 +79,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     const validTables = createValidTables(this.context.tables);
 
     this.createValidTables(validTables);
+    this.context.schema.resolveAllThunks();
     this.createQueries(validTables);
   }
 

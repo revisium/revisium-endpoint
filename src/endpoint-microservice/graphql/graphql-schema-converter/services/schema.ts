@@ -77,8 +77,11 @@ export type TypeModelField = (
   resolver?: (...args: any[]) => any;
 };
 
+export type TypeModelFieldThunk = () => TypeModelField;
+
 export class TypeModel {
   public fields = new Map<string, TypeModelField>();
+  private fieldThunks = new Map<string, TypeModelFieldThunk>();
 
   constructor(
     private readonly schema: Schema,
@@ -95,12 +98,30 @@ export class TypeModel {
     return this;
   }
 
+  public addFieldThunk(name: string, fieldThunk: TypeModelFieldThunk) {
+    if (this.fieldThunks.has(name)) {
+      throw new Error(`Field thunk with name "${name}" already exists`);
+    }
+
+    this.fieldThunks.set(name, fieldThunk);
+
+    return this;
+  }
+
   public addFields(fields: TypeModelField[]) {
     for (const field of fields) {
       this.addField(field);
     }
 
     return this;
+  }
+
+  public resolveThunks() {
+    for (const [name, thunk] of this.fieldThunks) {
+      const field = thunk();
+      this.fields.set(name, field);
+    }
+    this.fieldThunks.clear();
   }
 }
 
@@ -255,5 +276,11 @@ export class Schema {
     }
 
     return scalar;
+  }
+
+  public resolveAllThunks() {
+    for (const type of this.types.values()) {
+      type.resolveThunks();
+    }
   }
 }

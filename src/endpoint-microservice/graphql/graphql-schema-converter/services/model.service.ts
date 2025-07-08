@@ -173,33 +173,43 @@ export class ModelService {
     const isForeignKey = isStringForeignSchema(schema);
 
     if (isForeignKey) {
-      const fieldType: TypeModelField = {
-        ...(isFlat
-          ? this.cacheService.get(schema.foreignKey).dataFlatRoot
-          : {
-              type: FieldType.ref,
-              refType: FieldRefType.type,
-              value: this.cacheService.get(schema.foreignKey).nodeType.name,
-            }),
-        name: fieldNameInParentObject,
-        resolver: this.resolver.getFieldResolver(
-          schema.foreignKey,
-          field,
-          isFlat,
-        ),
+      const foreignKey = schema.foreignKey;
+      const fieldThunk = () => {
+        const fieldType: TypeModelField = {
+          ...(isFlat
+            ? this.cacheService.get(foreignKey).dataFlatRoot
+            : {
+                type: FieldType.ref,
+                refType: FieldRefType.type,
+                value: this.cacheService.get(foreignKey).nodeType.name,
+              }),
+          name: fieldNameInParentObject,
+          resolver: this.resolver.getFieldResolver(foreignKey, field, isFlat),
+        };
+
+        if (schema.deprecated && schema.description) {
+          fieldType.deprecationReason = schema.description;
+        } else if (schema.description) {
+          fieldType.description = schema.description;
+        }
+
+        return fieldType;
       };
 
       if (parentType && fieldNameInParentObject) {
-        this.contextService.schema.getType(parentType).addField(fieldType);
+        this.contextService.schema
+          .getType(parentType)
+          .addFieldThunk(fieldNameInParentObject, fieldThunk);
       }
 
-      if (schema.deprecated && schema.description) {
-        fieldType.deprecationReason = schema.description;
-      } else if (schema.description) {
-        fieldType.description = schema.description;
-      }
-
-      return { field: fieldType };
+      return {
+        field: {
+          name: fieldNameInParentObject,
+          type: FieldType.ref,
+          refType: FieldRefType.type,
+          value: `${this.projectName}${foreignKey.charAt(0).toUpperCase() + foreignKey.slice(1)}${isFlat ? 'Flat' : 'Node'}`, // Use proper type name
+        },
+      };
     }
 
     return null;
@@ -231,38 +241,52 @@ export class ModelService {
     parentType: string,
   ): { field: TypeModelField } | null {
     if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
-      const fieldType: TypeModelField = {
-        ...(isFlat
-          ? {
-              ...this.convertToListField(
-                this.cacheService.get(schema.items.foreignKey).dataFlatRoot,
-              ),
-            }
-          : {
-              type: FieldType.refList,
-              refType: FieldRefType.type,
-              value: this.cacheService.get(schema.items.foreignKey).nodeType
-                .name,
-            }),
-        name: fieldNameInParentObject,
-        resolver: this.resolver.getFieldArrayItemResolver(
-          schema.items.foreignKey,
-          field,
-          isFlat,
-        ),
+      const items = schema.items;
+      const foreignKey = items.foreignKey;
+      const fieldThunk = () => {
+        const fieldType: TypeModelField = {
+          ...(isFlat
+            ? {
+                ...this.convertToListField(
+                  this.cacheService.get(foreignKey).dataFlatRoot,
+                ),
+              }
+            : {
+                type: FieldType.refList,
+                refType: FieldRefType.type,
+                value: this.cacheService.get(foreignKey).nodeType.name,
+              }),
+          name: fieldNameInParentObject,
+          resolver: this.resolver.getFieldArrayItemResolver(
+            foreignKey,
+            field,
+            isFlat,
+          ),
+        };
+
+        if (schema.deprecated && schema.description) {
+          fieldType.deprecationReason = schema.description;
+        } else if (schema.description) {
+          fieldType.description = schema.description;
+        }
+
+        return fieldType;
       };
 
       if (parentType && fieldNameInParentObject) {
-        this.contextService.schema.getType(parentType).addField(fieldType);
+        this.contextService.schema
+          .getType(parentType)
+          .addFieldThunk(fieldNameInParentObject, fieldThunk);
       }
 
-      if (schema.deprecated && schema.description) {
-        fieldType.deprecationReason = schema.description;
-      } else if (schema.description) {
-        fieldType.description = schema.description;
-      }
-
-      return { field: fieldType };
+      return {
+        field: {
+          name: fieldNameInParentObject,
+          type: FieldType.refList,
+          refType: FieldRefType.type,
+          value: `${this.projectName}${foreignKey.charAt(0).toUpperCase() + foreignKey.slice(1)}${isFlat ? 'Flat' : 'Node'}`,
+        },
+      };
     }
 
     return null;
