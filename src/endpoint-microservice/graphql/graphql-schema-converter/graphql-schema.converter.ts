@@ -34,7 +34,7 @@ export interface CacheNode {
   node: GraphQLObjectType<RowModel>;
   nodeType: TypeModel;
   dataFlat: GraphQLFieldConfig<any, any>;
-  dataFlatRoot?: TypeModelField;
+  dataFlatRoot: TypeModelField;
 }
 
 export interface GraphQLSchemaConverterContext extends ConverterContextType {

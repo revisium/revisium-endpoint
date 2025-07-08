@@ -142,25 +142,32 @@ export class ModelService {
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
-  ): { config: GraphQLFieldConfig<any, any>; field?: TypeModelField } {
+  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } {
     const foreignKeyConfig = this.tryGettingForeignKeyFieldConfig(
       schema,
       field,
       isFlat,
+      fieldNameInParentObject,
+      parentType,
     );
 
     if (foreignKeyConfig) {
-      return { config: foreignKeyConfig.config };
+      return { config: foreignKeyConfig.config, field: foreignKeyConfig.field };
     }
 
     const foreignKeyArrayConfig = this.tryGettingForeignKeyArrayFieldConfig(
       schema,
       field,
       isFlat,
+      fieldNameInParentObject,
+      parentType,
     );
 
     if (foreignKeyArrayConfig) {
-      return { config: foreignKeyArrayConfig.config };
+      return {
+        config: foreignKeyArrayConfig.config,
+        field: foreignKeyArrayConfig.field,
+      };
     }
 
     const type = this.mapSchemaTypeToGraphQL(
@@ -191,10 +198,27 @@ export class ModelService {
     schema: JsonSchema,
     field: string,
     isFlat: boolean = false,
-  ): { config: GraphQLFieldConfig<any, any> } | null {
+    fieldNameInParentObject: string,
+    parentType: string,
+  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } | null {
     const isForeignKey = isStringForeignSchema(schema);
 
     if (isForeignKey) {
+      const fieldType: TypeModelField = {
+        ...(isFlat
+          ? this.cacheService.get(schema.foreignKey).dataFlatRoot
+          : {
+              type: FieldType.ref,
+              refType: FieldRefType.type,
+              value: this.cacheService.get(schema.foreignKey).nodeType.name,
+            }),
+        name: fieldNameInParentObject,
+      };
+
+      if (parentType && fieldNameInParentObject) {
+        this.contextService.schema.getType(parentType).addField(fieldType);
+      }
+
       const config: GraphQLFieldConfig<any, any> = {
         type: isFlat
           ? this.cacheService.get(schema.foreignKey).dataFlat.type
@@ -212,7 +236,7 @@ export class ModelService {
         config.description = schema.description;
       }
 
-      return { config };
+      return { config, field: fieldType };
     }
 
     return null;
@@ -222,8 +246,26 @@ export class ModelService {
     schema: JsonSchema,
     field: string,
     isFlat: boolean = false,
-  ): { config: GraphQLFieldConfig<any, any> } | null {
+    fieldNameInParentObject: string,
+    parentType: string,
+  ): { config: GraphQLFieldConfig<any, any>; field: TypeModelField } | null {
     if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
+      const fieldType: TypeModelField = {
+        ...(isFlat
+          ? { ...this.cacheService.get(schema.items.foreignKey).dataFlatRoot }
+          : {
+              type: FieldType.refList,
+              refType: FieldRefType.type,
+              value: this.cacheService.get(schema.items.foreignKey).nodeType
+                .name,
+            }),
+        name: fieldNameInParentObject,
+      };
+
+      if (parentType && fieldNameInParentObject) {
+        this.contextService.schema.getType(parentType).addField(fieldType);
+      }
+
       const config: GraphQLFieldConfig<any, any> = {
         type: new GraphQLNonNull(
           new GraphQLList(
@@ -247,7 +289,7 @@ export class ModelService {
         config.description = schema.description;
       }
 
-      return { config };
+      return { config, field: fieldType };
     }
 
     return null;

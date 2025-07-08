@@ -1,5 +1,11 @@
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
 scalar DateTime
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
 scalar JSON
 
 input ProjectBoolFilter {
@@ -11,10 +17,10 @@ input ProjectDateTimeFilter {
   equals: String
   gt: String
   gte: String
-  in: [String]
+  in: [String!]
   lt: String
   lte: String
-  notIn: [String]
+  notIn: [String!]
 }
 
 enum ProjectFilterJsonMode {
@@ -30,7 +36,7 @@ enum ProjectFilterStringMode {
 input ProjectGetPostsInput {
   after: String
   first: Int
-  orderBy: [ProjectGetPostsOrderByInput]
+  orderBy: [ProjectGetPostsOrderByInput!]
   where: ProjectPostsWhereInput
 }
 
@@ -49,7 +55,7 @@ input ProjectGetPostsOrderByInput {
 input ProjectGetUsersInput {
   after: String
   first: Int
-  orderBy: [ProjectGetUsersOrderByInput]
+  orderBy: [ProjectGetUsersOrderByInput!]
   where: ProjectUsersWhereInput
 }
 
@@ -66,7 +72,7 @@ input ProjectGetUsersOrderByInput {
 }
 
 input ProjectJsonFilter {
-  array_contains: [JSON]
+  array_contains: [JSON!]
   array_ends_with: JSON
   array_starts_with: JSON
   equals: JSON
@@ -75,7 +81,7 @@ input ProjectJsonFilter {
   lt: Float
   lte: Float
   mode: ProjectFilterJsonMode
-  path: [String]
+  path: [String!]
   string_contains: String
   string_ends_with: String
   string_starts_with: String
@@ -123,7 +129,7 @@ type ProjectPostNode {
   createdId: String!
   data: ProjectPost!
   id: String!
-  json: JSON
+  json: JSON!
   publishedAt: DateTime!
   updatedAt: DateTime!
   versionId: String!
@@ -154,12 +160,12 @@ input ProjectStringFilter {
   equals: String
   gt: String
   gte: String
-  in: [String]
+  in: [String!]
   lt: String
   lte: String
   mode: ProjectFilterStringMode
   not: String
-  notIn: [String]
+  notIn: [String!]
   startsWith: String
 }
 
@@ -205,7 +211,7 @@ type ProjectUserNode {
   createdId: String!
   data: ProjectUser!
   id: String!
-  json: JSON
+  json: JSON!
   publishedAt: DateTime!
   updatedAt: DateTime!
   versionId: String!
