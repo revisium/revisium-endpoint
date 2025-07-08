@@ -284,7 +284,9 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: this.getScalarRef(field.value).ref,
-            resolve: (data) => data[field.name],
+            resolve: field.resolver
+              ? field.resolver
+              : (data) => data[field.name],
             nullable: field.nullable,
             ...params,
           }),
@@ -296,7 +298,9 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: t.listRef(this.getScalarRef(field.value).ref),
-            resolve: (data) => data[field.name],
+            resolve: field.resolver
+              ? field.resolver
+              : (data) => data[field.name],
             nullable: field.nullable,
             ...params,
           }),
