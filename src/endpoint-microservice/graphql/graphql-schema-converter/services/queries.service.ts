@@ -32,12 +32,8 @@ export class QueriesService {
   public createItemFlatField(
     flatSingularKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
+  ) {
     const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
-
-    if (!nodeType) {
-      throw new Error('implement id');
-    }
 
     this.contextService.schema.query.addField({
       ...nodeType,
@@ -49,23 +45,12 @@ export class QueriesService {
       },
       resolver: this.resolver.getItemFlatResolver(options.table),
     });
-
-    const dataConfig = this.cacheService.get(options.table.id).dataFlat;
-
-    return {
-      type: dataConfig.type,
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve:
-        dataConfig.resolve ?? this.resolver.getItemFlatResolver(options.table),
-    };
   }
 
   public createItemField(
     singularKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
+  ) {
     const nodeType = this.cacheService.get(options.table.id).nodeType;
 
     this.contextService.schema.query.addField({
@@ -79,14 +64,6 @@ export class QueriesService {
       },
       resolver: this.resolver.getItemResolver(options.table),
     });
-
-    return {
-      type: new GraphQLNonNull(this.cacheService.get(options.table.id).node),
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: this.resolver.getItemResolver(options.table),
-    };
   }
 
   public createListField(
@@ -99,8 +76,6 @@ export class QueriesService {
 
     return {
       type: new GraphQLNonNull(ConnectionType),
-      // args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
-      resolve: this.resolver.getListResolver(options.table),
     };
   }
 
@@ -114,10 +89,6 @@ export class QueriesService {
 
     return {
       type: new GraphQLNonNull(ConnectionType),
-      // args: {
-      //   data: { type: this.getListArgs(options.pluralSafetyTableId) },
-      // },
-      resolve: this.resolver.getListFlatResolver(options.table),
     };
   }
 

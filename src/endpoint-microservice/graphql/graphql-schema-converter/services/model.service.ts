@@ -100,9 +100,6 @@ export class ModelService {
     const node = new GraphQLObjectType<RowModel>({
       name,
       fields: () => ({
-        versionId: { type: new GraphQLNonNull(GraphQLString) },
-        createdId: { type: new GraphQLNonNull(GraphQLString) },
-        id: { type: new GraphQLNonNull(GraphQLString) },
         [DATA_KEY]: data.config,
       }),
     });

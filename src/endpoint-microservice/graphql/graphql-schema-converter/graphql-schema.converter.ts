@@ -1,10 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import {
-  GraphQLInputObjectType,
-  GraphQLObjectType,
-  GraphQLSchema,
-} from 'graphql/type';
+import { GraphQLObjectType, GraphQLSchema } from 'graphql/type';
 import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { lexicographicSortSchema } from 'graphql/utilities';
 import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
@@ -33,8 +29,6 @@ export interface CacheNode {
 }
 
 export interface GraphQLSchemaConverterContext extends ConverterContextType {
-  listArgsMap: Record<string, GraphQLInputObjectType>;
-  whereInputTypeMap: Record<string, GraphQLInputObjectType>;
   nodes: Record<string, CacheNode>;
   schema: Schema;
 }
@@ -62,8 +56,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
-      listArgsMap: {},
-      whereInputTypeMap: {},
       nodes: {},
       schema: new Schema(),
     };
