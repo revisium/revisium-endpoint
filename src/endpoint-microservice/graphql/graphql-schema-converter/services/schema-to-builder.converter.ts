@@ -240,37 +240,42 @@ export class SchemaToBuilderConverter {
     type: TypeModel,
   ) {
     for (const field of type.fields.values()) {
+      const params = {
+        description: field.description,
+        deprecationReason: field.deprecationReason,
+      };
+
       if (field.type === FieldType.string) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeString(field.name, { nullable: field.nullable }),
+          t.exposeString(field.name, { nullable: field.nullable, ...params }),
         );
       } else if (field.type === FieldType.stringList) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeStringList(field.name),
+          t.exposeStringList(field.name, { ...params }),
         );
       } else if (field.type === FieldType.float) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeFloat(field.name, { nullable: field.nullable }),
+          t.exposeFloat(field.name, { nullable: field.nullable, ...params }),
         );
       } else if (field.type === FieldType.floatList) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeFloatList(field.name),
+          t.exposeFloatList(field.name, params),
         );
       } else if (field.type === FieldType.int) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeInt(field.name, { nullable: field.nullable }),
+          t.exposeInt(field.name, { nullable: field.nullable, ...params }),
         );
       } else if (field.type === FieldType.intList) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeIntList(field.name),
+          t.exposeIntList(field.name, params),
         );
       } else if (field.type === FieldType.boolean) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeBoolean(field.name, { nullable: field.nullable }),
+          t.exposeBoolean(field.name, { nullable: field.nullable, ...params }),
         );
       } else if (field.type === FieldType.booleanList) {
         this.builder.objectField(ref, field.name, (t) =>
-          t.exposeBooleanList(field.name),
+          t.exposeBooleanList(field.name, params),
         );
       } else if (
         field.type === FieldType.ref &&
@@ -281,6 +286,7 @@ export class SchemaToBuilderConverter {
             type: this.getScalarRef(field.value).ref,
             resolve: (data) => data.name,
             nullable: field.nullable,
+            ...params,
           }),
         );
       } else if (
@@ -292,6 +298,7 @@ export class SchemaToBuilderConverter {
             type: t.listRef(this.getScalarRef(field.value).ref),
             resolve: (data) => data.name,
             nullable: field.nullable,
+            ...params,
           }),
         );
       } else if (

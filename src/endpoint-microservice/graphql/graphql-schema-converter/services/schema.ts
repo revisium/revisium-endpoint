@@ -65,7 +65,12 @@ export type TypeModelField = (
   | { type: FieldType.booleanList }
   | { type: FieldType.ref; refType: FieldRefType; value: string }
   | { type: FieldType.refList; refType: FieldRefType; value: string }
-) & { name: string; nullable?: true };
+) & {
+  name: string;
+  nullable?: true;
+  description?: string;
+  deprecationReason?: string;
+};
 
 export class TypeModel {
   public fields = new Map<string, TypeModelField>();

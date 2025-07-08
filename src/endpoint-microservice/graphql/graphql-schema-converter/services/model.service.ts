@@ -186,8 +186,10 @@ export class ModelService {
     };
 
     if (schema.deprecated && schema.description) {
+      type.field.deprecationReason = schema.description;
       config.deprecationReason = schema.description;
     } else if (schema.description) {
+      type.field.description = schema.description;
       config.description = schema.description;
     }
 
@@ -231,8 +233,10 @@ export class ModelService {
       };
 
       if (schema.deprecated && schema.description) {
+        fieldType.deprecationReason = schema.description;
         config.deprecationReason = schema.description;
       } else if (schema.description) {
+        fieldType.description = schema.description;
         config.description = schema.description;
       }
 
@@ -306,8 +310,10 @@ export class ModelService {
       };
 
       if (schema.deprecated && schema.description) {
+        fieldType.deprecationReason = schema.description;
         config.deprecationReason = schema.description;
       } else if (schema.description) {
+        fieldType.description = schema.description;
         config.description = schema.description;
       }
 
