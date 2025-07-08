@@ -85,6 +85,7 @@ export class ModelService {
         type: FieldType.ref,
         refType: FieldRefType.scalar,
         value: 'JSON',
+        resolver: (parent) => parent.data,
       },
     ]);
 
@@ -215,6 +216,11 @@ export class ModelService {
               value: this.cacheService.get(schema.foreignKey).nodeType.name,
             }),
         name: fieldNameInParentObject,
+        resolver: this.resolver.getFieldResolver(
+          schema.foreignKey,
+          field,
+          isFlat,
+        ),
       };
 
       if (parentType && fieldNameInParentObject) {
@@ -286,6 +292,11 @@ export class ModelService {
                 .name,
             }),
         name: fieldNameInParentObject,
+        resolver: this.resolver.getFieldArrayItemResolver(
+          schema.items.foreignKey,
+          field,
+          isFlat,
+        ),
       };
 
       if (parentType && fieldNameInParentObject) {

@@ -50,6 +50,7 @@ export class QueriesService {
         name: 'id',
         required: true,
       },
+      resolver: this.resolver.getItemFlatResolver(options.table),
     });
 
     const dataConfig = this.cacheService.get(options.table.id).dataFlat;
@@ -79,6 +80,7 @@ export class QueriesService {
         name: 'id',
         required: true,
       },
+      resolver: this.resolver.getItemResolver(options.table),
     });
 
     return {
@@ -168,6 +170,7 @@ export class QueriesService {
         name: 'data',
         value: `${this.projectName}Get${options.pluralSafetyTableId}Input`,
       },
+      resolver: this.resolver.getListFlatResolver(options.table),
     });
 
     return new GraphQLObjectType({
@@ -246,6 +249,7 @@ export class QueriesService {
         name: 'data',
         value: `${this.projectName}Get${options.pluralSafetyTableId}Input`,
       },
+      resolver: this.resolver.getListResolver(options.table),
     });
 
     return new GraphQLObjectType({

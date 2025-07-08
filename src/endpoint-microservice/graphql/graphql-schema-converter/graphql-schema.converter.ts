@@ -92,14 +92,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
         const schemaNext = schemaToBuilderConverter.builder.toSchema();
 
-        console.log(printSchema(schemaNext));
-
-        // console.log(
-        //   printSchema(
-        //     graphQLSchemaConverterContext.builderService.builder.toSchema(),
-        //   ),
-        // );
-
         return lexicographicSortSchema(schemaNext);
       },
     );

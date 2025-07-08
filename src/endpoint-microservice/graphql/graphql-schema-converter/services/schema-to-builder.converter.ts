@@ -77,7 +77,7 @@ export class SchemaToBuilderConverter {
                 }),
               }
             : undefined,
-          resolve: () => '' as any,
+          resolve: field.resolver,
         };
 
         if (field.type === FieldType.string) {
@@ -284,7 +284,7 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: this.getScalarRef(field.value).ref,
-            resolve: (data) => data.name,
+            resolve: (data) => data[field.name],
             nullable: field.nullable,
             ...params,
           }),
@@ -296,7 +296,7 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: t.listRef(this.getScalarRef(field.value).ref),
-            resolve: (data) => data.name,
+            resolve: (data) => data[field.name],
             nullable: field.nullable,
             ...params,
           }),
@@ -308,7 +308,9 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: this.getTypeRef(field.value).ref,
-            resolve: (data) => data.name,
+            resolve: field.resolver
+              ? field.resolver
+              : (data) => data[field.name],
             nullable: field.nullable,
           }),
         );
@@ -319,7 +321,9 @@ export class SchemaToBuilderConverter {
         this.builder.objectField(ref, field.name, (t) =>
           t.field({
             type: t.listRef(this.getTypeRef(field.value).ref),
-            resolve: (data) => data.name,
+            resolve: field.resolver
+              ? field.resolver
+              : (data) => data[field.name],
             nullable: field.nullable,
           }),
         );

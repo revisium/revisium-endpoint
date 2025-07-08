@@ -16,7 +16,11 @@ export type QueryModelField = (
   | { type: FieldType.booleanList }
   | { type: FieldType.ref; value: string }
   | { type: FieldType.refList; value: string }
-) & { name: string; args: ArgsType | undefined };
+) & {
+  name: string;
+  args: ArgsType | undefined;
+  resolver: (...args: any[]) => any;
+};
 
 export class QueryModel {
   public fields = new Map<string, QueryModelField>();
@@ -70,6 +74,7 @@ export type TypeModelField = (
   nullable?: true;
   description?: string;
   deprecationReason?: string;
+  resolver?: (...args: any[]) => any;
 };
 
 export class TypeModel {
