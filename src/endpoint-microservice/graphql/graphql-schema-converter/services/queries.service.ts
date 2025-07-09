@@ -1,24 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import {
-  GraphQLInputObjectType,
-  GraphQLInt,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql/type';
-import { GraphQLFieldConfig } from 'graphql/type/definition';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
+import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
+import {
+  FieldRefType,
+  FieldType,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import { createWhereInput } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/createWhereInput';
-import { generateOrderByType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/generateOrderByType';
-import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
-
-const FLAT_KEY = 'Flat';
-const CONNECTION_KEY = 'Connection';
-const EDGE_KEY = 'Edge';
 
 @Injectable()
 export class QueriesService {
@@ -26,157 +15,296 @@ export class QueriesService {
     private readonly contextService: ContextService,
     private readonly cacheService: CacheService,
     private readonly resolver: ResolverService,
+    private readonly namingService: NamingService,
   ) {}
 
   public createItemFlatField(
+    flatSingularKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const dataConfig = this.cacheService.get(options.table.id).dataFlat;
+  ) {
+    const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
 
-    return {
-      type: dataConfig.type,
+    this.contextService.schema.query.addField({
+      ...nodeType,
+      name: flatSingularKey,
       args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
+        type: FieldType.string,
+        name: 'id',
+        required: true,
       },
-      resolve:
-        dataConfig.resolve ?? this.resolver.getItemFlatResolver(options.table),
-    };
+      resolver: this.resolver.getItemFlatResolver(options.table),
+    });
   }
 
   public createItemField(
+    singularKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    return {
-      type: new GraphQLNonNull(this.cacheService.get(options.table.id).node),
+  ) {
+    const nodeType = this.cacheService.get(options.table.id).nodeType;
+
+    this.contextService.schema.query.addField({
+      type: FieldType.ref,
+      name: singularKey,
+      value: nodeType.name,
       args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
+        type: FieldType.string,
+        name: 'id',
+        required: true,
       },
-      resolve: this.resolver.getItemResolver(options.table),
-    };
+      resolver: this.resolver.getItemResolver(options.table),
+    });
   }
 
-  public createListField(
-    options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getListConnection(options);
-    return {
-      type: new GraphQLNonNull(ConnectionType),
-      args: { data: { type: this.getListArgs(options.pluralSafetyTableId) } },
-      resolve: this.resolver.getListResolver(options.table),
-    };
+  public createListField(pluralKey: string, options: CreatingTableOptionsType) {
+    this.createListConnection(pluralKey, options);
+    this.createListArgs(options.pluralSafetyTableId);
   }
 
   public createListFlatField(
+    flatPluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLFieldConfig<any, any> {
-    const ConnectionType = this.getFlatConnection(options);
-
-    return {
-      type: new GraphQLNonNull(ConnectionType),
-      args: {
-        data: { type: this.getListArgs(options.pluralSafetyTableId) },
-      },
-      resolve: this.resolver.getListFlatResolver(options.table),
-    };
+  ) {
+    this.getFlatConnection(flatPluralKey, options);
+    this.createListArgs(options.pluralSafetyTableId);
   }
 
   private getFlatConnection(
+    flatPluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getFlatEdgeType(options))),
-          ),
-        },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
+  ) {
+    const connectionName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'flatConnection',
+    );
+    const edgeName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'flatEdge',
+    );
+    const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
+
+    this.contextService.schema.addType(edgeName).addFields([
+      {
+        type: FieldType.string,
+        name: 'cursor',
       },
+      {
+        ...nodeType,
+        name: 'node',
+      },
+    ]);
+
+    this.contextService.schema.addType(connectionName).addFields([
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.type,
+        name: 'edges',
+        value: edgeName,
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.type,
+        name: 'pageInfo',
+        value: this.namingService.getSystemTypeName('pageInfo'),
+      },
+      {
+        type: FieldType.int,
+        name: 'totalCount',
+      },
+    ]);
+
+    this.contextService.schema.query.addField({
+      type: FieldType.ref,
+      name: flatPluralKey,
+      value: connectionName,
+      args: {
+        type: FieldType.ref,
+        name: 'data',
+        value: this.namingService.getGetInputTypeName(
+          options.pluralSafetyTableId,
+        ),
+      },
+      resolver: this.resolver.getListFlatResolver(options.table),
     });
   }
 
-  private getFlatEdgeType(
+  private createListConnection(
+    pluralKey: string,
     options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    const flatType = this.cacheService.get(options.table.id).dataFlat.type;
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`,
-      fields: {
-        node: { type: flatType },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
+  ) {
+    const name = this.namingService.getTypeName(
+      options.safetyTableId,
+      'connection',
+    );
+
+    const edgeName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'edge',
+    );
+
+    this.contextService.schema.addType(edgeName).addFields([
+      {
+        type: FieldType.string,
+        name: 'cursor',
       },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.type,
+        name: 'node',
+        value: this.namingService.getTypeName(options.safetyTableId, 'node'),
+      },
+    ]);
+
+    this.contextService.schema.addType(name).addFields([
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.type,
+        name: 'edges',
+        value: edgeName,
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.type,
+        name: 'pageInfo',
+        value: this.namingService.getSystemTypeName('pageInfo'),
+      },
+      {
+        type: FieldType.int,
+        name: 'totalCount',
+      },
+    ]);
+
+    this.contextService.schema.query.addField({
+      type: FieldType.ref,
+      name: pluralKey,
+      value: name,
+      args: {
+        type: FieldType.ref,
+        name: 'data',
+        value: this.namingService.getGetInputTypeName(
+          options.pluralSafetyTableId,
+        ),
+      },
+      resolver: this.resolver.getListResolver(options.table),
     });
   }
 
-  private getListConnection(
-    options: CreatingTableOptionsType,
-  ): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${CONNECTION_KEY}`,
-      fields: {
-        edges: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(this.getEdgeType(options))),
-          ),
-        },
-        pageInfo: { type: new GraphQLNonNull(this.context.pageInfo) },
-        totalCount: { type: new GraphQLNonNull(GraphQLInt) },
-      },
-    });
-  }
+  private createListArgs(name: string) {
+    const getInputName = this.namingService.getGetInputTypeName(name);
 
-  private getListArgs(name: string): GraphQLInputObjectType {
-    const typeName = `${this.projectName}Get${name}Input`;
-
-    if (this.context.listArgsMap[typeName]) {
-      return this.context.listArgsMap[typeName];
+    if (this.contextService.schema.inputs.has(getInputName)) {
+      return;
     }
 
-    const listArgs = new GraphQLInputObjectType({
-      name: `${this.projectName}Get${name}Input`,
-      fields: {
-        first: { type: GraphQLInt },
-        after: { type: GraphQLString },
-        orderBy: {
-          type: generateOrderByType(
-            `${this.projectName}Get${name}`,
-            this.context.sortOrder,
-          ),
-        },
-        where: {
-          type: createWhereInput(
-            this.projectName,
-            name,
-            this.context.filterTypes,
-            this.context.whereInputTypeMap,
-          ),
-        },
+    const orderByEnumName = this.namingService.getOrderByFieldEnumName(name);
+    this.contextService.schema
+      .addEnum(orderByEnumName)
+      .addValues(['createdAt', 'updatedAt', 'publishedAt', 'id']);
+
+    const orderByFieldInputName =
+      this.namingService.getOrderByInputTypeName(name);
+    this.contextService.schema.addInput(orderByFieldInputName).addFields([
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.enum,
+        name: 'field',
+        value: orderByEnumName,
+        required: true,
       },
-    });
-
-    this.context.listArgsMap[typeName] = listArgs;
-
-    return listArgs;
-  }
-
-  private getEdgeType(options: CreatingTableOptionsType): GraphQLObjectType {
-    return new GraphQLObjectType({
-      name: `${this.projectName}${options.safetyTableId}${EDGE_KEY}`,
-      fields: {
-        node: {
-          type: new GraphQLNonNull(
-            this.cacheService.get(options.table.id).node,
-          ),
-        },
-        cursor: { type: new GraphQLNonNull(GraphQLString) },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.enum,
+        name: 'direction',
+        value: this.namingService.getSystemTypeName('sortOrder'),
+        required: true,
       },
-    });
-  }
+    ]);
 
-  private get projectName(): string {
-    return getProjectName(this.context.projectName);
+    const whereName = this.namingService.getWhereInputTypeName(name);
+    this.contextService.schema.addInput(whereName).addFields([
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.input,
+        name: 'AND',
+        value: whereName,
+      },
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.input,
+        name: 'NOT',
+        value: whereName,
+      },
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.input,
+        name: 'OR',
+        value: whereName,
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'versionId',
+        value: this.namingService.getSystemFilterTypeName('string'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'createdId',
+        value: this.namingService.getSystemFilterTypeName('string'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'id',
+        value: this.namingService.getSystemFilterTypeName('string'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'readonly',
+        value: this.namingService.getSystemFilterTypeName('bool'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'createdAt',
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'publishedAt',
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'updatedAt',
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'data',
+        value: this.namingService.getSystemFilterTypeName('json'),
+      },
+    ]);
+
+    this.contextService.schema.addInput(getInputName).addFields([
+      { type: FieldType.int, name: 'first' },
+      { type: FieldType.string, name: 'after' },
+      {
+        type: FieldType.refList,
+        refType: FieldRefType.input,
+        name: 'orderBy',
+        value: orderByFieldInputName,
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.input,
+        name: 'where',
+        value: whereName,
+      },
+    ]);
   }
 
   private get context() {

@@ -19,4 +19,8 @@ export class ContextService {
 
     return context;
   }
+
+  public get schema() {
+    return this.context.schema;
+  }
 }
