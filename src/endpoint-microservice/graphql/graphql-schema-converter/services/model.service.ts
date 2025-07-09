@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
+import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import {
   FieldRefType,
@@ -10,7 +11,6 @@ import {
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { SortDirection } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/sortDirection';
-import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
 import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
 import { isRootForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isRootForeignSchema';
@@ -26,7 +26,6 @@ import {
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 const DATA_KEY = 'data';
-const FLAT_KEY = 'Flat';
 const ITEMS_POSTFIX = 'Items';
 
 @Injectable()
@@ -35,6 +34,7 @@ export class ModelService {
     private readonly contextService: ContextService,
     private readonly resolver: ResolverService,
     private readonly cacheService: CacheService,
+    private readonly namingService: NamingService,
   ) {}
 
   public create(options: CreatingTableOptionsType[]) {
@@ -44,7 +44,7 @@ export class ModelService {
   }
 
   public getNodeType(options: CreatingTableOptionsType) {
-    const name = `${this.projectName}${options.safetyTableId}Node`;
+    const name = this.namingService.getTypeName(options.safetyTableId, 'node');
 
     const nodeType = this.contextService.schema.addType(name).addFields([
       { name: 'versionId', type: FieldType.string },
@@ -81,7 +81,7 @@ export class ModelService {
       options,
       options.table.schema,
       DATA_KEY,
-      `${this.projectName}${options.safetyTableId}`,
+      this.namingService.getTypeName(options.safetyTableId, 'base'),
       false,
       DATA_KEY,
       name,
@@ -207,7 +207,7 @@ export class ModelService {
           name: fieldNameInParentObject,
           type: FieldType.ref,
           refType: FieldRefType.type,
-          value: `${this.projectName}${foreignKey.charAt(0).toUpperCase() + foreignKey.slice(1)}${isFlat ? 'Flat' : 'Node'}`, // Use proper type name
+          value: this.namingService.getForeignKeyTypeName(foreignKey, isFlat),
         },
       };
     }
@@ -284,7 +284,7 @@ export class ModelService {
           name: fieldNameInParentObject,
           type: FieldType.refList,
           refType: FieldRefType.type,
-          value: `${this.projectName}${foreignKey.charAt(0).toUpperCase() + foreignKey.slice(1)}${isFlat ? 'Flat' : 'Node'}`,
+          value: this.namingService.getForeignKeyTypeName(foreignKey, isFlat),
         },
       };
     }
@@ -347,7 +347,7 @@ export class ModelService {
       case 'object': {
         const objectConfig = this.getObjectSchema(
           options,
-          `${typeName}${postfix}`,
+          this.namingService.getTypeNameWithPostfix(typeName, postfix),
           schema,
           isFlat,
           fieldNameInParentObject,
@@ -362,7 +362,7 @@ export class ModelService {
       case 'array': {
         const arrayConfig = this.mapSchemaTypeToGraphQL(
           options,
-          `${typeName}${postfix}`,
+          this.namingService.getTypeNameWithPostfix(typeName, postfix),
           schema.items,
           ITEMS_POSTFIX,
           isFlat,
@@ -422,7 +422,7 @@ export class ModelService {
           options,
           itemSchema,
           key,
-          `${name}${capitalizedSafetyKey}`,
+          this.namingService.getTypeNameWithPostfix(name, capitalizedSafetyKey),
           isFlat,
           key,
           name,
@@ -461,7 +461,10 @@ export class ModelService {
   }
 
   private createNodeCache(option: CreatingTableOptionsType): void {
-    const flatType = `${this.projectName}${option.safetyTableId}${FLAT_KEY}`;
+    const flatType = this.namingService.getTypeName(
+      option.safetyTableId,
+      'flat',
+    );
 
     const { nodeType } = this.getNodeType(option);
     const dataFlat = this.getDataFlatType(option, flatType, '');
@@ -470,10 +473,6 @@ export class ModelService {
       nodeType,
       dataFlatRoot: dataFlat.field,
     });
-  }
-
-  private get projectName(): string {
-    return getProjectName(this.context.projectName);
   }
 
   private get context() {
@@ -494,7 +493,7 @@ export class ModelService {
 
   private addPageInfo() {
     this.contextService.schema
-      .addType(`${this.projectName}PageInfo`)
+      .addType(this.namingService.getSystemTypeName('pageInfo'))
       .addField({
         name: 'startCursor',
         type: FieldType.string,
@@ -517,7 +516,7 @@ export class ModelService {
 
   private addSortOrder() {
     this.contextService.schema
-      .addEnum(`${this.projectName}SortOrder`)
+      .addEnum(this.namingService.getSystemTypeName('sortOrder'))
       .addValues([SortDirection.ASC, SortDirection.DESC]);
   }
 
@@ -530,11 +529,11 @@ export class ModelService {
 
   private addStringFilter() {
     const mode = this.contextService.schema
-      .addEnum(`${this.projectName}FilterStringMode`)
+      .addEnum(this.namingService.getSystemFilterModeEnumName('string'))
       .addValues(['default', 'insensitive']);
 
     this.contextService.schema
-      .addInput(`${this.projectName}StringFilter`)
+      .addInput(this.namingService.getSystemFilterTypeName('string'))
       .addFields([
         {
           name: 'equals',
@@ -591,7 +590,7 @@ export class ModelService {
 
   private addBooleanFilter() {
     this.contextService.schema
-      .addInput(`${this.projectName}BoolFilter`)
+      .addInput(this.namingService.getSystemFilterTypeName('bool'))
       .addFields([
         {
           name: 'equals',
@@ -606,7 +605,7 @@ export class ModelService {
 
   private addDateTimeFilter() {
     this.contextService.schema
-      .addInput(`${this.projectName}DateTimeFilter`)
+      .addInput(this.namingService.getSystemFilterTypeName('dateTime'))
       .addFields([
         {
           name: 'equals',
@@ -641,13 +640,13 @@ export class ModelService {
 
   private addJsonFilter() {
     const mode = this.contextService.schema
-      .addEnum(`${this.projectName}FilterJsonMode`)
+      .addEnum(this.namingService.getSystemFilterModeEnumName('json'))
       .addValues(['default', 'insensitive']);
 
     const jsonScalar = this.contextService.schema.getScalar('JSON');
 
     this.contextService.schema
-      .addInput(`${this.projectName}JsonFilter`)
+      .addInput(this.namingService.getSystemFilterTypeName('json'))
       .addFields([
         {
           name: 'equals',
