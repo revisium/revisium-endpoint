@@ -92,9 +92,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   }
 
   private createQueries(validTables: Record<string, ValidTableType>) {
-    Object.values(validTables).reduce<
-      Record<string, GraphQLFieldConfig<any, any>>
-    >((fields, validTable) => {
+    Object.values(validTables).forEach((validTable) => {
       const pluralKey = `${validTable.fieldName.plural}`;
       const singularKey = `${validTable.fieldName.singular}`;
       const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
@@ -111,8 +109,6 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
         flatPluralKey,
         validTable.options,
       );
-
-      return fields;
-    }, {});
+    });
   }
 }

@@ -80,8 +80,8 @@ export type TypeModelField = (
 export type TypeModelFieldThunk = () => TypeModelField;
 
 export class TypeModel {
-  public fields = new Map<string, TypeModelField>();
-  private fieldThunks = new Map<string, TypeModelFieldThunk>();
+  public readonly fields = new Map<string, TypeModelField>();
+  private readonly fieldThunks = new Map<string, TypeModelFieldThunk>();
 
   constructor(
     private readonly schema: Schema,

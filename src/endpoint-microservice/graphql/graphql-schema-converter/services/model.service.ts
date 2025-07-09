@@ -166,7 +166,7 @@ export class ModelService {
   private tryGettingForeignKeyFieldConfig(
     schema: JsonSchema,
     field: string,
-    isFlat: boolean = false,
+    isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
   ): { field: TypeModelField } | null {
@@ -236,7 +236,7 @@ export class ModelService {
   private tryGettingForeignKeyArrayFieldConfig(
     schema: JsonSchema,
     field: string,
-    isFlat: boolean = false,
+    isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
   ): { field: TypeModelField } | null {
@@ -408,30 +408,25 @@ export class ModelService {
     }
     this.contextService.schema.addType(name);
 
-    validEntries.reduce(
-      (fields, [key, itemSchema]) => {
-        if (!isValidName(key)) {
-          return fields;
-        }
+    validEntries.forEach(([key, itemSchema]) => {
+      if (!isValidName(key)) {
+        return;
+      }
 
-        const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(ids, key)
-          ? key
-          : capitalize(key);
+      const capitalizedSafetyKey = hasDuplicateKeyCaseInsensitive(ids, key)
+        ? key
+        : capitalize(key);
 
-        this.getSchemaConfig(
-          options,
-          itemSchema,
-          key,
-          this.namingService.getTypeNameWithPostfix(name, capitalizedSafetyKey),
-          isFlat,
-          key,
-          name,
-        );
-
-        return fields;
-      },
-      {} as Record<string, any>,
-    );
+      this.getSchemaConfig(
+        options,
+        itemSchema,
+        key,
+        this.namingService.getTypeNameWithPostfix(name, capitalizedSafetyKey),
+        isFlat,
+        key,
+        name,
+      );
+    });
 
     return {
       field,
