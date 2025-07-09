@@ -191,7 +191,7 @@ export class QueriesService {
   private createListArgs(name: string) {
     const getInputName = this.namingService.getGetInputTypeName(name);
 
-    if (this.context.schema.inputs.has(getInputName)) {
+    if (this.contextService.schema.inputs.has(getInputName)) {
       return;
     }
 

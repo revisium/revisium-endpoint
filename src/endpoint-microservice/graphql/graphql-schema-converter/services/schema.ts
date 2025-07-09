@@ -236,8 +236,8 @@ export class Schema {
     return model;
   }
 
-  public getInput(model: TypeModel) {
-    return this.inputs.get(model.name);
+  public getInput(name: string) {
+    return this.inputs.get(name);
   }
 
   public addEnum(name: string) {
@@ -252,8 +252,8 @@ export class Schema {
     return model;
   }
 
-  public getEnum(model: TypeModel) {
-    return this.enums.get(model.name);
+  public getEnum(name: string) {
+    return this.enums.get(name);
   }
 
   public addScalar(name: string, scalar: GraphQLScalarType) {
