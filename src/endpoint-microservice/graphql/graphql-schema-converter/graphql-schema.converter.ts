@@ -67,7 +67,10 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
         schemaToBuilderConverter.convert();
 
-        const schemaNext = schemaToBuilderConverter.builder.toSchema();
+        const schemaNext = schemaToBuilderConverter.builder.toSubGraphSchema({
+          linkUrl: 'https://specs.apollo.dev/federation/v2.3',
+          federationDirectives: ['@key'],
+        });
 
         return lexicographicSortSchema(schemaNext);
       },

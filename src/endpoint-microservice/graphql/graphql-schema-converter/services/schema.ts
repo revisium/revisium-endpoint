@@ -79,9 +79,16 @@ export type TypeModelField = (
 
 export type TypeModelFieldThunk = () => TypeModelField;
 
+export type TypeModelEntity = {
+  keys: string[];
+  resolve: (...args: any[]) => any;
+};
+
 export class TypeModel {
   public readonly fields = new Map<string, TypeModelField>();
   private readonly fieldThunks = new Map<string, TypeModelFieldThunk>();
+
+  public entity: TypeModelEntity | null = null;
 
   constructor(
     private readonly schema: Schema,

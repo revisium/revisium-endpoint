@@ -229,8 +229,21 @@ type Query {
   UsERFlat(id: String!): ProjectUsERFlat!
   UsERs(data: ProjectGetUsERsInput): ProjectUsERConnection!
   UsERsFlat(data: ProjectGetUsERsInput): ProjectUsERFlatConnection!
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
   uSer(id: String!): ProjectuSerNode!
   uSerFlat(id: String!): ProjectuSerFlat!
   uSers(data: ProjectGetuSersInput): ProjectuSerConnection!
   uSersFlat(data: ProjectGetuSersInput): ProjectuSerFlatConnection!
+}
+
+scalar _Any
+
+union _Entity = ProjectUsERNode | ProjectuSerNode
+
+type _Service {
+  """
+  The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  """
+  sdl: String
 }

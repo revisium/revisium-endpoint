@@ -217,6 +217,8 @@ input ProjectUsersWhereInput {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
   post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
@@ -225,4 +227,15 @@ type Query {
   userFlat(id: String!): [ProjectPostFlat!]!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
+}
+
+scalar _Any
+
+union _Entity = ProjectPostNode | ProjectUserNode
+
+type _Service {
+  """
+  The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  """
+  sdl: String
 }
