@@ -77,6 +77,11 @@ export class ModelService {
       },
     ]);
 
+    nodeType.entity = {
+      keys: ['id'],
+      resolve: this.resolver.getItemReferenceResolver(options.table),
+    };
+
     this.getSchemaConfig(
       options,
       options.table.schema,

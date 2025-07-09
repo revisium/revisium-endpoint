@@ -228,6 +228,15 @@ export class SchemaToBuilderConverter {
       const ref = this.builder.objectRef(type.name);
       ref.implement({ fields: () => ({}) });
       this.typeRefs.set(type.name, { ref, type });
+
+      if (type.entity) {
+        this.builder.asEntity(ref, {
+          key: type.entity.keys.map((key) =>
+            this.builder.selection<{ [key]: string }>(key as ''),
+          ),
+          resolveReference: type.entity.resolve,
+        });
+      }
     }
 
     for (const { ref, type } of this.typeRefs.values()) {

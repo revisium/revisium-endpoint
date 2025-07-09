@@ -30,6 +30,14 @@ export class ResolverService {
     return this.getItemBaseResolver(table.id, true);
   }
 
+  public getItemReferenceResolver(table: ConverterTable) {
+    return this.getItemBaseReferenceResolver(table.id, false);
+  }
+
+  public getItemFlatReferenceResolver(table: ConverterTable) {
+    return this.getItemBaseReferenceResolver(table.id, true);
+  }
+
   public getFieldResolver(
     foreignTableId: string,
     field: string,
@@ -135,6 +143,17 @@ export class ResolverService {
     const revisionId = this.context.revisionId;
 
     return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const response = await this.getCachedRow(revisionId, tableId, id, {
+        headers: ctx.headers,
+      });
+      return isFlat ? response.data : response;
+    };
+  }
+
+  private getItemBaseReferenceResolver(tableId: string, isFlat: boolean) {
+    const revisionId = this.context.revisionId;
+
+    return async ({ id }: { id: string }, ctx: ContextType) => {
       const response = await this.getCachedRow(revisionId, tableId, id, {
         headers: ctx.headers,
       });
