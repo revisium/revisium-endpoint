@@ -272,7 +272,7 @@ export class Schema {
     const scalar = this.scalars.get(name);
 
     if (!scalar) {
-      throw new Error(`Scalar with name "${name}" does not exists`);
+      throw new Error(`Scalar with name "${name}" does not exist`);
     }
 
     return scalar;
