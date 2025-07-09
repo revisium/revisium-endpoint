@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/cache.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
+import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import {
   FieldRefType,
   FieldType,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
-import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
-
-const FLAT_KEY = 'Flat';
-const CONNECTION_KEY = 'Connection';
-const EDGE_KEY = 'Edge';
 
 @Injectable()
 export class QueriesService {
@@ -19,6 +15,7 @@ export class QueriesService {
     private readonly contextService: ContextService,
     private readonly cacheService: CacheService,
     private readonly resolver: ResolverService,
+    private readonly namingService: NamingService,
   ) {}
 
   public createItemFlatField(
@@ -75,8 +72,14 @@ export class QueriesService {
     flatPluralKey: string,
     options: CreatingTableOptionsType,
   ) {
-    const connectionName = `${this.projectName}${options.safetyTableId}${FLAT_KEY}${CONNECTION_KEY}`;
-    const edgeName = `${this.projectName}${options.safetyTableId}${FLAT_KEY}${EDGE_KEY}`;
+    const connectionName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'flatConnection',
+    );
+    const edgeName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'flatEdge',
+    );
     const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
 
     this.contextService.schema.addType(edgeName).addFields([
@@ -101,7 +104,7 @@ export class QueriesService {
         type: FieldType.ref,
         refType: FieldRefType.type,
         name: 'pageInfo',
-        value: `${this.projectName}PageInfo`,
+        value: this.namingService.getSystemTypeName('pageInfo'),
       },
       {
         type: FieldType.int,
@@ -116,7 +119,9 @@ export class QueriesService {
       args: {
         type: FieldType.ref,
         name: 'data',
-        value: `${this.projectName}Get${options.pluralSafetyTableId}Input`,
+        value: this.namingService.getGetInputTypeName(
+          options.pluralSafetyTableId,
+        ),
       },
       resolver: this.resolver.getListFlatResolver(options.table),
     });
@@ -126,9 +131,15 @@ export class QueriesService {
     pluralKey: string,
     options: CreatingTableOptionsType,
   ) {
-    const name = `${this.projectName}${options.safetyTableId}${CONNECTION_KEY}`;
+    const name = this.namingService.getTypeName(
+      options.safetyTableId,
+      'connection',
+    );
 
-    const edgeName = `${this.projectName}${options.safetyTableId}${EDGE_KEY}`;
+    const edgeName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'edge',
+    );
 
     this.contextService.schema.addType(edgeName).addFields([
       {
@@ -139,7 +150,7 @@ export class QueriesService {
         type: FieldType.ref,
         refType: FieldRefType.type,
         name: 'node',
-        value: `${this.projectName}${options.safetyTableId}Node`,
+        value: this.namingService.getTypeName(options.safetyTableId, 'node'),
       },
     ]);
 
@@ -154,7 +165,7 @@ export class QueriesService {
         type: FieldType.ref,
         refType: FieldRefType.type,
         name: 'pageInfo',
-        value: `${this.projectName}PageInfo`,
+        value: this.namingService.getSystemTypeName('pageInfo'),
       },
       {
         type: FieldType.int,
@@ -169,25 +180,28 @@ export class QueriesService {
       args: {
         type: FieldType.ref,
         name: 'data',
-        value: `${this.projectName}Get${options.pluralSafetyTableId}Input`,
+        value: this.namingService.getGetInputTypeName(
+          options.pluralSafetyTableId,
+        ),
       },
       resolver: this.resolver.getListResolver(options.table),
     });
   }
 
   private createListArgs(name: string) {
-    const getInputName = `${this.projectName}Get${name}Input`;
+    const getInputName = this.namingService.getGetInputTypeName(name);
 
     if (this.context.schema.inputs.has(getInputName)) {
       return;
     }
 
-    const orderByEnumName = `${this.projectName}Get${name}OrderByField`;
+    const orderByEnumName = this.namingService.getOrderByFieldEnumName(name);
     this.contextService.schema
       .addEnum(orderByEnumName)
       .addValues(['createdAt', 'updatedAt', 'publishedAt', 'id']);
 
-    const orderByFieldInputName = `${this.projectName}Get${name}OrderByInput`;
+    const orderByFieldInputName =
+      this.namingService.getOrderByInputTypeName(name);
     this.contextService.schema.addInput(orderByFieldInputName).addFields([
       {
         type: FieldType.ref,
@@ -200,12 +214,12 @@ export class QueriesService {
         type: FieldType.ref,
         refType: FieldRefType.enum,
         name: 'direction',
-        value: `${this.projectName}SortOrder`,
+        value: this.namingService.getSystemTypeName('sortOrder'),
         required: true,
       },
     ]);
 
-    const whereName = `${this.projectName}${name}WhereInput`;
+    const whereName = this.namingService.getWhereInputTypeName(name);
     this.contextService.schema.addInput(whereName).addFields([
       {
         type: FieldType.refList,
@@ -229,49 +243,49 @@ export class QueriesService {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'versionId',
-        value: `${this.projectName}StringFilter`,
+        value: this.namingService.getSystemFilterTypeName('string'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'createdId',
-        value: `${this.projectName}StringFilter`,
+        value: this.namingService.getSystemFilterTypeName('string'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'id',
-        value: `${this.projectName}StringFilter`,
+        value: this.namingService.getSystemFilterTypeName('string'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'readonly',
-        value: `${this.projectName}BoolFilter`,
+        value: this.namingService.getSystemFilterTypeName('bool'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'createdAt',
-        value: `${this.projectName}DateTimeFilter`,
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'publishedAt',
-        value: `${this.projectName}DateTimeFilter`,
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'updatedAt',
-        value: `${this.projectName}DateTimeFilter`,
+        value: this.namingService.getSystemFilterTypeName('dateTime'),
       },
       {
         type: FieldType.ref,
         refType: FieldRefType.input,
         name: 'data',
-        value: `${this.projectName}JsonFilter`,
+        value: this.namingService.getSystemFilterTypeName('json'),
       },
     ]);
 
@@ -291,10 +305,6 @@ export class QueriesService {
         value: whereName,
       },
     ]);
-  }
-
-  private get projectName(): string {
-    return getProjectName(this.context.projectName);
   }
 
   private get context() {

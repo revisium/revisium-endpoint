@@ -150,4 +150,36 @@ export class NamingService {
       tableName.charAt(0).toUpperCase() + tableName.slice(1);
     return `${capitalizedTable}${postfix}`;
   }
+
+  /**
+   * Generate input type names for GraphQL queries
+   */
+  public getGetInputTypeName(tableName: string): string {
+    const formattedProject = this.getProjectName();
+    return `${formattedProject}Get${tableName}Input`;
+  }
+
+  /**
+   * Generate order by field enum names
+   */
+  public getOrderByFieldEnumName(tableName: string): string {
+    const formattedProject = this.getProjectName();
+    return `${formattedProject}Get${tableName}OrderByField`;
+  }
+
+  /**
+   * Generate order by input type names
+   */
+  public getOrderByInputTypeName(tableName: string): string {
+    const formattedProject = this.getProjectName();
+    return `${formattedProject}Get${tableName}OrderByInput`;
+  }
+
+  /**
+   * Generate where input type names
+   */
+  public getWhereInputTypeName(tableName: string): string {
+    const formattedProject = this.getProjectName();
+    return `${formattedProject}${tableName}WhereInput`;
+  }
 }
