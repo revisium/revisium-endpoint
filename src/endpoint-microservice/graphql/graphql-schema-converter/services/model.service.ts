@@ -11,15 +11,16 @@ import {
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { SortDirection } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types/sortDirection';
-import { isArraySchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArraySchema';
-import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
-import { isRootForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isRootForeignSchema';
-import { isStringForeignSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isStringForeignSchema';
+import { isArrayStore } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isArrayStore';
+import { isEmptyStore } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyStore';
+import { isRootForeignStore } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isRootForeignStore';
+import { isStringForeignStore } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isStringForeignStore';
 import { isValidName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isValidName';
 import {
-  JsonObjectSchema,
-  JsonSchema,
+  JsonObjectStore,
+  JsonSchemaStore,
 } from 'src/endpoint-microservice/shared/schema';
+import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
 import {
   capitalize,
   hasDuplicateKeyCaseInsensitive,
@@ -84,7 +85,7 @@ export class ModelService {
 
     this.getSchemaConfig(
       options,
-      options.table.schema,
+      options.table.store,
       DATA_KEY,
       this.namingService.getTypeName(options.safetyTableId, 'base'),
       false,
@@ -104,7 +105,7 @@ export class ModelService {
   ) {
     return this.getSchemaConfig(
       options,
-      options.table.schema,
+      options.table.store,
       DATA_KEY,
       flatType,
       true,
@@ -115,7 +116,7 @@ export class ModelService {
 
   private getSchemaConfig(
     options: CreatingTableOptionsType,
-    schema: JsonSchema,
+    schema: JsonSchemaStore,
     field: string,
     typeName: string,
     isFlat: boolean,
@@ -169,13 +170,13 @@ export class ModelService {
   }
 
   private tryGettingForeignKeyFieldConfig(
-    schema: JsonSchema,
+    schema: JsonSchemaStore,
     field: string,
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
   ): { field: TypeModelField } | null {
-    const isForeignKey = isStringForeignSchema(schema);
+    const isForeignKey = isStringForeignStore(schema);
 
     if (isForeignKey) {
       const foreignKey = schema.foreignKey;
@@ -239,13 +240,13 @@ export class ModelService {
   }
 
   private tryGettingForeignKeyArrayFieldConfig(
-    schema: JsonSchema,
+    schema: JsonSchemaStore,
     field: string,
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
   ): { field: TypeModelField } | null {
-    if (isArraySchema(schema) && isStringForeignSchema(schema.items)) {
+    if (isArrayStore(schema) && isStringForeignStore(schema.items)) {
       const items = schema.items;
       const foreignKey = items.foreignKey;
       const fieldThunk = () => {
@@ -300,19 +301,13 @@ export class ModelService {
   private mapSchemaTypeToGraphQL(
     options: CreatingTableOptionsType,
     typeName: string,
-    schema: JsonSchema,
+    schema: JsonSchemaStore,
     postfix: string,
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
     inList: boolean,
   ): { field: TypeModelField } {
-    if ('$ref' in schema) {
-      throw new InternalServerErrorException(
-        `endpointId: ${this.context.endpointId}, unsupported $ref in schema: ${JSON.stringify(schema)}`,
-      );
-    }
-
     switch (schema.type) {
       case 'string': {
         const field: TypeModelField = {
@@ -389,14 +384,14 @@ export class ModelService {
   private getObjectSchema(
     options: CreatingTableOptionsType,
     name: string,
-    schema: JsonObjectSchema,
+    schema: JsonObjectStore,
     isFlat: boolean,
     fieldNameInParentObject: string,
     parentType: string,
     inList: boolean,
   ): { field: TypeModelField } {
     const validEntries = Object.entries(schema.properties).filter(
-      ([_, propertySchema]) => !isEmptyObject(propertySchema),
+      ([_, propertySchema]) => !isEmptyStore(propertySchema),
     );
 
     const ids = validEntries.map(([key]) => key);
@@ -411,7 +406,7 @@ export class ModelService {
     if (parentType && fieldNameInParentObject) {
       this.contextService.schema.getType(parentType).addField(field);
     }
-    this.contextService.schema.addType(name);
+    const ref = this.contextService.schema.addType(name);
 
     validEntries.forEach(([key, itemSchema]) => {
       if (!isValidName(key)) {
@@ -431,6 +426,16 @@ export class ModelService {
         key,
         name,
       );
+
+      const isIdRefInRootObject =
+        itemSchema.$ref === SystemSchemaIds.RowId && !parentType;
+
+      if (isIdRefInRootObject) {
+        ref.entity = {
+          keys: [key],
+          resolve: this.resolver.getItemFlatReferenceResolver(options.table),
+        };
+      }
     });
 
     return {
@@ -440,9 +445,9 @@ export class ModelService {
 
   private createNotRootForeignKey(options: CreatingTableOptionsType[]) {
     for (const option of options) {
-      const schema = option.table.schema;
+      const store = option.table.store;
 
-      if (isRootForeignSchema(schema)) {
+      if (isRootForeignStore(store)) {
         continue;
       }
 
@@ -452,9 +457,9 @@ export class ModelService {
 
   private createRootForeignKey(options: CreatingTableOptionsType[]) {
     for (const option of options) {
-      const schema = option.table.schema;
+      const store = option.table.store;
 
-      if (isRootForeignSchema(schema)) {
+      if (isRootForeignStore(store)) {
         this.createNodeCache(option);
       }
     }

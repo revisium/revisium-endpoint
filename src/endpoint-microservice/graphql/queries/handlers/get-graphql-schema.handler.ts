@@ -4,10 +4,7 @@ import { GraphQLSchema } from 'graphql/type';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
-import {
-  resolveRefs,
-  JsonSchema,
-} from 'src/endpoint-microservice/shared/schema';
+import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
 export type GetJsonSchemasReturnType = {
@@ -41,7 +38,7 @@ export class GetGraphqlSchemaHandler
       tables: tables.map((table) => ({
         id: table.id,
         versionId: table.versionId,
-        schema: resolveRefs(table.data),
+        schema: table.data,
       })),
     });
   }

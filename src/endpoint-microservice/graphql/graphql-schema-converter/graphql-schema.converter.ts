@@ -16,6 +16,11 @@ import {
   Converter,
   ConverterContextType,
 } from 'src/endpoint-microservice/shared/converter';
+import {
+  createJsonSchemaStore,
+  JsonSchemaStore,
+  pluginRefs,
+} from 'src/endpoint-microservice/shared/schema';
 
 const FLAT_KEY = 'Flat';
 
@@ -27,6 +32,9 @@ export interface CacheNode {
 export interface GraphQLSchemaConverterContext extends ConverterContextType {
   nodes: Record<string, CacheNode>;
   schema: Schema;
+  tables: (ConverterContextType['tables'][number] & {
+    store: JsonSchemaStore;
+  })[];
 }
 
 @Injectable()
@@ -52,6 +60,16 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   public async convert(context: ConverterContextType): Promise<GraphQLSchema> {
     const graphQLSchemaConverterContext: GraphQLSchemaConverterContext = {
       ...context,
+      tables: context.tables.map((table) => {
+        const store = createJsonSchemaStore(table.schema, pluginRefs);
+        const resoledSchema = store.getPlainSchema({ skip$Ref: true });
+
+        return {
+          ...table,
+          schema: resoledSchema,
+          store,
+        };
+      }),
       nodes: {},
       schema: new Schema(),
     };

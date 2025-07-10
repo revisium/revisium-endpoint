@@ -1,9 +1,12 @@
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
+import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
 
 export type ContextType = { headers: Record<string, string> };
 
 export type CreatingTableOptionsType = {
-  table: ConverterTable;
+  table: ConverterTable & {
+    store: JsonSchemaStore;
+  };
   safetyTableId: string;
   pluralSafetyTableId: string;
 };
