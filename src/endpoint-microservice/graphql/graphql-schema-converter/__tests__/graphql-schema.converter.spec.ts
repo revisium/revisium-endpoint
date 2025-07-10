@@ -13,7 +13,6 @@ import {
   getObjectSchema,
   getRefSchema,
   getStringSchema,
-  resolveRefs,
 } from 'src/endpoint-microservice/shared/schema';
 import * as fs from 'node:fs/promises';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
@@ -606,11 +605,9 @@ describe('GraphQL Schema Converter', () => {
       const post: ConverterTable = {
         id: 'post',
         versionId: '1',
-        schema: resolveRefs(
-          getObjectSchema({
-            file: getRefSchema(SystemSchemaIds.File),
-          }),
-        ),
+        schema: getObjectSchema({
+          file: getRefSchema(SystemSchemaIds.File),
+        }),
       };
 
       const schema = await converter.convert(
@@ -619,6 +616,23 @@ describe('GraphQL Schema Converter', () => {
         }),
       );
       await check(schema, 'refs/file.graphql.text');
+    });
+
+    it('id', async () => {
+      const post: ConverterTable = {
+        id: 'post',
+        versionId: '1',
+        schema: getObjectSchema({
+          customId: getRefSchema(SystemSchemaIds.RowId),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [post],
+        }),
+      );
+      await check(schema, 'refs/custom-id.graphql.text');
     });
   });
 

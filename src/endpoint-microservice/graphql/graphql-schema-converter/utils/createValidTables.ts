@@ -5,8 +5,11 @@ import {
 import { generateFieldAndTypeNames } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/generateFieldAndTypeNames';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
+import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
 
-export const createValidTables = (tables: ConverterTable[]) => {
+export const createValidTables = (
+  tables: (ConverterTable & { store: JsonSchemaStore })[],
+) => {
   const validTables = tables.filter((table) => !isEmptyObject(table.schema));
 
   const validTableIds = validTables.map((table) => table.id);
