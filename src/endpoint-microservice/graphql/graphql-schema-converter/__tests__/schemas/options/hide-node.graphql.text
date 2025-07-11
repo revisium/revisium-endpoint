@@ -94,21 +94,6 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectPost {
-  name: String!
-}
-
-type ProjectPostConnection {
-  edges: [ProjectPostEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectPostEdge {
-  cursor: String!
-  node: ProjectPostNode!
-}
-
 type ProjectPostFlat {
   name: String!
 }
@@ -122,17 +107,6 @@ type ProjectPostFlatConnection {
 type ProjectPostFlatEdge {
   cursor: String!
   node: ProjectPostFlat!
-}
-
-type ProjectPostNode {
-  createdAt: DateTime!
-  createdId: String!
-  data: ProjectPost!
-  id: String!
-  json: JSON!
-  publishedAt: DateTime!
-  updatedAt: DateTime!
-  versionId: String!
 }
 
 input ProjectPostsWhereInput {
@@ -167,43 +141,6 @@ input ProjectStringFilter {
   not: String
   notIn: [String!]
   startsWith: String
-}
-
-type ProjectUser {
-  address: ProjectUserAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  post: ProjectPostNode!
-  posts: [ProjectUserPostsItems!]!
-}
-
-type ProjectUserAddress {
-  city: String!
-  nestedAddress: ProjectUserAddressNestedaddress!
-  zipCode: Float!
-}
-
-type ProjectUserAddressNestedaddress {
-  zipCode: String!
-}
-
-type ProjectUserArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserConnection {
-  edges: [ProjectUserEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserEdge {
-  cursor: String!
-  node: ProjectUserNode!
 }
 
 type ProjectUserFlat {
@@ -248,22 +185,6 @@ type ProjectUserFlatPostsItems {
   title: String!
 }
 
-type ProjectUserNode {
-  createdAt: DateTime!
-  createdId: String!
-  data: ProjectUser!
-  id: String!
-  json: JSON!
-  publishedAt: DateTime!
-  updatedAt: DateTime!
-  versionId: String!
-}
-
-type ProjectUserPostsItems {
-  id: String!
-  title: String!
-}
-
 input ProjectUsersWhereInput {
   AND: [ProjectUsersWhereInput!]
   NOT: [ProjectUsersWhereInput!]
@@ -279,21 +200,12 @@ input ProjectUsersWhereInput {
 }
 
 type Query {
-  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
-  post(id: String!): ProjectPostNode!
   postFlat(id: String!): ProjectPostFlat!
-  posts(data: ProjectGetPostsInput): ProjectPostConnection!
   postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
-  user(id: String!): ProjectUserNode!
   userFlat(id: String!): ProjectUserFlat!
-  users(data: ProjectGetUsersInput): ProjectUserConnection!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
-
-scalar _Any
-
-union _Entity = ProjectPostNode | ProjectUserNode
 
 type _Service {
   """

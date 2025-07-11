@@ -5,6 +5,7 @@ import { ClsService } from 'nestjs-cls';
 import { join } from 'path';
 import { printSchema } from 'graphql/utilities';
 import { GraphqlCachedRowsClsStore } from 'src/endpoint-microservice/graphql/graphql-cls.types';
+import { getComplexSchema } from 'src/endpoint-microservice/graphql/graphql-schema-converter/__tests__/utils';
 import { GRAPHQL_SCHEMA_CONVERTER_SERVICES } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services';
 import {
   getArraySchema,
@@ -102,40 +103,9 @@ describe('GraphQL Schema Converter', () => {
   });
 
   it('complex schema', async () => {
-    const table: ConverterTable = {
-      id: 'user',
-      versionId: '1',
-      schema: getObjectSchema({
-        firstName: getStringSchema(),
-        lastName: getStringSchema(),
-        age: getNumberSchema(),
-        adult: getBooleanSchema(),
-        address: getObjectSchema({
-          zipCode: getNumberSchema(),
-          city: getStringSchema(),
-          nestedAddress: getObjectSchema({
-            zipCode: getStringSchema(),
-          }),
-        }),
-        posts: getArraySchema(
-          getObjectSchema({ title: getStringSchema(), id: getStringSchema() }),
-        ),
-        array: getArraySchema(
-          getArraySchema(
-            getArraySchema(
-              getObjectSchema({
-                nested: getStringSchema(),
-              }),
-            ),
-          ),
-        ),
-        imageIds: getArraySchema(getStringSchema()),
-      }),
-    };
-
     const schema = await converter.convert(
       getContext({
-        tables: [table],
+        tables: [...getComplexSchema()],
       }),
     );
     await check(schema, 'complex.graphql.text');
@@ -633,6 +603,129 @@ describe('GraphQL Schema Converter', () => {
         }),
       );
       await check(schema, 'refs/custom-id.graphql.text');
+    });
+  });
+
+  describe('options', () => {
+    it('hide flat', async () => {
+      const schema = await converter.convert(
+        getContext({
+          tables: [...getComplexSchema()],
+          options: {
+            hideFlatTypes: true,
+          },
+        }),
+      );
+      await check(schema, 'options/hide-flat.graphql.text');
+    });
+
+    it('hide node', async () => {
+      const schema = await converter.convert(
+        getContext({
+          tables: [...getComplexSchema()],
+          options: {
+            hideNodeTypes: true,
+          },
+        }),
+      );
+      await check(schema, 'options/hide-node.graphql.text');
+    });
+
+    it('prefix for table', async () => {
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForTables: '',
+            },
+          }),
+        ),
+        'options/prefix-for-table-1.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForTables: 'Custom',
+            },
+          }),
+        ),
+        'options/prefix-for-table-2.graphql.text',
+      );
+    });
+
+    it('prefix for common', async () => {
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+            },
+          }),
+        ),
+        'options/prefix-for-common-1.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: 'Custom',
+            },
+          }),
+        ),
+        'options/prefix-for-common-2.graphql.text',
+      );
+    });
+
+    it('postfix', async () => {
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+              prefixForTables: '',
+              flatPostfix: '',
+              nodePostfix: 'Detailed',
+            },
+          }),
+        ),
+        'options/postfix-1.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+              prefixForTables: '',
+              flatPostfix: 'Custom',
+              nodePostfix: '',
+            },
+          }),
+        ),
+        'options/postfix-2.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              flatPostfix: 'Custom',
+              nodePostfix: 'Detailed',
+            },
+          }),
+        ),
+        'options/postfix-3.graphql.text',
+      );
     });
   });
 

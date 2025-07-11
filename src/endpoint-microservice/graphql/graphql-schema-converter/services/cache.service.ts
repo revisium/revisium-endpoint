@@ -22,6 +22,30 @@ export class CacheService {
     this.context.nodes[tableId] = value;
   }
 
+  public getRoot(tableId: string) {
+    const node = this.get(tableId);
+
+    if (!node.nodeType) {
+      throw new InternalServerErrorException(
+        'No root found for the given table id.',
+      );
+    }
+
+    return node.nodeType;
+  }
+
+  public getFlatRoot(tableId: string) {
+    const node = this.get(tableId);
+
+    if (!node.dataFlatRoot) {
+      throw new InternalServerErrorException(
+        'No flat root found for the given table id.',
+      );
+    }
+
+    return node.dataFlatRoot;
+  }
+
   private get context() {
     return this.contextService.context;
   }

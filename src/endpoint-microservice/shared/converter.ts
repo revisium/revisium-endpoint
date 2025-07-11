@@ -1,5 +1,14 @@
 import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 
+export type Options = {
+  hideNodeTypes?: boolean;
+  hideFlatTypes?: boolean;
+  flatPostfix?: string;
+  nodePostfix?: string;
+  prefixForTables?: string;
+  prefixForCommon?: string;
+};
+
 export type ConverterTable = {
   id: string;
   versionId: string;
@@ -13,6 +22,7 @@ export type ConverterContextType = {
   endpointId: string;
   revisionId: string;
   isDraft: boolean;
+  options?: Options;
 };
 
 export interface Converter<Target> {

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
-import { getSafetyName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getSafetyName';
 import { capitalize } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 export type GraphQLTypeVariant =
@@ -21,18 +20,23 @@ export type GraphQLTypeVariant =
 export class NamingService {
   constructor(private readonly contextService: ContextService) {}
 
+  public getNodePostfix() {
+    return this.contextService.nodePostfix ?? '';
+  }
+
+  public getFlatPostfix() {
+    return this.contextService.flatPostfix ?? 'Flat';
+  }
+
+  public getNodeTypePostfix() {
+    return `${this.getNodePostfix()}Node`;
+  }
+
   /**
    * Get formatted project name from context
    */
   public getProjectName(): string {
     return getProjectName(this.contextService.context.projectName);
-  }
-
-  /**
-   * Get formatted table name (capitalized) with safety checks
-   */
-  public getTableName(tableName: string): string {
-    return capitalize(getSafetyName(tableName, 'INVALID_TABLE_NAME'));
   }
 
   /**
@@ -42,23 +46,24 @@ export class NamingService {
     processedTableName: string,
     variant: GraphQLTypeVariant = 'base',
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
 
     switch (variant) {
       case 'base':
-        return `${formattedProject}${processedTableName}`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}`;
       case 'node':
-        return `${formattedProject}${processedTableName}Node`;
-      case 'flat':
-        return `${formattedProject}${processedTableName}Flat`;
+        return `${formattedProject}${processedTableName}${this.getNodeTypePostfix()}`;
       case 'connection':
-        return `${formattedProject}${processedTableName}Connection`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}Connection`;
       case 'edge':
-        return `${formattedProject}${processedTableName}Edge`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}Edge`;
+      case 'flat':
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}`;
       case 'flatConnection':
-        return `${formattedProject}${processedTableName}FlatConnection`;
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}Connection`;
       case 'flatEdge':
-        return `${formattedProject}${processedTableName}FlatEdge`;
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}Edge`;
       default:
         return `${formattedProject}${processedTableName}`;
     }
@@ -71,18 +76,21 @@ export class NamingService {
     foreignKeyTableName: string,
     isFlat: boolean = false,
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     const capitalizedTable =
       foreignKeyTableName.charAt(0).toUpperCase() +
       foreignKeyTableName.slice(1);
-    return `${formattedProject}${capitalizedTable}${isFlat ? 'Flat' : 'Node'}`;
+
+    return `${formattedProject}${capitalizedTable}${isFlat ? this.getFlatPostfix() : this.getNodeTypePostfix()}`;
   }
 
   /**
    * Generate system type names (shared across all tables)
    */
   public getSystemTypeName(systemType: 'pageInfo' | 'sortOrder'): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (systemType) {
       case 'pageInfo':
@@ -100,7 +108,8 @@ export class NamingService {
   public getSystemFilterTypeName(
     filterType: 'string' | 'bool' | 'dateTime' | 'json',
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (filterType) {
       case 'string':
@@ -120,7 +129,8 @@ export class NamingService {
    * Generate system filter mode enum names
    */
   public getSystemFilterModeEnumName(filterType: 'string' | 'json'): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (filterType) {
       case 'string':
@@ -140,22 +150,11 @@ export class NamingService {
   }
 
   /**
-   * Generate capitalized table name with postfix
-   */
-  public getCapitalizedTableNameWithPostfix(
-    tableName: string,
-    postfix: string,
-  ): string {
-    const capitalizedTable =
-      tableName.charAt(0).toUpperCase() + tableName.slice(1);
-    return `${capitalizedTable}${postfix}`;
-  }
-
-  /**
    * Generate input type names for GraphQL queries
    */
   public getGetInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}Input`;
   }
 
@@ -163,7 +162,8 @@ export class NamingService {
    * Generate order by field enum names
    */
   public getOrderByFieldEnumName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}OrderByField`;
   }
 
@@ -171,7 +171,8 @@ export class NamingService {
    * Generate order by input type names
    */
   public getOrderByInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}OrderByInput`;
   }
 
@@ -179,7 +180,8 @@ export class NamingService {
    * Generate where input type names
    */
   public getWhereInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}${tableName}WhereInput`;
   }
 }

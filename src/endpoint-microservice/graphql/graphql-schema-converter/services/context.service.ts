@@ -23,4 +23,28 @@ export class ContextService {
   public get schema() {
     return this.context.schema;
   }
+
+  public get hideNodeTypes() {
+    return this.context.options?.hideNodeTypes;
+  }
+
+  public get hideFlatTypes() {
+    return this.context.options?.hideFlatTypes;
+  }
+
+  public get prefixForTables() {
+    return this.context.options?.prefixForTables;
+  }
+
+  public get prefixForCommon() {
+    return this.context.options?.prefixForCommon;
+  }
+
+  public get flatPostfix() {
+    return this.context.options?.flatPostfix;
+  }
+
+  public get nodePostfix() {
+    return this.context.options?.nodePostfix;
+  }
 }

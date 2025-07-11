@@ -57,13 +57,12 @@ export class ModelService {
 
     this.processSchemaField(createNodeContext(options, typeName));
 
-    return {
-      nodeType,
-    };
+    return nodeType;
   }
 
   public getFlatType(options: CreatingTableOptionsType, parentType: string) {
-    return this.processSchemaField(createFlatContext(options, parentType));
+    return this.processSchemaField(createFlatContext(options, parentType))
+      .field;
   }
 
   public processSchemaField(context: SchemaProcessingContext): {
@@ -127,12 +126,13 @@ export class ModelService {
   }
 
   private createRootTypes(option: CreatingTableOptionsType): void {
-    const { nodeType } = this.getNodeType(option);
-    const dataFlat = this.getFlatType(option, '');
-
     this.cacheService.add(option.table.id, {
-      nodeType,
-      dataFlatRoot: dataFlat.field,
+      nodeType: this.contextService.hideNodeTypes
+        ? undefined
+        : this.getNodeType(option),
+      dataFlatRoot: this.contextService.hideFlatTypes
+        ? undefined
+        : this.getFlatType(option, ''),
     });
   }
 }

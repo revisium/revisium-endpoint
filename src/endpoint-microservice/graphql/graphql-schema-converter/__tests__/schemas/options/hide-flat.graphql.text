@@ -109,21 +109,6 @@ type ProjectPostEdge {
   node: ProjectPostNode!
 }
 
-type ProjectPostFlat {
-  name: String!
-}
-
-type ProjectPostFlatConnection {
-  edges: [ProjectPostFlatEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectPostFlatEdge {
-  cursor: String!
-  node: ProjectPostFlat!
-}
-
 type ProjectPostNode {
   createdAt: DateTime!
   createdId: String!
@@ -206,48 +191,6 @@ type ProjectUserEdge {
   node: ProjectUserNode!
 }
 
-type ProjectUserFlat {
-  address: ProjectUserFlatAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserFlatArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  post: ProjectPostFlat!
-  posts: [ProjectUserFlatPostsItems!]!
-}
-
-type ProjectUserFlatAddress {
-  city: String!
-  nestedAddress: ProjectUserFlatAddressNestedaddress!
-  zipCode: Float!
-}
-
-type ProjectUserFlatAddressNestedaddress {
-  zipCode: String!
-}
-
-type ProjectUserFlatArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserFlatConnection {
-  edges: [ProjectUserFlatEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserFlatEdge {
-  cursor: String!
-  node: ProjectUserFlat!
-}
-
-type ProjectUserFlatPostsItems {
-  id: String!
-  title: String!
-}
-
 type ProjectUserNode {
   createdAt: DateTime!
   createdId: String!
@@ -282,13 +225,9 @@ type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
   post(id: String!): ProjectPostNode!
-  postFlat(id: String!): ProjectPostFlat!
   posts(data: ProjectGetPostsInput): ProjectPostConnection!
-  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
   user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUserFlat!
   users(data: ProjectGetUsersInput): ProjectUserConnection!
-  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
 
 scalar _Any

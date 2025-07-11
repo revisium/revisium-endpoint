@@ -62,12 +62,12 @@ export class ForeignKeyHandler extends BaseSchemaTypeHandler {
     foreignKey: string,
   ): TypeModelField {
     return context.isFlat
-      ? this.handlerContext.cacheService.get(foreignKey).dataFlatRoot
+      ? this.handlerContext.cacheService.getFlatRoot(foreignKey)
       : {
           name: '',
           type: FieldType.ref,
           refType: FieldRefType.type,
-          value: this.handlerContext.cacheService.get(foreignKey).nodeType.name,
+          value: this.handlerContext.cacheService.getRoot(foreignKey).name,
         };
   }
 }

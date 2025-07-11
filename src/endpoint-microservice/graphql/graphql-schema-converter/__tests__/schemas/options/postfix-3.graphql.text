@@ -94,40 +94,40 @@ type ProjectPageInfo {
   startCursor: String
 }
 
-type ProjectPost {
+type ProjectPostCustom {
   name: String!
 }
 
-type ProjectPostConnection {
-  edges: [ProjectPostEdge!]!
+type ProjectPostCustomConnection {
+  edges: [ProjectPostCustomEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectPostEdge {
+type ProjectPostCustomEdge {
   cursor: String!
-  node: ProjectPostNode!
+  node: ProjectPostCustom!
 }
 
-type ProjectPostFlat {
+type ProjectPostDetailed {
   name: String!
 }
 
-type ProjectPostFlatConnection {
-  edges: [ProjectPostFlatEdge!]!
+type ProjectPostDetailedConnection {
+  edges: [ProjectPostDetailedEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectPostFlatEdge {
+type ProjectPostDetailedEdge {
   cursor: String!
-  node: ProjectPostFlat!
+  node: ProjectPostDetailedNode!
 }
 
-type ProjectPostNode {
+type ProjectPostDetailedNode {
   createdAt: DateTime!
   createdId: String!
-  data: ProjectPost!
+  data: ProjectPostDetailed!
   id: String!
   json: JSON!
   publishedAt: DateTime!
@@ -169,89 +169,89 @@ input ProjectStringFilter {
   startsWith: String
 }
 
-type ProjectUser {
-  address: ProjectUserAddress!
+type ProjectUserCustom {
+  address: ProjectUserCustomAddress!
   adult: Boolean!
   age: Float!
-  array: [ProjectUserArrayItemsItemsItems!]!
+  array: [ProjectUserCustomArrayItemsItemsItems!]!
   firstName: String!
   imageIds: [String!]!
   lastName: String!
-  post: ProjectPostNode!
-  posts: [ProjectUserPostsItems!]!
+  post: ProjectPostCustom!
+  posts: [ProjectUserCustomPostsItems!]!
 }
 
-type ProjectUserAddress {
+type ProjectUserCustomAddress {
   city: String!
-  nestedAddress: ProjectUserAddressNestedaddress!
+  nestedAddress: ProjectUserCustomAddressNestedaddress!
   zipCode: Float!
 }
 
-type ProjectUserAddressNestedaddress {
+type ProjectUserCustomAddressNestedaddress {
   zipCode: String!
 }
 
-type ProjectUserArrayItemsItemsItems {
+type ProjectUserCustomArrayItemsItemsItems {
   nested: String!
 }
 
-type ProjectUserConnection {
-  edges: [ProjectUserEdge!]!
+type ProjectUserCustomConnection {
+  edges: [ProjectUserCustomEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectUserEdge {
+type ProjectUserCustomEdge {
   cursor: String!
-  node: ProjectUserNode!
+  node: ProjectUserCustom!
 }
 
-type ProjectUserFlat {
-  address: ProjectUserFlatAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserFlatArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  post: ProjectPostFlat!
-  posts: [ProjectUserFlatPostsItems!]!
-}
-
-type ProjectUserFlatAddress {
-  city: String!
-  nestedAddress: ProjectUserFlatAddressNestedaddress!
-  zipCode: Float!
-}
-
-type ProjectUserFlatAddressNestedaddress {
-  zipCode: String!
-}
-
-type ProjectUserFlatArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserFlatConnection {
-  edges: [ProjectUserFlatEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserFlatEdge {
-  cursor: String!
-  node: ProjectUserFlat!
-}
-
-type ProjectUserFlatPostsItems {
+type ProjectUserCustomPostsItems {
   id: String!
   title: String!
 }
 
-type ProjectUserNode {
+type ProjectUserDetailed {
+  address: ProjectUserDetailedAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserDetailedArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: ProjectPostDetailedNode!
+  posts: [ProjectUserDetailedPostsItems!]!
+}
+
+type ProjectUserDetailedAddress {
+  city: String!
+  nestedAddress: ProjectUserDetailedAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserDetailedAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserDetailedArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserDetailedConnection {
+  edges: [ProjectUserDetailedEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserDetailedEdge {
+  cursor: String!
+  node: ProjectUserDetailedNode!
+}
+
+type ProjectUserDetailedNode {
   createdAt: DateTime!
   createdId: String!
-  data: ProjectUser!
+  data: ProjectUserDetailed!
   id: String!
   json: JSON!
   publishedAt: DateTime!
@@ -259,7 +259,7 @@ type ProjectUserNode {
   versionId: String!
 }
 
-type ProjectUserPostsItems {
+type ProjectUserDetailedPostsItems {
   id: String!
   title: String!
 }
@@ -281,19 +281,19 @@ input ProjectUsersWhereInput {
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
-  post(id: String!): ProjectPostNode!
-  postFlat(id: String!): ProjectPostFlat!
-  posts(data: ProjectGetPostsInput): ProjectPostConnection!
-  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
-  user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUserFlat!
-  users(data: ProjectGetUsersInput): ProjectUserConnection!
-  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
+  postCustom(id: String!): ProjectPostCustom!
+  postDetailed(id: String!): ProjectPostDetailedNode!
+  postsCustom(data: ProjectGetPostsInput): ProjectPostCustomConnection!
+  postsDetailed(data: ProjectGetPostsInput): ProjectPostDetailedConnection!
+  userCustom(id: String!): ProjectUserCustom!
+  userDetailed(id: String!): ProjectUserDetailedNode!
+  usersCustom(data: ProjectGetUsersInput): ProjectUserCustomConnection!
+  usersDetailed(data: ProjectGetUsersInput): ProjectUserDetailedConnection!
 }
 
 scalar _Any
 
-union _Entity = ProjectPostNode | ProjectUserNode
+union _Entity = ProjectPostDetailedNode | ProjectUserDetailedNode
 
 type _Service {
   """

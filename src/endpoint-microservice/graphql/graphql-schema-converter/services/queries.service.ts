@@ -22,10 +22,10 @@ export class QueriesService {
     flatSingularKey: string,
     options: CreatingTableOptionsType,
   ) {
-    const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
+    const flatRoot = this.cacheService.getFlatRoot(options.table.id);
 
     this.contextService.schema.query.addField({
-      ...nodeType,
+      ...flatRoot,
       name: flatSingularKey,
       args: {
         type: FieldType.string,
@@ -40,12 +40,12 @@ export class QueriesService {
     singularKey: string,
     options: CreatingTableOptionsType,
   ) {
-    const nodeType = this.cacheService.get(options.table.id).nodeType;
+    const root = this.cacheService.getRoot(options.table.id);
 
     this.contextService.schema.query.addField({
       type: FieldType.ref,
       name: singularKey,
-      value: nodeType.name,
+      value: root.name,
       args: {
         type: FieldType.string,
         name: 'id',
@@ -80,7 +80,7 @@ export class QueriesService {
       options.safetyTableId,
       'flatEdge',
     );
-    const nodeType = this.cacheService.get(options.table.id).dataFlatRoot;
+    const flatRoot = this.cacheService.getFlatRoot(options.table.id);
 
     this.contextService.schema.addType(edgeName).addFields([
       {
@@ -88,7 +88,7 @@ export class QueriesService {
         name: 'cursor',
       },
       {
-        ...nodeType,
+        ...flatRoot,
         name: 'node',
       },
     ]);
