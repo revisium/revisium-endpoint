@@ -32,7 +32,11 @@ export class ForeignKeyArrayHandler extends BaseSchemaTypeHandler {
       throw new Error('Schema must be an array store');
     }
     const items = schema.items;
-    return (items as any).foreignKey;
+
+    if (!isStringForeignStore(items)) {
+      throw new Error('Array items must be a string foreign store');
+    }
+    return items.foreignKey;
   }
 
   private createForeignKeyArrayField(

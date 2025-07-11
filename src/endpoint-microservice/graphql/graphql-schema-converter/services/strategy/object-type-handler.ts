@@ -1,3 +1,4 @@
+import { createPropertyContext } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/schema-processing-context.utils';
 import {
   JsonSchemaStore,
   JsonObjectStore,
@@ -6,6 +7,7 @@ import {
   FieldType,
   FieldRefType,
   TypeModelField,
+  TypeModel,
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { BaseSchemaTypeHandler } from './base-schema-type-handler';
 import { SchemaProcessingContext } from './schema-processing-context.interface';
@@ -17,7 +19,6 @@ import {
   capitalize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
 import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
-import { SchemaProcessingContextUtils } from '../../utils/schema-processing-context.utils';
 
 export class ObjectTypeHandler extends BaseSchemaTypeHandler {
   public canHandle(schema: JsonSchemaStore): boolean {
@@ -91,7 +92,7 @@ export class ObjectTypeHandler extends BaseSchemaTypeHandler {
     validEntries: [string, JsonSchemaStore][],
     propertyKeys: string[],
     objectTypeName: string,
-    typeRef: any,
+    typeRef: TypeModel,
   ): void {
     validEntries.forEach(([key, itemSchema]) => {
       if (!isValidName(key)) {
@@ -115,7 +116,7 @@ export class ObjectTypeHandler extends BaseSchemaTypeHandler {
     itemSchema: JsonSchemaStore,
     propertyKeys: string[],
     objectTypeName: string,
-    typeRef: any,
+    typeRef: TypeModel,
   ): void {
     const capitalizedSafetyKey = this.getSafePropertyKey(propertyKeys, key);
 
@@ -143,7 +144,7 @@ export class ObjectTypeHandler extends BaseSchemaTypeHandler {
     objectTypeName: string,
   ): void {
     this.handlerContext.modelService.processSchemaField(
-      SchemaProcessingContextUtils.createPropertyContext(
+      createPropertyContext(
         context,
         itemSchema,
         key,
@@ -157,7 +158,7 @@ export class ObjectTypeHandler extends BaseSchemaTypeHandler {
     context: SchemaProcessingContext,
     key: string,
     itemSchema: JsonSchemaStore,
-    typeRef: any,
+    typeRef: TypeModel,
   ): void {
     if (this.isIdRefInRootObject(itemSchema, context)) {
       typeRef.entity = {

@@ -10,7 +10,11 @@ import { createTypeHandlers } from 'src/endpoint-microservice/graphql/graphql-sc
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 import { isRootForeignStore } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isRootForeignStore';
 import { applySchemaDescriptions } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/schema-description.utils';
-import { SchemaProcessingContextUtils } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/schema-processing-context.utils';
+import {
+  addDefaults,
+  createFlatContext,
+  createNodeContext,
+} from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/schema-processing-context.utils';
 import {
   SchemaTypeHandler,
   SchemaTypeHandlerContext,
@@ -51,9 +55,7 @@ export class ModelService {
     const { nodeType, typeName } =
       this.nodeTypeBuilderService.createNodeType(options);
 
-    this.processSchemaField(
-      SchemaProcessingContextUtils.createNodeContext(options, typeName),
-    );
+    this.processSchemaField(createNodeContext(options, typeName));
 
     return {
       nodeType,
@@ -61,17 +63,13 @@ export class ModelService {
   }
 
   public getFlatType(options: CreatingTableOptionsType, parentType: string) {
-    return this.processSchemaField(
-      SchemaProcessingContextUtils.createFlatContext(options, parentType),
-    );
+    return this.processSchemaField(createFlatContext(options, parentType));
   }
 
   public processSchemaField(context: SchemaProcessingContext): {
     field: TypeModelField;
   } {
-    const result = this.processSchemaWithHandler(
-      SchemaProcessingContextUtils.addDefaults(context),
-    );
+    const result = this.processSchemaWithHandler(addDefaults(context));
 
     applySchemaDescriptions(context.schema, result.field);
 

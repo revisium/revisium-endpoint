@@ -19,7 +19,10 @@ export class ForeignKeyHandler extends BaseSchemaTypeHandler {
   }
 
   private extractForeignKey(schema: JsonSchemaStore): string {
-    return (schema as any).foreignKey;
+    if (!isStringForeignStore(schema)) {
+      throw new Error('Schema is not a valid foreign key store');
+    }
+    return schema.foreignKey;
   }
 
   private createForeignKeyField(

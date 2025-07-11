@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ContextService } from './context.service';
 import { NamingService } from './naming.service';
 import { ResolverService } from './resolver.service';
-import { FieldType, FieldRefType, TypeModelField } from './schema';
+import { FieldType, FieldRefType, TypeModelField, TypeModel } from './schema';
 import { CreatingTableOptionsType } from '../types';
 
 @Injectable()
@@ -73,7 +73,7 @@ export class NodeTypeBuilderService {
   }
 
   private configureEntityResolution(
-    nodeType: any,
+    nodeType: TypeModel,
     options: CreatingTableOptionsType,
   ): void {
     nodeType.entity = {
