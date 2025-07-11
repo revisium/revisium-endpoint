@@ -3,6 +3,25 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+input GetUsersInput {
+  after: String
+  first: Int
+  orderBy: [GetUsersOrderByInput!]
+  where: UsersWhereInput
+}
+
+enum GetUsersOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input GetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: GetUsersOrderByField!
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -31,25 +50,6 @@ enum ProjectFilterJsonMode {
 enum ProjectFilterStringMode {
   default
   insensitive
-}
-
-input ProjectGetUsersInput {
-  after: String
-  first: Int
-  orderBy: [ProjectGetUsersOrderByInput!]
-  where: ProjectUsersWhereInput
-}
-
-enum ProjectGetUsersOrderByField {
-  createdAt
-  id
-  publishedAt
-  updatedAt
-}
-
-input ProjectGetUsersOrderByInput {
-  direction: ProjectSortOrder!
-  field: ProjectGetUsersOrderByField!
 }
 
 input ProjectJsonFilter {
@@ -95,27 +95,13 @@ input ProjectStringFilter {
   startsWith: String
 }
 
-input ProjectUsersWhereInput {
-  AND: [ProjectUsersWhereInput!]
-  NOT: [ProjectUsersWhereInput!]
-  OR: [ProjectUsersWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
-}
-
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
   user(id: String!): UserNode!
   userFlat(id: String!): UserFlat!
-  users(data: ProjectGetUsersInput): UserConnection!
-  usersFlat(data: ProjectGetUsersInput): UserFlatConnection!
+  users(data: GetUsersInput): UserConnection!
+  usersFlat(data: GetUsersInput): UserFlatConnection!
 }
 
 type User {
@@ -209,6 +195,20 @@ type UserNode {
 type UserPostsItems {
   id: String!
   title: String!
+}
+
+input UsersWhereInput {
+  AND: [UsersWhereInput!]
+  NOT: [UsersWhereInput!]
+  OR: [UsersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
 }
 
 scalar _Any

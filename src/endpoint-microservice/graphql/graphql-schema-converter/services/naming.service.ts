@@ -29,13 +29,6 @@ export class NamingService {
   }
 
   /**
-   * Get formatted table name (capitalized) with safety checks
-   */
-  public getTableName(tableName: string): string {
-    return capitalize(getSafetyName(tableName, 'INVALID_TABLE_NAME'));
-  }
-
-  /**
    * Generate GraphQL type names using pre-processed table names
    */
   public getTypeName(
@@ -162,7 +155,8 @@ export class NamingService {
    * Generate order by input type names
    */
   public getOrderByInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}OrderByInput`;
   }
 
@@ -170,7 +164,8 @@ export class NamingService {
    * Generate where input type names
    */
   public getWhereInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}${tableName}WhereInput`;
   }
 }

@@ -643,6 +643,18 @@ describe('GraphQL Schema Converter', () => {
         ),
         'options/prefix-for-table-1.graphql.text',
       );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [getComplexSchema()],
+            options: {
+              prefixForTables: 'Custom',
+            },
+          }),
+        ),
+        'options/prefix-for-table-2.graphql.text',
+      );
     });
   });
 
