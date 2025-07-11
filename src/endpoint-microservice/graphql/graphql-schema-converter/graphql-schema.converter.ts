@@ -5,6 +5,7 @@ import { lexicographicSortSchema } from 'graphql/utilities';
 import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/common-schema.service';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
+import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import {
   Schema,
@@ -24,8 +25,6 @@ import {
   pluginRefs,
 } from 'src/endpoint-microservice/shared/schema';
 
-const FLAT_KEY = 'Flat';
-
 export interface CacheNode {
   nodeType?: TypeModel;
   dataFlatRoot?: TypeModelField;
@@ -43,6 +42,7 @@ export interface GraphQLSchemaConverterContext extends ConverterContextType {
 export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   constructor(
     private readonly contextService: ContextService,
+    private readonly namingService: NamingService,
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
     private readonly modelService: ModelService,
@@ -118,10 +118,13 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
 
   private createQueries(validTables: Record<string, ValidTableType>) {
     Object.values(validTables).forEach((validTable) => {
-      const pluralKey = `${validTable.fieldName.plural}`;
-      const singularKey = `${validTable.fieldName.singular}`;
-      const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
-      const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
+      const nodePostfix = this.namingService.getNodePostfix();
+      const flatPostfix = this.namingService.getFlatPostfix();
+
+      const pluralKey = `${validTable.fieldName.plural}${nodePostfix}`;
+      const singularKey = `${validTable.fieldName.singular}${nodePostfix}`;
+      const flatSingularKey = `${validTable.fieldName.singular}${flatPostfix}`;
+      const flatPluralKey = `${validTable.fieldName.plural}${flatPostfix}`;
 
       if (!this.contextService.hideNodeTypes) {
         this.queriesService.createItemField(singularKey, validTable.options);

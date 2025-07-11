@@ -20,6 +20,18 @@ export type GraphQLTypeVariant =
 export class NamingService {
   constructor(private readonly contextService: ContextService) {}
 
+  public getNodePostfix() {
+    return this.contextService.nodePostfix ?? '';
+  }
+
+  public getFlatPostfix() {
+    return this.contextService.flatPostfix ?? 'Flat';
+  }
+
+  public getNodeTypePostfix() {
+    return `${this.getNodePostfix()}Node`;
+  }
+
   /**
    * Get formatted project name from context
    */
@@ -39,19 +51,19 @@ export class NamingService {
 
     switch (variant) {
       case 'base':
-        return `${formattedProject}${processedTableName}`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}`;
       case 'node':
-        return `${formattedProject}${processedTableName}Node`;
-      case 'flat':
-        return `${formattedProject}${processedTableName}Flat`;
+        return `${formattedProject}${processedTableName}${this.getNodeTypePostfix()}`;
       case 'connection':
-        return `${formattedProject}${processedTableName}Connection`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}Connection`;
       case 'edge':
-        return `${formattedProject}${processedTableName}Edge`;
+        return `${formattedProject}${processedTableName}${this.getNodePostfix()}Edge`;
+      case 'flat':
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}`;
       case 'flatConnection':
-        return `${formattedProject}${processedTableName}FlatConnection`;
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}Connection`;
       case 'flatEdge':
-        return `${formattedProject}${processedTableName}FlatEdge`;
+        return `${formattedProject}${processedTableName}${this.getFlatPostfix()}Edge`;
       default:
         return `${formattedProject}${processedTableName}`;
     }
@@ -70,7 +82,7 @@ export class NamingService {
       foreignKeyTableName.charAt(0).toUpperCase() +
       foreignKeyTableName.slice(1);
 
-    return `${formattedProject}${capitalizedTable}${isFlat ? 'Flat' : 'Node'}`;
+    return `${formattedProject}${capitalizedTable}${isFlat ? this.getFlatPostfix() : this.getNodeTypePostfix()}`;
   }
 
   /**

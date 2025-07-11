@@ -1,0 +1,303 @@
+input BoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+input DateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  notIn: [String!]
+}
+
+enum FilterJsonMode {
+  default
+  insensitive
+}
+
+enum FilterStringMode {
+  default
+  insensitive
+}
+
+input GetPostsInput {
+  after: String
+  first: Int
+  orderBy: [GetPostsOrderByInput!]
+  where: PostsWhereInput
+}
+
+enum GetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input GetPostsOrderByInput {
+  direction: SortOrder!
+  field: GetPostsOrderByField!
+}
+
+input GetUsersInput {
+  after: String
+  first: Int
+  orderBy: [GetUsersOrderByInput!]
+  where: UsersWhereInput
+}
+
+enum GetUsersOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input GetUsersOrderByInput {
+  direction: SortOrder!
+  field: GetUsersOrderByField!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+input JsonFilter {
+  array_contains: [JSON!]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: FilterJsonMode
+  path: [String!]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type Post {
+  name: String!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PostDetailed {
+  name: String!
+}
+
+type PostDetailedConnection {
+  edges: [PostDetailedEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PostDetailedEdge {
+  cursor: String!
+  node: PostDetailedNode!
+}
+
+type PostDetailedNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: PostDetailed!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type PostEdge {
+  cursor: String!
+  node: Post!
+}
+
+input PostsWhereInput {
+  AND: [PostsWhereInput!]
+  NOT: [PostsWhereInput!]
+  OR: [PostsWhereInput!]
+  createdAt: DateTimeFilter
+  createdId: StringFilter
+  data: JsonFilter
+  id: StringFilter
+  publishedAt: DateTimeFilter
+  readonly: BoolFilter
+  updatedAt: DateTimeFilter
+  versionId: StringFilter
+}
+
+type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+  post(id: String!): Post!
+  postDetailed(id: String!): PostDetailedNode!
+  posts(data: GetPostsInput): PostConnection!
+  postsDetailed(data: GetPostsInput): PostDetailedConnection!
+  user(id: String!): User!
+  userDetailed(id: String!): UserDetailedNode!
+  users(data: GetUsersInput): UserConnection!
+  usersDetailed(data: GetUsersInput): UserDetailedConnection!
+}
+
+enum SortOrder {
+  asc
+  desc
+}
+
+input StringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  mode: FilterStringMode
+  not: String
+  notIn: [String!]
+  startsWith: String
+}
+
+type User {
+  address: UserAddress!
+  adult: Boolean!
+  age: Float!
+  array: [UserArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: Post!
+  posts: [UserPostsItems!]!
+}
+
+type UserAddress {
+  city: String!
+  nestedAddress: UserAddressNestedaddress!
+  zipCode: Float!
+}
+
+type UserAddressNestedaddress {
+  zipCode: String!
+}
+
+type UserArrayItemsItemsItems {
+  nested: String!
+}
+
+type UserConnection {
+  edges: [UserEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserDetailed {
+  address: UserDetailedAddress!
+  adult: Boolean!
+  age: Float!
+  array: [UserDetailedArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: PostDetailedNode!
+  posts: [UserDetailedPostsItems!]!
+}
+
+type UserDetailedAddress {
+  city: String!
+  nestedAddress: UserDetailedAddressNestedaddress!
+  zipCode: Float!
+}
+
+type UserDetailedAddressNestedaddress {
+  zipCode: String!
+}
+
+type UserDetailedArrayItemsItemsItems {
+  nested: String!
+}
+
+type UserDetailedConnection {
+  edges: [UserDetailedEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserDetailedEdge {
+  cursor: String!
+  node: UserDetailedNode!
+}
+
+type UserDetailedNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: UserDetailed!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type UserDetailedPostsItems {
+  id: String!
+  title: String!
+}
+
+type UserEdge {
+  cursor: String!
+  node: User!
+}
+
+type UserPostsItems {
+  id: String!
+  title: String!
+}
+
+input UsersWhereInput {
+  AND: [UsersWhereInput!]
+  NOT: [UsersWhereInput!]
+  OR: [UsersWhereInput!]
+  createdAt: DateTimeFilter
+  createdId: StringFilter
+  data: JsonFilter
+  id: StringFilter
+  publishedAt: DateTimeFilter
+  readonly: BoolFilter
+  updatedAt: DateTimeFilter
+  versionId: StringFilter
+}
+
+scalar _Any
+
+union _Entity = PostDetailedNode | UserDetailedNode
+
+type _Service {
+  """
+  The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  """
+  sdl: String
+}

@@ -682,6 +682,51 @@ describe('GraphQL Schema Converter', () => {
         'options/prefix-for-common-2.graphql.text',
       );
     });
+
+    it('postfix', async () => {
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+              prefixForTables: '',
+              flatPostfix: '',
+              nodePostfix: 'Detailed',
+            },
+          }),
+        ),
+        'options/postfix-1.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+              prefixForTables: '',
+              flatPostfix: 'Custom',
+              nodePostfix: '',
+            },
+          }),
+        ),
+        'options/postfix-2.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              flatPostfix: 'Custom',
+              nodePostfix: 'Detailed',
+            },
+          }),
+        ),
+        'options/postfix-3.graphql.text',
+      );
+    });
   });
 
   function getContext(

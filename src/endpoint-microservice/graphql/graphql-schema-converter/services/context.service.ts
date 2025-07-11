@@ -39,4 +39,12 @@ export class ContextService {
   public get prefixForCommon() {
     return this.context.options?.prefixForCommon;
   }
+
+  public get flatPostfix() {
+    return this.context.options?.flatPostfix;
+  }
+
+  public get nodePostfix() {
+    return this.context.options?.nodePostfix;
+  }
 }

@@ -1,0 +1,303 @@
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  notIn: [String!]
+}
+
+enum ProjectFilterJsonMode {
+  default
+  insensitive
+}
+
+enum ProjectFilterStringMode {
+  default
+  insensitive
+}
+
+input ProjectGetPostsInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetPostsOrderByInput!]
+  where: ProjectPostsWhereInput
+}
+
+enum ProjectGetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetPostsOrderByField!
+}
+
+input ProjectGetUsersInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetUsersOrderByInput!]
+  where: ProjectUsersWhereInput
+}
+
+enum ProjectGetUsersOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsersOrderByField!
+}
+
+input ProjectJsonFilter {
+  array_contains: [JSON!]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: ProjectFilterJsonMode
+  path: [String!]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectPostCustom {
+  name: String!
+}
+
+type ProjectPostCustomConnection {
+  edges: [ProjectPostCustomEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostCustomEdge {
+  cursor: String!
+  node: ProjectPostCustom!
+}
+
+type ProjectPostDetailed {
+  name: String!
+}
+
+type ProjectPostDetailedConnection {
+  edges: [ProjectPostDetailedEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostDetailedEdge {
+  cursor: String!
+  node: ProjectPostDetailedNode!
+}
+
+type ProjectPostDetailedNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectPostDetailed!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+input ProjectPostsWhereInput {
+  AND: [ProjectPostsWhereInput!]
+  NOT: [ProjectPostsWhereInput!]
+  OR: [ProjectPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  mode: ProjectFilterStringMode
+  not: String
+  notIn: [String!]
+  startsWith: String
+}
+
+type ProjectUserCustom {
+  address: ProjectUserCustomAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserCustomArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: ProjectPostCustom!
+  posts: [ProjectUserCustomPostsItems!]!
+}
+
+type ProjectUserCustomAddress {
+  city: String!
+  nestedAddress: ProjectUserCustomAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserCustomAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserCustomArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserCustomConnection {
+  edges: [ProjectUserCustomEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserCustomEdge {
+  cursor: String!
+  node: ProjectUserCustom!
+}
+
+type ProjectUserCustomPostsItems {
+  id: String!
+  title: String!
+}
+
+type ProjectUserDetailed {
+  address: ProjectUserDetailedAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserDetailedArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: ProjectPostDetailedNode!
+  posts: [ProjectUserDetailedPostsItems!]!
+}
+
+type ProjectUserDetailedAddress {
+  city: String!
+  nestedAddress: ProjectUserDetailedAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserDetailedAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserDetailedArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserDetailedConnection {
+  edges: [ProjectUserDetailedEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserDetailedEdge {
+  cursor: String!
+  node: ProjectUserDetailedNode!
+}
+
+type ProjectUserDetailedNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectUserDetailed!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type ProjectUserDetailedPostsItems {
+  id: String!
+  title: String!
+}
+
+input ProjectUsersWhereInput {
+  AND: [ProjectUsersWhereInput!]
+  NOT: [ProjectUsersWhereInput!]
+  OR: [ProjectUsersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+  postCustom(id: String!): ProjectPostCustom!
+  postDetailed(id: String!): ProjectPostDetailedNode!
+  postsCustom(data: ProjectGetPostsInput): ProjectPostCustomConnection!
+  postsDetailed(data: ProjectGetPostsInput): ProjectPostDetailedConnection!
+  userCustom(id: String!): ProjectUserCustom!
+  userDetailed(id: String!): ProjectUserDetailedNode!
+  usersCustom(data: ProjectGetUsersInput): ProjectUserCustomConnection!
+  usersDetailed(data: ProjectGetUsersInput): ProjectUserDetailedConnection!
+}
+
+scalar _Any
+
+union _Entity = ProjectPostDetailedNode | ProjectUserDetailedNode
+
+type _Service {
+  """
+  The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  """
+  sdl: String
+}
