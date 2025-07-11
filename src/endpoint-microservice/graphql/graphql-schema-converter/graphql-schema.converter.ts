@@ -3,6 +3,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLSchema } from 'graphql/type';
 import { lexicographicSortSchema } from 'graphql/utilities';
 import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/common-schema.service';
+import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import {
@@ -41,6 +42,7 @@ export interface GraphQLSchemaConverterContext extends ConverterContextType {
 @Injectable()
 export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   constructor(
+    private readonly contextService: ContextService,
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
     private readonly modelService: ModelService,
@@ -121,17 +123,21 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       const flatSingularKey = `${validTable.fieldName.singular}${FLAT_KEY}`;
       const flatPluralKey = `${validTable.fieldName.plural}${FLAT_KEY}`;
 
-      this.queriesService.createItemField(singularKey, validTable.options);
+      if (!this.contextService.hideNodeTypes) {
+        this.queriesService.createItemField(singularKey, validTable.options);
+        this.queriesService.createListField(pluralKey, validTable.options);
+      }
 
-      this.queriesService.createListField(pluralKey, validTable.options);
-      this.queriesService.createItemFlatField(
-        flatSingularKey,
-        validTable.options,
-      );
-      this.queriesService.createListFlatField(
-        flatPluralKey,
-        validTable.options,
-      );
+      if (!this.contextService.hideFlatTypes) {
+        this.queriesService.createItemFlatField(
+          flatSingularKey,
+          validTable.options,
+        );
+        this.queriesService.createListFlatField(
+          flatPluralKey,
+          validTable.options,
+        );
+      }
     });
   }
 }

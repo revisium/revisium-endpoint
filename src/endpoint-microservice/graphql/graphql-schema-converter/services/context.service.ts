@@ -23,4 +23,12 @@ export class ContextService {
   public get schema() {
     return this.context.schema;
   }
+
+  public get hideNodeTypes() {
+    return this.context.options?.hideNodeTypes;
+  }
+
+  public get hideFlatTypes() {
+    return this.context.options?.hideFlatTypes;
+  }
 }

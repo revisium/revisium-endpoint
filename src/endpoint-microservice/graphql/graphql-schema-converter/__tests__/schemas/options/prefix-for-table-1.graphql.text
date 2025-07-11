@@ -1,0 +1,223 @@
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+input ProjectBoolFilter {
+  equals: Boolean
+  not: Boolean
+}
+
+input ProjectDateTimeFilter {
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  notIn: [String!]
+}
+
+enum ProjectFilterJsonMode {
+  default
+  insensitive
+}
+
+enum ProjectFilterStringMode {
+  default
+  insensitive
+}
+
+input ProjectGetUsersInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetUsersOrderByInput!]
+  where: ProjectUsersWhereInput
+}
+
+enum ProjectGetUsersOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetUsersOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetUsersOrderByField!
+}
+
+input ProjectJsonFilter {
+  array_contains: [JSON!]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: ProjectFilterJsonMode
+  path: [String!]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type ProjectPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+enum ProjectSortOrder {
+  asc
+  desc
+}
+
+input ProjectStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  mode: ProjectFilterStringMode
+  not: String
+  notIn: [String!]
+  startsWith: String
+}
+
+type ProjectUser {
+  address: ProjectUserAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [ProjectUserPostsItems!]!
+}
+
+type ProjectUserAddress {
+  city: String!
+  nestedAddress: ProjectUserAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserConnection {
+  edges: [ProjectUserEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserEdge {
+  cursor: String!
+  node: ProjectUserNode!
+}
+
+type ProjectUserFlat {
+  address: ProjectUserFlatAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserFlatArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [ProjectUserFlatPostsItems!]!
+}
+
+type ProjectUserFlatAddress {
+  city: String!
+  nestedAddress: ProjectUserFlatAddressNestedaddress!
+  zipCode: Float!
+}
+
+type ProjectUserFlatAddressNestedaddress {
+  zipCode: String!
+}
+
+type ProjectUserFlatArrayItemsItemsItems {
+  nested: String!
+}
+
+type ProjectUserFlatConnection {
+  edges: [ProjectUserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectUserFlatEdge {
+  cursor: String!
+  node: ProjectUserFlat!
+}
+
+type ProjectUserFlatPostsItems {
+  id: String!
+  title: String!
+}
+
+type ProjectUserNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectUser!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type ProjectUserPostsItems {
+  id: String!
+  title: String!
+}
+
+input ProjectUsersWhereInput {
+  AND: [ProjectUsersWhereInput!]
+  NOT: [ProjectUsersWhereInput!]
+  OR: [ProjectUsersWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+  user(id: String!): ProjectUserNode!
+  userFlat(id: String!): ProjectUserFlat!
+  users(data: ProjectGetUsersInput): ProjectUserConnection!
+  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
+}
+
+scalar _Any
+
+union _Entity = ProjectUserNode
+
+type _Service {
+  """
+  The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied
+  """
+  sdl: String
+}
