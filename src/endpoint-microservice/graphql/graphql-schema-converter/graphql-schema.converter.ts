@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 import { GraphQLSchema } from 'graphql/type';
 import { lexicographicSortSchema } from 'graphql/utilities';
+import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/common-schema.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import {
@@ -43,6 +44,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
     private readonly modelService: ModelService,
+    private readonly commonSchemaService: CommonSchemaService,
   ) {}
 
   private get context(): GraphQLSchemaConverterContext {
@@ -98,6 +100,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
   private async createSchema() {
     const validTables = createValidTables(this.context.tables);
 
+    this.commonSchemaService.createCommon();
     this.createValidTables(validTables);
     this.context.schema.resolveAllThunks();
     this.createQueries(validTables);

@@ -25,7 +25,7 @@ export type QueryModelField = (
 export class QueryModel {
   public fields = new Map<string, QueryModelField>();
 
-  constructor(private readonly schema: Schema) {}
+  constructor() {}
 
   public addField(field: QueryModelField) {
     if (this.fields.has(field.name)) {
@@ -90,10 +90,7 @@ export class TypeModel {
 
   public entity: TypeModelEntity | null = null;
 
-  constructor(
-    private readonly schema: Schema,
-    public readonly name: string,
-  ) {}
+  constructor(public readonly name: string) {}
 
   public addField(field: TypeModelField) {
     if (this.fields.has(field.name)) {
@@ -148,10 +145,7 @@ export type InputModelField = (
 export class InputModel {
   public fields = new Map<string, InputModelField>();
 
-  constructor(
-    private readonly schema: Schema,
-    public readonly name: string,
-  ) {}
+  constructor(public readonly name: string) {}
 
   public addField(field: InputModelField) {
     if (this.fields.has(field.name)) {
@@ -175,10 +169,7 @@ export class InputModel {
 export class EnumModel {
   public readonly values: string[] = [];
 
-  constructor(
-    private readonly schema: Schema,
-    public readonly name: string,
-  ) {}
+  constructor(public readonly name: string) {}
 
   public addValue(value: string) {
     this.values.push(value);
@@ -195,14 +186,13 @@ export class EnumModel {
 
 export class ScalarModel {
   constructor(
-    private readonly schema: Schema,
     public readonly name: string,
     public readonly scalar: GraphQLScalarType,
   ) {}
 }
 
 export class Schema {
-  public readonly query = new QueryModel(this);
+  public readonly query = new QueryModel();
 
   public readonly types = new Map<string, TypeModel>();
   public readonly inputs = new Map<string, InputModel>();
@@ -214,7 +204,7 @@ export class Schema {
       throw new Error(`Type with name "${name}" already exists`);
     }
 
-    const model = new TypeModel(this, name);
+    const model = new TypeModel(name);
 
     this.types.set(model.name, model);
 
@@ -236,7 +226,7 @@ export class Schema {
       throw new Error(`Input with name "${name}" already exists`);
     }
 
-    const model = new InputModel(this, name);
+    const model = new InputModel(name);
 
     this.inputs.set(model.name, model);
 
@@ -252,7 +242,7 @@ export class Schema {
       throw new Error(`Enum with name "${name}" already exists`);
     }
 
-    const model = new EnumModel(this, name);
+    const model = new EnumModel(name);
 
     this.enums.set(model.name, model);
 
@@ -268,7 +258,7 @@ export class Schema {
       throw new Error(`Scalar with name "${name}" already exists`);
     }
 
-    const model = new ScalarModel(this, name, scalar);
+    const model = new ScalarModel(name, scalar);
 
     this.scalars.set(model.name, model);
 
