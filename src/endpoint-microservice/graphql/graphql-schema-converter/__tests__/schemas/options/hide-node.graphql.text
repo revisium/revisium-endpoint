@@ -33,6 +33,25 @@ enum ProjectFilterStringMode {
   insensitive
 }
 
+input ProjectGetPostsInput {
+  after: String
+  first: Int
+  orderBy: [ProjectGetPostsOrderByInput!]
+  where: ProjectPostsWhereInput
+}
+
+enum ProjectGetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input ProjectGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: ProjectGetPostsOrderByField!
+}
+
 input ProjectGetUsersInput {
   after: String
   first: Int
@@ -75,6 +94,35 @@ type ProjectPageInfo {
   startCursor: String
 }
 
+type ProjectPostFlat {
+  name: String!
+}
+
+type ProjectPostFlatConnection {
+  edges: [ProjectPostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectPostFlatEdge {
+  cursor: String!
+  node: ProjectPostFlat!
+}
+
+input ProjectPostsWhereInput {
+  AND: [ProjectPostsWhereInput!]
+  NOT: [ProjectPostsWhereInput!]
+  OR: [ProjectPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
 enum ProjectSortOrder {
   asc
   desc
@@ -103,6 +151,7 @@ type ProjectUserFlat {
   firstName: String!
   imageIds: [String!]!
   lastName: String!
+  post: ProjectPostFlat!
   posts: [ProjectUserFlatPostsItems!]!
 }
 
@@ -152,6 +201,8 @@ input ProjectUsersWhereInput {
 
 type Query {
   _service: _Service!
+  postFlat(id: String!): ProjectPostFlat!
+  postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
   userFlat(id: String!): ProjectUserFlat!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }

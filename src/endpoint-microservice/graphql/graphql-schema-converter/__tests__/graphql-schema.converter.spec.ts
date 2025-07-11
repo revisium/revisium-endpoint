@@ -105,7 +105,7 @@ describe('GraphQL Schema Converter', () => {
   it('complex schema', async () => {
     const schema = await converter.convert(
       getContext({
-        tables: [getComplexSchema()],
+        tables: [...getComplexSchema()],
       }),
     );
     await check(schema, 'complex.graphql.text');
@@ -610,7 +610,7 @@ describe('GraphQL Schema Converter', () => {
     it('hide flat', async () => {
       const schema = await converter.convert(
         getContext({
-          tables: [getComplexSchema()],
+          tables: [...getComplexSchema()],
           options: {
             hideFlatTypes: true,
           },
@@ -622,7 +622,7 @@ describe('GraphQL Schema Converter', () => {
     it('hide node', async () => {
       const schema = await converter.convert(
         getContext({
-          tables: [getComplexSchema()],
+          tables: [...getComplexSchema()],
           options: {
             hideNodeTypes: true,
           },
@@ -635,7 +635,7 @@ describe('GraphQL Schema Converter', () => {
       await check(
         await converter.convert(
           getContext({
-            tables: [getComplexSchema()],
+            tables: [...getComplexSchema()],
             options: {
               prefixForTables: '',
             },
@@ -647,13 +647,39 @@ describe('GraphQL Schema Converter', () => {
       await check(
         await converter.convert(
           getContext({
-            tables: [getComplexSchema()],
+            tables: [...getComplexSchema()],
             options: {
               prefixForTables: 'Custom',
             },
           }),
         ),
         'options/prefix-for-table-2.graphql.text',
+      );
+    });
+
+    it('prefix for common', async () => {
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: '',
+            },
+          }),
+        ),
+        'options/prefix-for-common-1.graphql.text',
+      );
+
+      await check(
+        await converter.convert(
+          getContext({
+            tables: [...getComplexSchema()],
+            options: {
+              prefixForCommon: 'Custom',
+            },
+          }),
+        ),
+        'options/prefix-for-common-2.graphql.text',
       );
     });
   });

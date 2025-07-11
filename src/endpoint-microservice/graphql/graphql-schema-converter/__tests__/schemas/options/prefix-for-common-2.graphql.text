@@ -1,19 +1,9 @@
-"""
-A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-"""
-scalar DateTime
-
-"""
-The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-"""
-scalar JSON
-
-input ProjectBoolFilter {
+input CustomBoolFilter {
   equals: Boolean
   not: Boolean
 }
 
-input ProjectDateTimeFilter {
+input CustomDateTimeFilter {
   equals: String
   gt: String
   gte: String
@@ -23,15 +13,68 @@ input ProjectDateTimeFilter {
   notIn: [String!]
 }
 
-enum ProjectFilterJsonMode {
+enum CustomFilterJsonMode {
   default
   insensitive
 }
 
-enum ProjectFilterStringMode {
+enum CustomFilterStringMode {
   default
   insensitive
 }
+
+input CustomJsonFilter {
+  array_contains: [JSON!]
+  array_ends_with: JSON
+  array_starts_with: JSON
+  equals: JSON
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+  mode: CustomFilterJsonMode
+  path: [String!]
+  string_contains: String
+  string_ends_with: String
+  string_starts_with: String
+}
+
+type CustomPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+enum CustomSortOrder {
+  asc
+  desc
+}
+
+input CustomStringFilter {
+  contains: String
+  endsWith: String
+  equals: String
+  gt: String
+  gte: String
+  in: [String!]
+  lt: String
+  lte: String
+  mode: CustomFilterStringMode
+  not: String
+  notIn: [String!]
+  startsWith: String
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
 
 input ProjectGetPostsInput {
   after: String
@@ -48,7 +91,7 @@ enum ProjectGetPostsOrderByField {
 }
 
 input ProjectGetPostsOrderByInput {
-  direction: ProjectSortOrder!
+  direction: CustomSortOrder!
   field: ProjectGetPostsOrderByField!
 }
 
@@ -67,31 +110,8 @@ enum ProjectGetUsersOrderByField {
 }
 
 input ProjectGetUsersOrderByInput {
-  direction: ProjectSortOrder!
+  direction: CustomSortOrder!
   field: ProjectGetUsersOrderByField!
-}
-
-input ProjectJsonFilter {
-  array_contains: [JSON!]
-  array_ends_with: JSON
-  array_starts_with: JSON
-  equals: JSON
-  gt: Float
-  gte: Float
-  lt: Float
-  lte: Float
-  mode: ProjectFilterJsonMode
-  path: [String!]
-  string_contains: String
-  string_ends_with: String
-  string_starts_with: String
-}
-
-type ProjectPageInfo {
-  endCursor: String
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
 }
 
 type ProjectPost {
@@ -100,7 +120,7 @@ type ProjectPost {
 
 type ProjectPostConnection {
   edges: [ProjectPostEdge!]!
-  pageInfo: ProjectPageInfo!
+  pageInfo: CustomPageInfo!
   totalCount: Int!
 }
 
@@ -115,7 +135,7 @@ type ProjectPostFlat {
 
 type ProjectPostFlatConnection {
   edges: [ProjectPostFlatEdge!]!
-  pageInfo: ProjectPageInfo!
+  pageInfo: CustomPageInfo!
   totalCount: Int!
 }
 
@@ -139,34 +159,14 @@ input ProjectPostsWhereInput {
   AND: [ProjectPostsWhereInput!]
   NOT: [ProjectPostsWhereInput!]
   OR: [ProjectPostsWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
-}
-
-enum ProjectSortOrder {
-  asc
-  desc
-}
-
-input ProjectStringFilter {
-  contains: String
-  endsWith: String
-  equals: String
-  gt: String
-  gte: String
-  in: [String!]
-  lt: String
-  lte: String
-  mode: ProjectFilterStringMode
-  not: String
-  notIn: [String!]
-  startsWith: String
+  createdAt: CustomDateTimeFilter
+  createdId: CustomStringFilter
+  data: CustomJsonFilter
+  id: CustomStringFilter
+  publishedAt: CustomDateTimeFilter
+  readonly: CustomBoolFilter
+  updatedAt: CustomDateTimeFilter
+  versionId: CustomStringFilter
 }
 
 type ProjectUser {
@@ -197,7 +197,7 @@ type ProjectUserArrayItemsItemsItems {
 
 type ProjectUserConnection {
   edges: [ProjectUserEdge!]!
-  pageInfo: ProjectPageInfo!
+  pageInfo: CustomPageInfo!
   totalCount: Int!
 }
 
@@ -234,7 +234,7 @@ type ProjectUserFlatArrayItemsItemsItems {
 
 type ProjectUserFlatConnection {
   edges: [ProjectUserFlatEdge!]!
-  pageInfo: ProjectPageInfo!
+  pageInfo: CustomPageInfo!
   totalCount: Int!
 }
 
@@ -268,14 +268,14 @@ input ProjectUsersWhereInput {
   AND: [ProjectUsersWhereInput!]
   NOT: [ProjectUsersWhereInput!]
   OR: [ProjectUsersWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
+  createdAt: CustomDateTimeFilter
+  createdId: CustomStringFilter
+  data: CustomJsonFilter
+  id: CustomStringFilter
+  publishedAt: CustomDateTimeFilter
+  readonly: CustomBoolFilter
+  updatedAt: CustomDateTimeFilter
+  versionId: CustomStringFilter
 }
 
 type Query {

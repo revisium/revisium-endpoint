@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { getProjectName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getProjectName';
-import { getSafetyName } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/getSafetyName';
 import { capitalize } from 'src/endpoint-microservice/shared/utils/stringUtils';
 
 export type GraphQLTypeVariant =
@@ -65,10 +64,12 @@ export class NamingService {
     foreignKeyTableName: string,
     isFlat: boolean = false,
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     const capitalizedTable =
       foreignKeyTableName.charAt(0).toUpperCase() +
       foreignKeyTableName.slice(1);
+
     return `${formattedProject}${capitalizedTable}${isFlat ? 'Flat' : 'Node'}`;
   }
 
@@ -76,7 +77,8 @@ export class NamingService {
    * Generate system type names (shared across all tables)
    */
   public getSystemTypeName(systemType: 'pageInfo' | 'sortOrder'): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (systemType) {
       case 'pageInfo':
@@ -94,7 +96,8 @@ export class NamingService {
   public getSystemFilterTypeName(
     filterType: 'string' | 'bool' | 'dateTime' | 'json',
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (filterType) {
       case 'string':
@@ -114,7 +117,8 @@ export class NamingService {
    * Generate system filter mode enum names
    */
   public getSystemFilterModeEnumName(filterType: 'string' | 'json'): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
 
     switch (filterType) {
       case 'string':

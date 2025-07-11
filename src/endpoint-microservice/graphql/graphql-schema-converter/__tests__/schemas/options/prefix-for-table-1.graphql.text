@@ -3,6 +3,25 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+input GetPostsInput {
+  after: String
+  first: Int
+  orderBy: [GetPostsOrderByInput!]
+  where: PostsWhereInput
+}
+
+enum GetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input GetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: GetPostsOrderByField!
+}
+
 input GetUsersInput {
   after: String
   first: Int
@@ -26,6 +45,61 @@ input GetUsersOrderByInput {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
+
+type Post {
+  name: String!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type PostEdge {
+  cursor: String!
+  node: PostNode!
+}
+
+type PostFlat {
+  name: String!
+}
+
+type PostFlatConnection {
+  edges: [PostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type PostFlatEdge {
+  cursor: String!
+  node: PostFlat!
+}
+
+type PostNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: Post!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+input PostsWhereInput {
+  AND: [PostsWhereInput!]
+  NOT: [PostsWhereInput!]
+  OR: [PostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
 
 input ProjectBoolFilter {
   equals: Boolean
@@ -98,6 +172,10 @@ input ProjectStringFilter {
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
+  post(id: String!): PostNode!
+  postFlat(id: String!): PostFlat!
+  posts(data: GetPostsInput): PostConnection!
+  postsFlat(data: GetPostsInput): PostFlatConnection!
   user(id: String!): UserNode!
   userFlat(id: String!): UserFlat!
   users(data: GetUsersInput): UserConnection!
@@ -112,6 +190,7 @@ type User {
   firstName: String!
   imageIds: [String!]!
   lastName: String!
+  post: PostNode!
   posts: [UserPostsItems!]!
 }
 
@@ -148,6 +227,7 @@ type UserFlat {
   firstName: String!
   imageIds: [String!]!
   lastName: String!
+  post: PostFlat!
   posts: [UserFlatPostsItems!]!
 }
 
@@ -213,7 +293,7 @@ input UsersWhereInput {
 
 scalar _Any
 
-union _Entity = UserNode
+union _Entity = PostNode | UserNode
 
 type _Service {
   """

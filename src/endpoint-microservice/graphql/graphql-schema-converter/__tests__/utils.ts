@@ -7,33 +7,46 @@ import {
   getStringSchema,
 } from 'src/endpoint-microservice/shared/schema';
 
-export const getComplexSchema = (): ConverterTable => ({
-  id: 'user',
-  versionId: '1',
-  schema: getObjectSchema({
-    firstName: getStringSchema(),
-    lastName: getStringSchema(),
-    age: getNumberSchema(),
-    adult: getBooleanSchema(),
-    address: getObjectSchema({
-      zipCode: getNumberSchema(),
-      city: getStringSchema(),
-      nestedAddress: getObjectSchema({
-        zipCode: getStringSchema(),
+export const getComplexSchema = (): ConverterTable[] => {
+  const user: ConverterTable = {
+    id: 'user',
+    versionId: '1',
+    schema: getObjectSchema({
+      post: getStringSchema({ foreignKey: 'post' }),
+      firstName: getStringSchema(),
+      lastName: getStringSchema(),
+      age: getNumberSchema(),
+      adult: getBooleanSchema(),
+      address: getObjectSchema({
+        zipCode: getNumberSchema(),
+        city: getStringSchema(),
+        nestedAddress: getObjectSchema({
+          zipCode: getStringSchema(),
+        }),
       }),
-    }),
-    posts: getArraySchema(
-      getObjectSchema({ title: getStringSchema(), id: getStringSchema() }),
-    ),
-    array: getArraySchema(
-      getArraySchema(
+      posts: getArraySchema(
+        getObjectSchema({ title: getStringSchema(), id: getStringSchema() }),
+      ),
+      array: getArraySchema(
         getArraySchema(
-          getObjectSchema({
-            nested: getStringSchema(),
-          }),
+          getArraySchema(
+            getObjectSchema({
+              nested: getStringSchema(),
+            }),
+          ),
         ),
       ),
-    ),
-    imageIds: getArraySchema(getStringSchema()),
-  }),
-});
+      imageIds: getArraySchema(getStringSchema()),
+    }),
+  };
+
+  const post: ConverterTable = {
+    id: 'post',
+    versionId: '1',
+    schema: getObjectSchema({
+      name: getStringSchema(),
+    }),
+  };
+
+  return [user, post];
+};

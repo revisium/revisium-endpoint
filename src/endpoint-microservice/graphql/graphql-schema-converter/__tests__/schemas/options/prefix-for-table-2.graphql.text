@@ -1,3 +1,22 @@
+input CustomGetPostsInput {
+  after: String
+  first: Int
+  orderBy: [CustomGetPostsOrderByInput!]
+  where: CustomPostsWhereInput
+}
+
+enum CustomGetPostsOrderByField {
+  createdAt
+  id
+  publishedAt
+  updatedAt
+}
+
+input CustomGetPostsOrderByInput {
+  direction: ProjectSortOrder!
+  field: CustomGetPostsOrderByField!
+}
+
 input CustomGetUsersInput {
   after: String
   first: Int
@@ -17,6 +36,61 @@ input CustomGetUsersOrderByInput {
   field: CustomGetUsersOrderByField!
 }
 
+type CustomPost {
+  name: String!
+}
+
+type CustomPostConnection {
+  edges: [CustomPostEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type CustomPostEdge {
+  cursor: String!
+  node: CustomPostNode!
+}
+
+type CustomPostFlat {
+  name: String!
+}
+
+type CustomPostFlatConnection {
+  edges: [CustomPostFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type CustomPostFlatEdge {
+  cursor: String!
+  node: CustomPostFlat!
+}
+
+type CustomPostNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: CustomPost!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+input CustomPostsWhereInput {
+  AND: [CustomPostsWhereInput!]
+  NOT: [CustomPostsWhereInput!]
+  OR: [CustomPostsWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
 type CustomUser {
   address: CustomUserAddress!
   adult: Boolean!
@@ -25,6 +99,7 @@ type CustomUser {
   firstName: String!
   imageIds: [String!]!
   lastName: String!
+  post: CustomPostNode!
   posts: [CustomUserPostsItems!]!
 }
 
@@ -61,6 +136,7 @@ type CustomUserFlat {
   firstName: String!
   imageIds: [String!]!
   lastName: String!
+  post: CustomPostFlat!
   posts: [CustomUserFlatPostsItems!]!
 }
 
@@ -205,6 +281,10 @@ input ProjectStringFilter {
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
+  post(id: String!): CustomPostNode!
+  postFlat(id: String!): CustomPostFlat!
+  posts(data: CustomGetPostsInput): CustomPostConnection!
+  postsFlat(data: CustomGetPostsInput): CustomPostFlatConnection!
   user(id: String!): CustomUserNode!
   userFlat(id: String!): CustomUserFlat!
   users(data: CustomGetUsersInput): CustomUserConnection!
@@ -213,7 +293,7 @@ type Query {
 
 scalar _Any
 
-union _Entity = CustomUserNode
+union _Entity = CustomPostNode | CustomUserNode
 
 type _Service {
   """
