@@ -26,8 +26,8 @@ import {
 const FLAT_KEY = 'Flat';
 
 export interface CacheNode {
-  nodeType: TypeModel;
-  dataFlatRoot: TypeModelField;
+  nodeType?: TypeModel;
+  dataFlatRoot?: TypeModelField;
 }
 
 export interface GraphQLSchemaConverterContext extends ConverterContextType {
