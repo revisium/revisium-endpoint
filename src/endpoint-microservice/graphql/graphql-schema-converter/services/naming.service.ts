@@ -42,7 +42,8 @@ export class NamingService {
     processedTableName: string,
     variant: GraphQLTypeVariant = 'base',
   ): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
 
     switch (variant) {
       case 'base':
@@ -140,22 +141,11 @@ export class NamingService {
   }
 
   /**
-   * Generate capitalized table name with postfix
-   */
-  public getCapitalizedTableNameWithPostfix(
-    tableName: string,
-    postfix: string,
-  ): string {
-    const capitalizedTable =
-      tableName.charAt(0).toUpperCase() + tableName.slice(1);
-    return `${capitalizedTable}${postfix}`;
-  }
-
-  /**
    * Generate input type names for GraphQL queries
    */
   public getGetInputTypeName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}Input`;
   }
 
@@ -163,7 +153,8 @@ export class NamingService {
    * Generate order by field enum names
    */
   public getOrderByFieldEnumName(tableName: string): string {
-    const formattedProject = this.getProjectName();
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
     return `${formattedProject}Get${tableName}OrderByField`;
   }
 

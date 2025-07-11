@@ -95,99 +95,6 @@ input ProjectStringFilter {
   startsWith: String
 }
 
-type ProjectUser {
-  address: ProjectUserAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  posts: [ProjectUserPostsItems!]!
-}
-
-type ProjectUserAddress {
-  city: String!
-  nestedAddress: ProjectUserAddressNestedaddress!
-  zipCode: Float!
-}
-
-type ProjectUserAddressNestedaddress {
-  zipCode: String!
-}
-
-type ProjectUserArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserConnection {
-  edges: [ProjectUserEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserEdge {
-  cursor: String!
-  node: ProjectUserNode!
-}
-
-type ProjectUserFlat {
-  address: ProjectUserFlatAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserFlatArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  posts: [ProjectUserFlatPostsItems!]!
-}
-
-type ProjectUserFlatAddress {
-  city: String!
-  nestedAddress: ProjectUserFlatAddressNestedaddress!
-  zipCode: Float!
-}
-
-type ProjectUserFlatAddressNestedaddress {
-  zipCode: String!
-}
-
-type ProjectUserFlatArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserFlatConnection {
-  edges: [ProjectUserFlatEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserFlatEdge {
-  cursor: String!
-  node: ProjectUserFlat!
-}
-
-type ProjectUserFlatPostsItems {
-  id: String!
-  title: String!
-}
-
-type ProjectUserNode {
-  createdAt: DateTime!
-  createdId: String!
-  data: ProjectUser!
-  id: String!
-  json: JSON!
-  publishedAt: DateTime!
-  updatedAt: DateTime!
-  versionId: String!
-}
-
-type ProjectUserPostsItems {
-  id: String!
-  title: String!
-}
-
 input ProjectUsersWhereInput {
   AND: [ProjectUsersWhereInput!]
   NOT: [ProjectUsersWhereInput!]
@@ -205,15 +112,108 @@ input ProjectUsersWhereInput {
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
-  user(id: String!): ProjectUserNode!
-  userFlat(id: String!): ProjectUserFlat!
-  users(data: ProjectGetUsersInput): ProjectUserConnection!
-  usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
+  user(id: String!): UserNode!
+  userFlat(id: String!): UserFlat!
+  users(data: ProjectGetUsersInput): UserConnection!
+  usersFlat(data: ProjectGetUsersInput): UserFlatConnection!
+}
+
+type User {
+  address: UserAddress!
+  adult: Boolean!
+  age: Float!
+  array: [UserArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [UserPostsItems!]!
+}
+
+type UserAddress {
+  city: String!
+  nestedAddress: UserAddressNestedaddress!
+  zipCode: Float!
+}
+
+type UserAddressNestedaddress {
+  zipCode: String!
+}
+
+type UserArrayItemsItemsItems {
+  nested: String!
+}
+
+type UserConnection {
+  edges: [UserEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type UserEdge {
+  cursor: String!
+  node: UserNode!
+}
+
+type UserFlat {
+  address: UserFlatAddress!
+  adult: Boolean!
+  age: Float!
+  array: [UserFlatArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  posts: [UserFlatPostsItems!]!
+}
+
+type UserFlatAddress {
+  city: String!
+  nestedAddress: UserFlatAddressNestedaddress!
+  zipCode: Float!
+}
+
+type UserFlatAddressNestedaddress {
+  zipCode: String!
+}
+
+type UserFlatArrayItemsItemsItems {
+  nested: String!
+}
+
+type UserFlatConnection {
+  edges: [UserFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type UserFlatEdge {
+  cursor: String!
+  node: UserFlat!
+}
+
+type UserFlatPostsItems {
+  id: String!
+  title: String!
+}
+
+type UserNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: User!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type UserPostsItems {
+  id: String!
+  title: String!
 }
 
 scalar _Any
 
-union _Entity = ProjectUserNode
+union _Entity = UserNode
 
 type _Service {
   """

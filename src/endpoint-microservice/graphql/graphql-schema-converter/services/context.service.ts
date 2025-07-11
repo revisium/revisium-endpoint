@@ -31,4 +31,12 @@ export class ContextService {
   public get hideFlatTypes() {
     return this.context.options?.hideFlatTypes;
   }
+
+  public get prefixForTables() {
+    return this.context.options?.prefixForTables;
+  }
+
+  public get prefixForCommon() {
+    return this.context.options?.prefixForCommon;
+  }
 }
