@@ -1,11 +1,13 @@
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Options } from 'src/endpoint-microservice/shared/converter';
 
 @Injectable()
-export class GraphQLOptionsService implements OnApplicationBootstrap {
+export class GraphQLOptionsService {
+  private readonly logger = new Logger(GraphQLOptionsService.name);
+
   private options: Options | undefined;
 
-  public onApplicationBootstrap(): void {
+  constructor() {
     this.validateAndLoadOptions();
   }
 
@@ -68,6 +70,8 @@ export class GraphQLOptionsService implements OnApplicationBootstrap {
     this.validatePostfixMutualExclusivity(envOptions);
 
     this.options = hasAnyOption ? envOptions : undefined;
+
+    this.logger.log(this.options);
   }
 
   private parseBoolean(value: string, envName: string): boolean {
