@@ -2,10 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GraphQLOptionsService } from '../graphql-options.service';
 
 describe('GraphQLOptionsService', () => {
-  let service: GraphQLOptionsService;
   let originalEnv: NodeJS.ProcessEnv;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     originalEnv = { ...process.env };
 
     Object.keys(process.env).forEach((key) => {
@@ -13,30 +12,31 @@ describe('GraphQLOptionsService', () => {
         delete process.env[key];
       }
     });
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [GraphQLOptionsService],
-    }).compile();
-
-    service = module.get<GraphQLOptionsService>(GraphQLOptionsService);
   });
 
   afterEach(() => {
     process.env = originalEnv;
   });
 
+  const createService = async (): Promise<GraphQLOptionsService> => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [GraphQLOptionsService],
+    }).compile();
+
+    return module.get<GraphQLOptionsService>(GraphQLOptionsService);
+  };
+
   describe('getOptions', () => {
-    it('should return undefined when no GRAPHQL_* environment variables are set', () => {
-      service.onApplicationBootstrap();
+    it('should return undefined when no GRAPHQL_* environment variables are set', async () => {
+      const service = await createService();
       expect(service.getOptions()).toBeUndefined();
     });
 
-    it('should return options when GRAPHQL_* environment variables are set', () => {
+    it('should return options when GRAPHQL_* environment variables are set', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_FLAT_POSTFIX = 'Custom';
 
-      service.onApplicationBootstrap();
-
+      const service = await createService();
       const options = service.getOptions();
       expect(options).toEqual({
         hideNodeTypes: true,
@@ -44,7 +44,7 @@ describe('GraphQLOptionsService', () => {
       });
     });
 
-    it('should handle all supported environment variables', () => {
+    it('should handle all supported environment variables', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_HIDE_FLAT_TYPES = 'false';
       process.env.GRAPHQL_FLAT_POSTFIX = 'Flat';
@@ -52,8 +52,7 @@ describe('GraphQLOptionsService', () => {
       process.env.GRAPHQL_PREFIX_FOR_TABLES = 'Custom';
       process.env.GRAPHQL_PREFIX_FOR_COMMON = 'Common';
 
-      service.onApplicationBootstrap();
-
+      const service = await createService();
       const options = service.getOptions();
       expect(options).toEqual({
         hideNodeTypes: true,
@@ -67,7 +66,7 @@ describe('GraphQLOptionsService', () => {
   });
 
   describe('boolean validation', () => {
-    it('should parse valid boolean values', () => {
+    it('should parse valid boolean values', async () => {
       const testCases = [
         { input: 'true', expected: true },
         { input: 'TRUE', expected: true },
@@ -81,27 +80,39 @@ describe('GraphQLOptionsService', () => {
         { input: ' false ', expected: false },
       ];
 
-      testCases.forEach(({ input, expected }) => {
+      for (const { input, expected } of testCases) {
+        Object.keys(process.env).forEach((key) => {
+          if (key.startsWith('GRAPHQL_')) {
+            delete process.env[key];
+          }
+        });
+
         process.env.GRAPHQL_HIDE_NODE_TYPES = input;
-        service.onApplicationBootstrap();
+        const service = await createService();
         expect(service.getOptions()?.hideNodeTypes).toBe(expected);
-      });
+      }
     });
 
-    it('should throw error for invalid boolean values', () => {
+    it('should throw error for invalid boolean values', async () => {
       const invalidValues = ['yes', 'no', 'invalid', '2', 'truthy', 'falsy'];
 
-      invalidValues.forEach((value) => {
+      for (const value of invalidValues) {
+        Object.keys(process.env).forEach((key) => {
+          if (key.startsWith('GRAPHQL_')) {
+            delete process.env[key];
+          }
+        });
+
         process.env.GRAPHQL_HIDE_NODE_TYPES = value;
-        expect(() => service.onApplicationBootstrap()).toThrow(
+        await expect(createService()).rejects.toThrow(
           `Invalid boolean value for GRAPHQL_HIDE_NODE_TYPES: ${value}. Expected: true, false, 1, or 0`,
         );
-      });
+      }
     });
   });
 
   describe('GraphQL identifier validation', () => {
-    it('should accept valid GraphQL identifiers', () => {
+    it('should accept valid GraphQL identifiers', async () => {
       const validIdentifiers = [
         '',
         '_',
@@ -114,15 +125,20 @@ describe('GraphQLOptionsService', () => {
         'MyCustomPrefix',
       ];
 
-      validIdentifiers.forEach((identifier) => {
+      for (const identifier of validIdentifiers) {
+        Object.keys(process.env).forEach((key) => {
+          if (key.startsWith('GRAPHQL_')) {
+            delete process.env[key];
+          }
+        });
+
         process.env.GRAPHQL_PREFIX_FOR_TABLES = identifier;
-        expect(() => service.onApplicationBootstrap()).not.toThrow();
-        service.onApplicationBootstrap();
+        const service = await createService();
         expect(service.getOptions()?.prefixForTables).toBe(identifier);
-      });
+      }
     });
 
-    it('should reject invalid GraphQL identifiers', () => {
+    it('should reject invalid GraphQL identifiers', async () => {
       const invalidIdentifiers = [
         '123',
         '123abc',
@@ -134,15 +150,21 @@ describe('GraphQLOptionsService', () => {
         'abc$def',
       ];
 
-      invalidIdentifiers.forEach((identifier) => {
+      for (const identifier of invalidIdentifiers) {
+        Object.keys(process.env).forEach((key) => {
+          if (key.startsWith('GRAPHQL_')) {
+            delete process.env[key];
+          }
+        });
+
         process.env.GRAPHQL_PREFIX_FOR_TABLES = identifier;
-        expect(() => service.onApplicationBootstrap()).toThrow(
+        await expect(createService()).rejects.toThrow(
           `Invalid GraphQL identifier for GRAPHQL_PREFIX_FOR_TABLES: ${identifier}`,
         );
-      });
+      }
     });
 
-    it('should validate all prefix/postfix environment variables', () => {
+    it('should validate all prefix/postfix environment variables', async () => {
       const envVars = [
         'GRAPHQL_FLAT_POSTFIX',
         'GRAPHQL_NODE_POSTFIX',
@@ -150,120 +172,113 @@ describe('GraphQLOptionsService', () => {
         'GRAPHQL_PREFIX_FOR_COMMON',
       ];
 
-      envVars.forEach((envVar) => {
+      for (const envVar of envVars) {
+        Object.keys(process.env).forEach((key) => {
+          if (key.startsWith('GRAPHQL_')) {
+            delete process.env[key];
+          }
+        });
+
         process.env[envVar] = 'invalid-identifier';
-        expect(() => service.onApplicationBootstrap()).toThrow(
+        await expect(createService()).rejects.toThrow(
           `Invalid GraphQL identifier for ${envVar}: invalid-identifier`,
         );
-        delete process.env[envVar];
-      });
+      }
     });
   });
 
   describe('postfix mutual exclusivity validation', () => {
-    it('should allow flatPostfix with non-empty value', () => {
+    it('should allow flatPostfix with non-empty value', async () => {
       process.env.GRAPHQL_FLAT_POSTFIX = 'Custom';
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
 
-      service.onApplicationBootstrap();
+      const service = await createService();
       expect(service.getOptions()?.flatPostfix).toBe('Custom');
     });
 
-    it('should allow nodePostfix with non-empty value', () => {
+    it('should allow nodePostfix with non-empty value', async () => {
       process.env.GRAPHQL_NODE_POSTFIX = 'Detailed';
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
 
-      service.onApplicationBootstrap();
+      const service = await createService();
       expect(service.getOptions()?.nodePostfix).toBe('Detailed');
     });
 
-    it('should allow one empty and one non-empty postfix', () => {
+    it('should allow one empty and one non-empty postfix', async () => {
       process.env.GRAPHQL_FLAT_POSTFIX = '';
       process.env.GRAPHQL_NODE_POSTFIX = 'Custom';
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
 
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.flatPostfix).toBe('');
       expect(options?.nodePostfix).toBe('Custom');
     });
 
-    it('should allow both non-empty postfixes', () => {
+    it('should allow both non-empty postfixes', async () => {
       process.env.GRAPHQL_FLAT_POSTFIX = 'Flat';
       process.env.GRAPHQL_NODE_POSTFIX = 'Node';
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
 
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.flatPostfix).toBe('Flat');
       expect(options?.nodePostfix).toBe('Node');
     });
 
-    it('should reject both postfixes being empty', () => {
+    it('should reject both postfixes being empty', async () => {
       process.env.GRAPHQL_FLAT_POSTFIX = '';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).toThrow(
+      await expect(createService()).rejects.toThrow(
         'GRAPHQL_FLAT_POSTFIX and GRAPHQL_NODE_POSTFIX cannot both be empty at the same time. At least one must have a value or be undefined.',
       );
     });
 
-    it('should reject flat postfix being empty when node postfix is undefined', () => {
+    it('should reject flat postfix being empty when node postfix is undefined', async () => {
       process.env.GRAPHQL_FLAT_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).toThrow(
+      await expect(createService()).rejects.toThrow(
         'Conflicting postfix configuration: at least one postfix must have a value when the other is empty.',
       );
     });
 
-    it('should reject node postfix being empty when flat postfix is undefined', () => {
+    it('should reject node postfix being empty when flat postfix is undefined', async () => {
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).toThrow(
+      await expect(createService()).rejects.toThrow(
         'Conflicting postfix configuration: at least one postfix must have a value when the other is empty.',
       );
     });
 
-    it('should allow undefined postfixes (not set)', () => {
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+    it('should allow undefined postfixes (not set)', async () => {
+      const service = await createService();
       expect(service.getOptions()).toBeUndefined();
     });
 
-    it('should allow flat postfix empty when node types are hidden', () => {
+    it('should allow flat postfix empty when node types are hidden', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_FLAT_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.hideNodeTypes).toBe(true);
       expect(options?.flatPostfix).toBe('');
     });
 
-    it('should allow node postfix empty when flat types are hidden', () => {
+    it('should allow node postfix empty when flat types are hidden', async () => {
       process.env.GRAPHQL_HIDE_FLAT_TYPES = 'true';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.hideFlatTypes).toBe(true);
       expect(options?.nodePostfix).toBe('');
     });
 
-    it('should allow both postfixes empty when both types are hidden', () => {
+    it('should allow both postfixes empty when both types are hidden', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_HIDE_FLAT_TYPES = 'true';
       process.env.GRAPHQL_FLAT_POSTFIX = '';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.hideNodeTypes).toBe(true);
       expect(options?.hideFlatTypes).toBe(true);
@@ -271,26 +286,22 @@ describe('GraphQLOptionsService', () => {
       expect(options?.nodePostfix).toBe('');
     });
 
-    it('should allow flat postfix empty and node undefined when node types are hidden', () => {
+    it('should allow flat postfix empty and node undefined when node types are hidden', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_FLAT_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.hideNodeTypes).toBe(true);
       expect(options?.flatPostfix).toBe('');
       expect(options?.nodePostfix).toBeUndefined();
     });
 
-    it('should allow node postfix empty and flat undefined when flat types are hidden', () => {
+    it('should allow node postfix empty and flat undefined when flat types are hidden', async () => {
       process.env.GRAPHQL_HIDE_FLAT_TYPES = 'true';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options?.hideFlatTypes).toBe(true);
       expect(options?.nodePostfix).toBe('');
@@ -299,11 +310,11 @@ describe('GraphQLOptionsService', () => {
   });
 
   describe('integration tests', () => {
-    it('should work with real environment variable scenarios', () => {
+    it('should work with real environment variable scenarios', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_HIDE_FLAT_TYPES = 'false';
 
-      service.onApplicationBootstrap();
+      let service = await createService();
       let options = service.getOptions();
       expect(options).toEqual({
         hideNodeTypes: true,
@@ -320,7 +331,7 @@ describe('GraphQLOptionsService', () => {
       process.env.GRAPHQL_FLAT_POSTFIX = 'Flattened';
       process.env.GRAPHQL_NODE_POSTFIX = 'Detailed';
 
-      service.onApplicationBootstrap();
+      service = await createService();
       options = service.getOptions();
       expect(options).toEqual({
         prefixForTables: 'Custom',
@@ -329,15 +340,13 @@ describe('GraphQLOptionsService', () => {
       });
     });
 
-    it('should handle microservice startup scenario', () => {
+    it('should handle microservice startup scenario', async () => {
       process.env.GRAPHQL_PREFIX_FOR_TABLES = '';
       process.env.GRAPHQL_PREFIX_FOR_COMMON = '';
       process.env.GRAPHQL_FLAT_POSTFIX = 'Custom';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      const service = await createService();
       const options = service.getOptions();
       expect(options).toEqual({
         prefixForTables: '',
@@ -347,13 +356,11 @@ describe('GraphQLOptionsService', () => {
       });
     });
 
-    it('should handle hide flag scenarios correctly', () => {
+    it('should handle hide flag scenarios correctly', async () => {
       process.env.GRAPHQL_HIDE_NODE_TYPES = 'true';
       process.env.GRAPHQL_NODE_POSTFIX = '';
 
-      expect(() => service.onApplicationBootstrap()).not.toThrow();
-
-      service.onApplicationBootstrap();
+      let service = await createService();
       let options = service.getOptions();
       expect(options).toEqual({
         hideNodeTypes: true,
@@ -370,7 +377,7 @@ describe('GraphQLOptionsService', () => {
       process.env.GRAPHQL_FLAT_POSTFIX = '';
       process.env.GRAPHQL_PREFIX_FOR_TABLES = 'Custom';
 
-      service.onApplicationBootstrap();
+      service = await createService();
       options = service.getOptions();
       expect(options).toEqual({
         hideFlatTypes: true,
