@@ -4,14 +4,9 @@ import { GraphQLSchema } from 'graphql/type';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
+import { GraphQLOptionsService } from 'src/endpoint-microservice/graphql/services/graphql-options.service';
 import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
-
-export type GetJsonSchemasReturnType = {
-  id: string;
-  versionId: string;
-  data: JsonSchema;
-}[];
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
@@ -22,6 +17,7 @@ export class GetGraphqlSchemaHandler
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly converter: GraphQLSchemaConverter,
+    private readonly optionsService: GraphQLOptionsService,
   ) {}
 
   public async execute({
@@ -40,6 +36,7 @@ export class GetGraphqlSchemaHandler
         versionId: table.versionId,
         schema: table.data,
       })),
+      options: this.optionsService.getOptions(),
     });
   }
 

@@ -8,6 +8,7 @@ import { GraphqlEndpointController } from 'src/endpoint-microservice/graphql/gra
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 import { GraphqlSchemaConverterModule } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema-converter.module';
 import { GRAPHQL_QUERIES } from 'src/endpoint-microservice/graphql/queries/handlers';
+import { GraphQLOptionsService } from 'src/endpoint-microservice/graphql/services/graphql-options.service';
 import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module';
 
 @Module({
@@ -22,7 +23,12 @@ import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module'
     MetricsModule,
     GraphqlSchemaConverterModule,
   ],
-  providers: [GraphqlEndpointService, ...GRAPHQL_COMMANDS, ...GRAPHQL_QUERIES],
+  providers: [
+    GraphqlEndpointService,
+    GraphQLOptionsService,
+    ...GRAPHQL_COMMANDS,
+    ...GRAPHQL_QUERIES,
+  ],
   controllers: [GraphqlEndpointController],
 })
 export class GraphqlModule implements OnApplicationShutdown {
