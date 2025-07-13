@@ -27,17 +27,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.11.1
+
       - name: Create test .env
         uses: canastro/copy-file-action@master
         with:
           source: '.env.example'
           target: '.env'
+
       - run: npm ci
+
       - run: npm run prisma:generate
-      - run: npm test
+
+      - run: npm run test:cov
+
       - run: npm run lint:ci
+
       - run: npm run tsc
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: revisium/revisium-endpoint

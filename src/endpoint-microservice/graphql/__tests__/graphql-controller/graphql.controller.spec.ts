@@ -5,6 +5,7 @@ import { gql } from 'src/__tests__/utils/gql';
 import { graphqlQuery } from 'src/__tests__/utils/queryTest';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
+import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
 import { CreateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/commands/impl';
 import {
@@ -20,6 +21,7 @@ import {
   REVISION_ID,
   POST_TABLE_ID,
   USER_TABLE_ID,
+  createMockPrismaService,
 } from './test-utils';
 
 describe('graphql controller', () => {
@@ -405,6 +407,8 @@ describe('graphql controller', () => {
       .useValue(mockInternalCoreApiService)
       .overrideProvider(ProxyCoreApiService)
       .useValue(mockProxyCoreApiService)
+      .overrideProvider(PrismaService)
+      .useValue(createMockPrismaService())
       .compile();
 
     app = moduleFixture.createNestApplication();
