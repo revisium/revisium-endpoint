@@ -38,7 +38,7 @@ jobs:
 
       - run: npm run prisma:generate
 
-      - run: npm test
+      - run: npm run test:cov
 
       - run: npm run lint:ci
 
