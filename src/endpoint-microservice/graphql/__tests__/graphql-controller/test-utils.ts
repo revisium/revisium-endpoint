@@ -276,3 +276,9 @@ export const createMockProxyCoreApiService = () => ({
     row: createRowMock(),
   },
 });
+
+export const createMockPrismaService = () => ({
+  endpoint: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+});
