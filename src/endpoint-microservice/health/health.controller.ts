@@ -17,7 +17,7 @@ export class HealthController {
     private readonly coreApi: CoreApiCheck,
   ) {}
 
-  @Get('liveness')
+  @Get('readiness')
   @HealthCheck()
   liveness() {
     const indicators: HealthIndicatorFunction[] = [
@@ -29,7 +29,7 @@ export class HealthController {
     return this.health.check(indicators);
   }
 
-  @Get('readiness')
+  @Get('liveness')
   @HealthCheck()
   readiness() {
     return this.health.check([]);
