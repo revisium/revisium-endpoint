@@ -34,6 +34,7 @@ query GetUser($id: String!) {
 ```
 
 Variables:
+
 ```json
 {
   "id": "user-123"
@@ -89,10 +90,7 @@ The API implements Relay-style pagination with connections, edges, and cursors.
 
 ```graphql
 query GetUsersWithPagination {
-  users(data: {
-    first: 10,
-    after: "cursor-string"
-  }) {
+  users(data: { first: 10, after: "cursor-string" }) {
     edges {
       node {
         id
@@ -113,8 +111,6 @@ query GetUsersWithPagination {
 }
 ```
 
-**Note**: The API currently only supports the `last` parameter for backward pagination. The `before` parameter is not supported due to limitations in the Core API.
-
 ## Filtering
 
 The API provides comprehensive filtering capabilities for all data types.
@@ -123,15 +119,7 @@ The API provides comprehensive filtering capabilities for all data types.
 
 ```graphql
 query GetUsersFiltered {
-  users(data: {
-    where: {
-      data: {
-        name: {
-          equals: "John"
-        }
-      }
-    }
-  }) {
+  users(data: { where: { data: { path: ["name"], equals: "John" } } }) {
     edges {
       node {
         id
@@ -146,6 +134,7 @@ query GetUsersFiltered {
 ```
 
 Other string filter options:
+
 - `contains: "substring"`
 - `startsWith: "prefix"`
 - `endsWith: "suffix"`
@@ -157,16 +146,7 @@ Other string filter options:
 
 ```graphql
 query GetUsersByAge {
-  users(data: {
-    where: {
-      data: {
-        age: {
-          gte: 18
-          lt: 65
-        }
-      }
-    }
-  }) {
+  users(data: { where: { data: { path: ["age"], gte: 18, lt: 65 } } }) {
     edges {
       node {
         id
@@ -182,6 +162,7 @@ query GetUsersByAge {
 ```
 
 Other number filter options:
+
 - `equals: 42`
 - `gt: 10`
 - `gte: 10`
@@ -194,15 +175,7 @@ Other number filter options:
 
 ```graphql
 query GetActiveUsers {
-  users(data: {
-    where: {
-      data: {
-        active: {
-          equals: true
-        }
-      }
-    }
-  }) {
+  users(data: { where: { data: { path: ["active"], equals: true } } }) {
     edges {
       node {
         id
@@ -221,13 +194,7 @@ query GetActiveUsers {
 
 ```graphql
 query GetRecentUsers {
-  users(data: {
-    where: {
-      createdAt: {
-        gte: "2023-01-01T00:00:00Z"
-      }
-    }
-  }) {
+  users(data: { where: { createdAt: { gte: "2023-01-01T00:00:00Z" } } }) {
     edges {
       node {
         id
@@ -248,44 +215,22 @@ Using AND, OR, and NOT operators:
 
 ```graphql
 query GetComplexFilteredUsers {
-  users(data: {
-    where: {
-      AND: [
-        {
-          data: {
-            age: {
-              gte: 18
-            }
+  users(
+    data: {
+      where: {
+        AND: [
+          { data: { age: { gte: 18 } } }
+          {
+            OR: [
+              { data: { name: { contains: "John" } } }
+              { data: { email: { endsWith: "@example.com" } } }
+            ]
           }
-        },
-        {
-          OR: [
-            {
-              data: {
-                name: {
-                  contains: "John"
-                }
-              }
-            },
-            {
-              data: {
-                email: {
-                  endsWith: "@example.com"
-                }
-              }
-            }
-          ]
-        }
-      ],
-      NOT: {
-        data: {
-          suspended: {
-            equals: true
-          }
-        }
+        ]
+        NOT: { data: { suspended: { equals: true } } }
       }
     }
-  }) {
+  ) {
     edges {
       node {
         id
@@ -309,14 +254,7 @@ The API supports sorting by multiple fields in ascending or descending order.
 
 ```graphql
 query GetUsersSorted {
-  users(data: {
-    orderBy: [
-      {
-        field: createdAt
-        direction: desc
-      }
-    ]
-  }) {
+  users(data: { orderBy: [{ field: createdAt, direction: desc }] }) {
     edges {
       node {
         id
@@ -335,18 +273,14 @@ query GetUsersSorted {
 
 ```graphql
 query GetUsersMultiSorted {
-  users(data: {
-    orderBy: [
-      {
-        field: createdAt
-        direction: asc
-      },
-      {
-        field: id
-        direction: asc
-      }
-    ]
-  }) {
+  users(
+    data: {
+      orderBy: [
+        { field: createdAt, direction: asc }
+        { field: id, direction: asc }
+      ]
+    }
+  ) {
     edges {
       node {
         id
@@ -393,8 +327,6 @@ query GetUserWithPosts {
 }
 ```
 
-
-
 ## Flat vs Node Types
 
 The API generates two representations for each entity to suit different use cases:
@@ -417,6 +349,7 @@ type ProjectUserNode {
 ```
 
 **System Fields in Node Types:**
+
 - `id`: Unique identifier for the entity
 - `createdAt`: Timestamp when the entity was created
 - `createdId`: ID of the user who created the entity
