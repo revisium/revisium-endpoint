@@ -219,15 +219,15 @@ query GetComplexFilteredUsers {
     data: {
       where: {
         AND: [
-          { data: { age: { gte: 18 } } }
+          { data: { path: ["age"], gte: 18 } }
           {
             OR: [
-              { data: { name: { contains: "John" } } }
-              { data: { email: { endsWith: "@example.com" } } }
+              { data: { path: ["name"], contains: "John" } }
+                { data: { path: ["email"], endsWith: "@example.com" } }
             ]
           }
         ]
-        NOT: { data: { suspended: { equals: true } } }
+        NOT: { data: { path: ["suspended"], equals: true } }
       }
     }
   ) {
