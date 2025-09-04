@@ -99,7 +99,7 @@ type MyProjectUserNode {
 }
 ```
 
-Node types are useful when you need access to system metadata about entities, such as creation timestamps, version information, and raw JSON data.
+Node types are useful when you need access to system metadata about entities, such as creation timestamps, version information, and raw JSON data. They implement the Apollo Federation entity interface for distributed GraphQL architectures.
 
 ### Flat Types
 
@@ -155,6 +155,7 @@ Node types contain several system fields that provide metadata about each entity
 | `createdId` | `String!` | ID of the user who created the entity |
 | `updatedAt` | `DateTime!` | Timestamp when the entity was last updated |
 | `publishedAt` | `DateTime!` | Timestamp when the entity was published |
+| `readonly` | `Boolean!` | Whether the entity is read-only |
 | `versionId` | `String!` | Version identifier for the entity |
 | `json` | `JSON!` | Raw JSON representation of the entity data |
 | `data` | `EntityType!` | The actual entity data |

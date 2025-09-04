@@ -113,33 +113,7 @@ query GetUsersWithPagination {
 }
 ```
 
-### Backward Pagination
-
-```graphql
-query GetUsersWithBackwardPagination {
-  users(data: {
-    last: 10,
-    before: "cursor-string"
-  }) {
-    edges {
-      node {
-        id
-        data {
-          name
-        }
-      }
-      cursor
-    }
-    pageInfo {
-      hasNextPage
-      hasPreviousPage
-      startCursor
-      endCursor
-    }
-    totalCount
-  }
-}
-```
+**Note**: The API currently only supports the `last` parameter for backward pagination. The `before` parameter is not supported due to limitations in the Core API.
 
 ## Filtering
 
@@ -364,11 +338,11 @@ query GetUsersMultiSorted {
   users(data: {
     orderBy: [
       {
-        field: lastName
+        field: createdAt
         direction: asc
       },
       {
-        field: firstName
+        field: id
         direction: asc
       }
     ]
@@ -376,6 +350,7 @@ query GetUsersMultiSorted {
     edges {
       node {
         id
+        createdAt
         data {
           firstName
           lastName

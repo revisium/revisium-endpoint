@@ -24,7 +24,7 @@ The GraphQL module can be configured through environment variables to customize 
 | GRAPHQL_HIDE_NODE_TYPES | Boolean | false | Hide Node types (with metadata) from the schema |
 | GRAPHQL_HIDE_FLAT_TYPES | Boolean | false | Hide Flat types (without metadata) from the schema |
 | GRAPHQL_FLAT_POSTFIX | String | "Flat" | Postfix for flat types |
-| GRAPHQL_NODE_POSTFIX | String | "" | Postfix for node types |
+| GRAPHQL_NODE_POSTFIX | String | "" | Postfix for node types (results in "Node" postfix when empty) |
 
 ### Naming Configuration
 
@@ -69,7 +69,7 @@ Note: If you set this to an empty string, you must either:
 
 #### GRAPHQL_NODE_POSTFIX
 
-Controls the postfix used for node types. The default is an empty string, resulting in types like `UserNode`. You can customize this to any valid GraphQL identifier.
+Controls the postfix used for node types. The default is an empty string, which results in types like `UserNode` (the "Node" part is always added). You can customize this to any valid GraphQL identifier.
 
 Example:
 ```bash

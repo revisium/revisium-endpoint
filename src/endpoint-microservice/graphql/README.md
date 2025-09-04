@@ -43,7 +43,7 @@ For detailed information, please refer to the following documentation files:
 
 The GraphQL module follows a modular architecture with several key components:
 
-```
+```text
 GraphQL Module
 ├── GraphQLSchemaConverter - Main conversion logic
 ├── SchemaToBuilderConverter - Converts internal schema to Pothos schema

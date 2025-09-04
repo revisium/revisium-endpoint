@@ -35,7 +35,7 @@ The core functionality of the module is converting JSON schemas (representing da
 The system generates multiple representations for each table:
 
 1. **Base Types**: Represent the core data structure
-2. **Node Types**: Extend base types with system metadata (implements Relay Node interface)
+2. **Node Types**: Extend base types with system metadata (implements Apollo Federation entity interface)
 3. **Flat Types**: Simplified versions without metadata
 4. **Connection Types**: Implement pagination using Relay connections
 5. **Input Types**: For filtering, sorting, and querying
