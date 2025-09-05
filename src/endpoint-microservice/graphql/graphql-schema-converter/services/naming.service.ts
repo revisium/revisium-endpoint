@@ -88,7 +88,13 @@ export class NamingService {
   /**
    * Generate system type names (shared across all tables)
    */
-  public getSystemTypeName(systemType: 'pageInfo' | 'sortOrder'): string {
+  public getSystemTypeName(
+    systemType:
+      | 'pageInfo'
+      | 'sortOrder'
+      | 'orderFieldType'
+      | 'orderFieldAggregation',
+  ): string {
     const formattedProject =
       this.contextService.prefixForCommon ?? this.getProjectName();
 
@@ -97,6 +103,10 @@ export class NamingService {
         return `${formattedProject}PageInfo`;
       case 'sortOrder':
         return `${formattedProject}SortOrder`;
+      case 'orderFieldType':
+        return `${formattedProject}OrderFieldType`;
+      case 'orderFieldAggregation':
+        return `${formattedProject}OrderFieldAggregation`;
       default:
         return `${formattedProject}${capitalize(systemType)}`;
     }

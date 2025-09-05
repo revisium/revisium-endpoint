@@ -20,6 +20,8 @@ export class CommonSchemaService {
     this.addScalars();
     this.addPageInfo();
     this.addSortOrder();
+    this.addOrderFieldType();
+    this.addOrderFieldAggregation();
     this.addFilters();
   }
 
@@ -55,6 +57,18 @@ export class CommonSchemaService {
     this.contextService.schema
       .addEnum(this.namingService.getSystemTypeName('sortOrder'))
       .addValues([SortDirection.ASC, SortDirection.DESC]);
+  }
+
+  private addOrderFieldType(): void {
+    this.contextService.schema
+      .addEnum(this.namingService.getSystemTypeName('orderFieldType'))
+      .addValues(['text', 'int', 'float', 'boolean', 'timestamp']);
+  }
+
+  private addOrderFieldAggregation(): void {
+    this.contextService.schema
+      .addEnum(this.namingService.getSystemTypeName('orderFieldAggregation'))
+      .addValues(['min', 'max', 'avg', 'first', 'last']);
   }
 
   private addFilters(): void {

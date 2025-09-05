@@ -198,7 +198,7 @@ export class QueriesService {
     const orderByEnumName = this.namingService.getOrderByFieldEnumName(name);
     this.contextService.schema
       .addEnum(orderByEnumName)
-      .addValues(['createdAt', 'updatedAt', 'publishedAt', 'id']);
+      .addValues(['createdAt', 'updatedAt', 'publishedAt', 'id', 'data']);
 
     const orderByFieldInputName =
       this.namingService.getOrderByInputTypeName(name);
@@ -216,6 +216,22 @@ export class QueriesService {
         name: 'direction',
         value: this.namingService.getSystemTypeName('sortOrder'),
         required: true,
+      },
+      {
+        type: FieldType.string,
+        name: 'path',
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.enum,
+        name: 'type',
+        value: this.namingService.getSystemTypeName('orderFieldType'),
+      },
+      {
+        type: FieldType.ref,
+        refType: FieldRefType.enum,
+        name: 'aggregation',
+        value: this.namingService.getSystemTypeName('orderFieldAggregation'),
       },
     ]);
 
