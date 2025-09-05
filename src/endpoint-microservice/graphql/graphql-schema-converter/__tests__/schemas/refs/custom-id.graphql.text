@@ -42,14 +42,18 @@ input ProjectGetPostsInput {
 
 enum ProjectGetPostsOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input ProjectGetPostsOrderByInput {
+  aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
   field: ProjectGetPostsOrderByField!
+  path: String
+  type: ProjectOrderFieldType
 }
 
 input ProjectJsonFilter {
@@ -66,6 +70,22 @@ input ProjectJsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum ProjectOrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum ProjectOrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type ProjectPageInfo {

@@ -49,6 +49,22 @@ input ProjectJsonFilter {
   string_starts_with: String
 }
 
+enum ProjectOrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum ProjectOrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
+}
+
 type ProjectPageInfo {
   endCursor: String
   hasNextPage: Boolean!

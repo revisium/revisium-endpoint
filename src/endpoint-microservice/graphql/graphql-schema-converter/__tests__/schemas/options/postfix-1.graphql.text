@@ -37,14 +37,18 @@ input GetPostsInput {
 
 enum GetPostsOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input GetPostsOrderByInput {
+  aggregation: OrderFieldAggregation
   direction: SortOrder!
   field: GetPostsOrderByField!
+  path: String
+  type: OrderFieldType
 }
 
 input GetUsersInput {
@@ -56,14 +60,18 @@ input GetUsersInput {
 
 enum GetUsersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input GetUsersOrderByInput {
+  aggregation: OrderFieldAggregation
   direction: SortOrder!
   field: GetUsersOrderByField!
+  path: String
+  type: OrderFieldType
 }
 
 """
@@ -85,6 +93,22 @@ input JsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum OrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum OrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type PageInfo {

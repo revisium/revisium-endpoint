@@ -37,14 +37,18 @@ input INVALID_PROJECT_NAME_1GetUsersInput {
 
 enum INVALID_PROJECT_NAME_1GetUsersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input INVALID_PROJECT_NAME_1GetUsersOrderByInput {
+  aggregation: INVALID_PROJECT_NAME_1OrderFieldAggregation
   direction: INVALID_PROJECT_NAME_1SortOrder!
   field: INVALID_PROJECT_NAME_1GetUsersOrderByField!
+  path: String
+  type: INVALID_PROJECT_NAME_1OrderFieldType
 }
 
 input INVALID_PROJECT_NAME_1JsonFilter {
@@ -61,6 +65,22 @@ input INVALID_PROJECT_NAME_1JsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum INVALID_PROJECT_NAME_1OrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum INVALID_PROJECT_NAME_1OrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type INVALID_PROJECT_NAME_1PageInfo {
