@@ -42,14 +42,18 @@ input ProjectGetUsersInput {
 
 enum ProjectGetUsersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input ProjectGetUsersOrderByInput {
+  aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
   field: ProjectGetUsersOrderByField!
+  path: String
+  type: ProjectOrderFieldType
 }
 
 input ProjectJsonFilter {
@@ -66,6 +70,22 @@ input ProjectJsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum ProjectOrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum ProjectOrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type ProjectPageInfo {
@@ -96,7 +116,8 @@ input ProjectStringFilter {
 }
 
 type ProjectUser {
-  name: String!
+  NAmE: ProjectUserNAmE!
+  naMe: ProjectUsernaMe!
 }
 
 type ProjectUserConnection {
@@ -111,7 +132,8 @@ type ProjectUserEdge {
 }
 
 type ProjectUserFlat {
-  name: String!
+  NAmE: ProjectUserFlatNAmE!
+  naMe: ProjectUserFlatnaMe!
 }
 
 type ProjectUserFlatConnection {
@@ -125,6 +147,18 @@ type ProjectUserFlatEdge {
   node: ProjectUserFlat!
 }
 
+type ProjectUserFlatNAmE {
+  name: String!
+}
+
+type ProjectUserFlatnaMe {
+  name: String!
+}
+
+type ProjectUserNAmE {
+  name: String!
+}
+
 type ProjectUserNode {
   createdAt: DateTime!
   createdId: String!
@@ -134,6 +168,10 @@ type ProjectUserNode {
   publishedAt: DateTime!
   updatedAt: DateTime!
   versionId: String!
+}
+
+type ProjectUsernaMe {
+  name: String!
 }
 
 input ProjectUsersWhereInput {

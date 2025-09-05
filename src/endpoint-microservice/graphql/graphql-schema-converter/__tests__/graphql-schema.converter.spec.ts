@@ -49,7 +49,7 @@ describe('GraphQL Schema Converter', () => {
         tables: [table],
       }),
     );
-    await check(schema, 'simple-user.graphql.text');
+    await check(schema, 'simple.graphql.text');
   });
 
   it('lower case for table', async () => {
@@ -66,7 +66,7 @@ describe('GraphQL Schema Converter', () => {
         tables: [table],
       }),
     );
-    await check(schema, 'simple-user.graphql.text');
+    await check(schema, 'simple.graphql.text');
   });
 
   it('few tables', async () => {
@@ -350,7 +350,7 @@ describe('GraphQL Schema Converter', () => {
           tables: [user1, user2],
         }),
       );
-      await check(schema, 'unique/table-id.graphql.text');
+      await check(schema, 'unique/similar-table.graphql.text');
     });
 
     it('similar field', async () => {
@@ -372,7 +372,7 @@ describe('GraphQL Schema Converter', () => {
           tables: [user],
         }),
       );
-      await check(schema, 'unique/field.graphql.text');
+      await check(schema, 'unique/similar-field.graphql.text');
     });
   });
 

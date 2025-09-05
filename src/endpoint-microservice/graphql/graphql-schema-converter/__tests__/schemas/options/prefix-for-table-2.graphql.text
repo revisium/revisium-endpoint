@@ -7,14 +7,18 @@ input CustomGetPostsInput {
 
 enum CustomGetPostsOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input CustomGetPostsOrderByInput {
+  aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
   field: CustomGetPostsOrderByField!
+  path: String
+  type: ProjectOrderFieldType
 }
 
 input CustomGetUsersInput {
@@ -26,14 +30,18 @@ input CustomGetUsersInput {
 
 enum CustomGetUsersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input CustomGetUsersOrderByInput {
+  aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
   field: CustomGetUsersOrderByField!
+  path: String
+  type: ProjectOrderFieldType
 }
 
 type CustomPost {
@@ -249,6 +257,22 @@ input ProjectJsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum ProjectOrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum ProjectOrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type ProjectPageInfo {

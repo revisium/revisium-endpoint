@@ -49,6 +49,22 @@ input JsonFilter {
   string_starts_with: String
 }
 
+enum OrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum OrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
@@ -65,14 +81,18 @@ input ProjectGetPostsInput {
 
 enum ProjectGetPostsOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input ProjectGetPostsOrderByInput {
+  aggregation: OrderFieldAggregation
   direction: SortOrder!
   field: ProjectGetPostsOrderByField!
+  path: String
+  type: OrderFieldType
 }
 
 input ProjectGetUsersInput {
@@ -84,14 +104,18 @@ input ProjectGetUsersInput {
 
 enum ProjectGetUsersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input ProjectGetUsersOrderByInput {
+  aggregation: OrderFieldAggregation
   direction: SortOrder!
   field: ProjectGetUsersOrderByField!
+  path: String
+  type: OrderFieldType
 }
 
 type ProjectPost {

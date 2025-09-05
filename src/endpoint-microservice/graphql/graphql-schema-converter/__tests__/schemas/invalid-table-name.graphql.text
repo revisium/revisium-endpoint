@@ -42,14 +42,18 @@ input ProjectGetInvalid_table_name____usersInput {
 
 enum ProjectGetInvalid_table_name____usersOrderByField {
   createdAt
+  data
   id
   publishedAt
   updatedAt
 }
 
 input ProjectGetInvalid_table_name____usersOrderByInput {
+  aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
   field: ProjectGetInvalid_table_name____usersOrderByField!
+  path: String
+  type: ProjectOrderFieldType
 }
 
 type ProjectInvalid_table_name____user {
@@ -121,6 +125,22 @@ input ProjectJsonFilter {
   string_contains: String
   string_ends_with: String
   string_starts_with: String
+}
+
+enum ProjectOrderFieldAggregation {
+  avg
+  first
+  last
+  max
+  min
+}
+
+enum ProjectOrderFieldType {
+  boolean
+  float
+  int
+  text
+  timestamp
 }
 
 type ProjectPageInfo {
