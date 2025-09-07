@@ -8,7 +8,6 @@ import {
   PgNotifyStrategy,
   NestJSMicroserviceStrategy,
 } from './strategies';
-import { PgNotificationSetupService } from './services';
 
 @Module({
   imports: [CqrsModule, ConfigModule, DatabaseModule],
@@ -17,7 +16,6 @@ import { PgNotificationSetupService } from './services';
     DbPollingStrategy,
     PgNotifyStrategy,
     NestJSMicroserviceStrategy,
-    PgNotificationSetupService,
     {
       provide: 'SYNC_STRATEGIES',
       useFactory: (
@@ -33,7 +31,6 @@ import { PgNotificationSetupService } from './services';
     DbPollingStrategy,
     PgNotifyStrategy,
     NestJSMicroserviceStrategy,
-    PgNotificationSetupService,
   ],
 })
 export class SynchronizationModule {}
