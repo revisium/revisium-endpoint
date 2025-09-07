@@ -403,21 +403,15 @@ describe('DbPollingStrategy', () => {
       });
     });
 
-    it('should maintain sync timestamp even when no endpoints found', async () => {
+    it('should NOT advance sync timestamp when no endpoints found', async () => {
       prisma.endpoint.findMany.mockResolvedValue([]);
       // @ts-ignore - accessing private property for testing
       const initialTimestamp = new Date(strategy.lastSyncTimestamp.getTime());
-
-      // Add small delay to ensure different timestamps
-      await new Promise((resolve) => setTimeout(resolve, 10));
       // @ts-ignore - accessing private method for testing
       await strategy.pollForChanges();
-
       // @ts-ignore - accessing private property for testing
       const newTimestamp = new Date(strategy.lastSyncTimestamp.getTime());
-      expect(newTimestamp.getTime()).toBeGreaterThan(
-        initialTimestamp.getTime(),
-      );
+      expect(newTimestamp.getTime()).toBe(initialTimestamp.getTime());
     });
 
     it('should handle large batches correctly', async () => {

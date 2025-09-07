@@ -19,6 +19,7 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
   private lastSyncTimestamp = new Date();
   private readonly batchSize: number;
   private readonly intervalMs: number;
+  private isPolling = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -74,13 +75,16 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
       return;
     }
 
+    if (this.isPolling) return;
+
+    this.isPolling = true;
+
     try {
       const currentTimestamp = new Date();
 
       const modifiedEndpoints = await this.getEndpoints();
 
       if (modifiedEndpoints.length === 0) {
-        this.lastSyncTimestamp = currentTimestamp;
         return;
       }
 
@@ -104,6 +108,8 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
         `Error during database polling: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : error,
       );
+    } finally {
+      this.isPolling = false;
     }
   }
 
