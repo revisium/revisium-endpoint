@@ -63,10 +63,10 @@ export class EndpointSyncManager
   }
 
   private async initializeSyncStrategies() {
-    // Filter and sort strategies by priority (higher priority first)
+    // Filter and sort strategies by initialization order (lower number = initialize first)
     const applicableStrategies = this.syncStrategies
       .filter((strategy) => strategy.isEnabled(this.appOptions))
-      .sort((a, b) => b.priority - a.priority);
+      .sort((a, b) => a.initializationOrder - b.initializationOrder);
 
     for (const strategy of applicableStrategies) {
       try {
@@ -74,7 +74,7 @@ export class EndpointSyncManager
         strategy.onEndpointChange(this.handleEndpointChange.bind(this));
         this.enabledStrategies.push(strategy);
         this.logger.log(
-          `Initialized strategy: ${strategy.name} (priority: ${strategy.priority})`,
+          `Initialized strategy: ${strategy.name} (initializationOrder: ${strategy.initializationOrder})`,
         );
       } catch (error) {
         this.logger.error(

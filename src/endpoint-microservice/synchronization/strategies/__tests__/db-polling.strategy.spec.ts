@@ -20,7 +20,7 @@ describe('DbPollingStrategy', () => {
   describe('initialization', () => {
     it('should have correct strategy properties', () => {
       expect(strategy.name).toBe('db-polling');
-      expect(strategy.priority).toBe(30);
+      expect(strategy.initializationOrder).toBe(30);
     });
 
     it('should read configuration values from ConfigService', () => {

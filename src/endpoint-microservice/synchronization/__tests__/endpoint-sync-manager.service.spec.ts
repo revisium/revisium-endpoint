@@ -26,7 +26,7 @@ describe('EndpointSyncManager', () => {
   beforeEach(async () => {
     mockStrategy1 = {
       name: 'strategy1',
-      priority: 100,
+      initializationOrder: 100,
       isEnabled: jest.fn().mockReturnValue(true),
       initialize: jest.fn().mockResolvedValue(undefined),
       shutdown: jest.fn().mockResolvedValue(undefined),
@@ -35,7 +35,7 @@ describe('EndpointSyncManager', () => {
 
     mockStrategy2 = {
       name: 'strategy2',
-      priority: 50,
+      initializationOrder: 50,
       isEnabled: jest.fn().mockReturnValue(true),
       initialize: jest.fn().mockResolvedValue(undefined),
       shutdown: jest.fn().mockResolvedValue(undefined),
@@ -90,9 +90,9 @@ describe('EndpointSyncManager', () => {
       // @ts-ignore - accessing private property for testing
       const enabledStrategies = service.enabledStrategies;
       expect(enabledStrategies).toHaveLength(2);
-      // Should be sorted by priority (higher first)
-      expect(enabledStrategies[0].name).toBe('strategy1');
-      expect(enabledStrategies[1].name).toBe('strategy2');
+      // Should be sorted by initializationOrder (lower number first)
+      expect(enabledStrategies[0].name).toBe('strategy2'); // order: 50
+      expect(enabledStrategies[1].name).toBe('strategy1'); // order: 100
     });
 
     it('should skip disabled strategies', async () => {
@@ -344,7 +344,7 @@ describe('EndpointSyncManager', () => {
       // @ts-ignore - accessing private property for testing
       const strategies = service.enabledStrategies;
       expect(strategies).toHaveLength(2);
-      expect(strategies.map((s) => s.name)).toEqual(['strategy1', 'strategy2']);
+      expect(strategies.map((s) => s.name)).toEqual(['strategy2', 'strategy1']);
     });
 
     it('should report pending sync status', async () => {

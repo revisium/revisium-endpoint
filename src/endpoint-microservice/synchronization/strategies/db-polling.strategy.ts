@@ -9,7 +9,7 @@ import { EndpointSyncStrategy } from './endpoint-sync-strategy.interface';
 @Injectable()
 export class DbPollingStrategy implements EndpointSyncStrategy {
   public readonly name = 'db-polling';
-  public readonly priority = 30;
+  public readonly initializationOrder = 30;
 
   private readonly logger = new Logger(DbPollingStrategy.name);
 
