@@ -1,47 +1,47 @@
 export interface SyncConfig {
-  strategies: {
-    pgNotify: {
-      enabled: boolean;
-      maxReconnectAttempts: number;
+  readonly strategies: {
+    readonly pgNotify: {
+      readonly enabled: boolean;
+      readonly maxReconnectAttempts: number;
     };
-    nestjsMicroservice: {
-      enabled: boolean;
+    readonly nestjsMicroservice: {
+      readonly enabled: boolean;
     };
-    dbPolling: {
-      enabled: boolean;
-      intervalMs: number;
-      batchSize: number;
+    readonly dbPolling: {
+      readonly enabled: boolean;
+      readonly intervalMs: number;
+      readonly batchSize: number;
     };
-    fallbackCheck: {
-      enabled: boolean;
-      cacheTtlMs: number;
+    readonly fallbackCheck: {
+      readonly enabled: boolean;
+      readonly cacheTtlMs: number;
     };
   };
-  mutex: {
-    timeoutMs: number;
+  readonly mutex: {
+    readonly timeoutMs: number;
   };
 }
 
-export const DEFAULT_SYNC_CONFIG: SyncConfig = {
-  strategies: {
-    pgNotify: {
+export const DEFAULT_SYNC_CONFIG: Readonly<SyncConfig> = Object.freeze({
+  strategies: Object.freeze({
+    pgNotify: Object.freeze({
       enabled: true,
       maxReconnectAttempts: 5,
-    },
-    nestjsMicroservice: {
+    }),
+    nestjsMicroservice: Object.freeze({
       enabled: true,
-    },
-    dbPolling: {
+    }),
+    dbPolling: Object.freeze({
       enabled: true,
       intervalMs: 30000,
       batchSize: 50,
-    },
-    fallbackCheck: {
+    }),
+    fallbackCheck: Object.freeze({
       enabled: true,
       cacheTtlMs: 60000,
-    },
-  },
-  mutex: {
+    }),
+  }),
+  mutex: Object.freeze({
     timeoutMs: 30000,
-  },
-};
+  }),
+});

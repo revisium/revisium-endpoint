@@ -50,8 +50,8 @@ export class EndpointSyncManager
         this.logger.log(`Shut down strategy: ${strategy.name}`);
       } catch (error) {
         this.logger.error(
-          `Error shutting down strategy ${strategy.name}:`,
-          error,
+          `Error shutting down strategy ${strategy.name}: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : error,
         );
       }
     });
@@ -78,8 +78,8 @@ export class EndpointSyncManager
         );
       } catch (error) {
         this.logger.error(
-          `Failed to initialize strategy ${strategy.name}:`,
-          error,
+          `Failed to initialize strategy ${strategy.name}: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : error,
         );
       }
     }
@@ -96,8 +96,8 @@ export class EndpointSyncManager
       return;
     }
 
-    // Prevent race conditions with mutex
-    const mutexKey = `${changeEvent.type}:${changeEvent.endpointId}`;
+    // Prevent race conditions with mutex - serialize per endpoint type+id
+    const mutexKey = `${changeEvent.endpointType}:${changeEvent.endpointId}:${changeEvent.type}`;
 
     if (this.syncMutex.has(mutexKey)) {
       this.logger.debug(`Event already being processed: ${mutexKey}`);
@@ -111,7 +111,10 @@ export class EndpointSyncManager
     try {
       await syncPromise;
     } catch (error) {
-      this.logger.error(`Failed to process sync event ${mutexKey}:`, error);
+      this.logger.error(
+        `Failed to process sync event ${mutexKey}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : error,
+      );
     } finally {
       this.syncMutex.delete(mutexKey);
     }
@@ -146,15 +149,15 @@ export class EndpointSyncManager
       );
     } catch (error) {
       this.logger.error(
-        `Error processing endpoint ${event.type} ${event.endpointId}:`,
-        error,
+        `Error processing endpoint ${event.type} ${event.endpointId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : error,
       );
       throw error;
     }
   }
 
   private isDuplicateEvent(event: EndpointChangeEvent): boolean {
-    const eventKey = `${event.type}:${event.endpointId}:${event.timestamp.getTime()}`;
+    const eventKey = `${event.endpointType}:${event.endpointId}:${event.type}:${event.timestamp.getTime()}`;
     const lastSeen = this.recentEvents.get(eventKey);
 
     if (lastSeen && Date.now() - lastSeen.getTime() < 5000) {

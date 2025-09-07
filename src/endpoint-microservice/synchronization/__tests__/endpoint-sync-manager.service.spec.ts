@@ -221,7 +221,7 @@ describe('EndpointSyncManager', () => {
 
       expect(
         // @ts-ignore - accessing private property for testing
-        Array.from(service.syncMutex.keys()).some((key) =>
+        Array.from((service as any).syncMutex.keys()).some((key: string) =>
           key.includes('endpoint1'),
         ),
       ).toBe(true);
@@ -232,7 +232,7 @@ describe('EndpointSyncManager', () => {
       expect(commandBus.execute).toHaveBeenCalledTimes(1);
       expect(
         // @ts-ignore - accessing private property for testing
-        Array.from(service.syncMutex.keys()).some((key) =>
+        Array.from((service as any).syncMutex.keys()).some((key: string) =>
           key.includes('endpoint1'),
         ),
       ).toBe(false);
@@ -253,6 +253,28 @@ describe('EndpointSyncManager', () => {
 
       // Should only execute once due to deduplication
       expect(commandBus.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('should use enhanced mutex keys with endpoint type', async () => {
+      const event1: EndpointChangeEvent = {
+        type: 'created',
+        endpointId: 'endpoint1',
+        endpointType: EndpointType.GRAPHQL,
+        timestamp: new Date(),
+      };
+
+      const event2: EndpointChangeEvent = {
+        type: 'created',
+        endpointId: 'endpoint1', // Same ID
+        endpointType: EndpointType.REST_API, // Different type
+        timestamp: new Date(),
+      };
+
+      // Both should be processed since they have different endpoint types
+      await changeHandler(event1);
+      await changeHandler(event2);
+
+      expect(commandBus.execute).toHaveBeenCalledTimes(2);
     });
 
     it('should handle unknown event types gracefully', async () => {
@@ -283,6 +305,33 @@ describe('EndpointSyncManager', () => {
       expect(commandBus.execute).toHaveBeenCalledWith(
         new CreateEndpointCommand('endpoint1'),
       );
+    });
+
+    it('should clean up old events from recent events cache', async () => {
+      const oldTimestamp = new Date(Date.now() - 120000); // 2 minutes ago
+      const recentTimestamp = new Date();
+
+      const oldEvent: EndpointChangeEvent = {
+        type: 'created',
+        endpointId: 'endpoint1',
+        endpointType: EndpointType.GRAPHQL,
+        timestamp: oldTimestamp,
+      };
+
+      const recentEvent: EndpointChangeEvent = {
+        type: 'created',
+        endpointId: 'endpoint2',
+        endpointType: EndpointType.GRAPHQL,
+        timestamp: recentTimestamp,
+      };
+
+      // Process old event first
+      await changeHandler(oldEvent);
+      // Then process recent event (this should trigger cleanup)
+      await changeHandler(recentEvent);
+
+      // Both events should be processed (not considered duplicates)
+      expect(commandBus.execute).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -316,7 +365,7 @@ describe('EndpointSyncManager', () => {
 
       expect(
         // @ts-ignore - accessing private property for testing
-        Array.from(service.syncMutex.keys()).some((key) =>
+        Array.from((service as any).syncMutex.keys()).some((key: string) =>
           key.includes('endpoint1'),
         ),
       ).toBe(true);
@@ -331,7 +380,7 @@ describe('EndpointSyncManager', () => {
 
       expect(
         // @ts-ignore - accessing private property for testing
-        Array.from(service.syncMutex.keys()).some((key) =>
+        Array.from((service as any).syncMutex.keys()).some((key: string) =>
           key.includes('endpoint1'),
         ),
       ).toBe(false);

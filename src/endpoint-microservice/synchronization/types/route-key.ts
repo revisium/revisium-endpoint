@@ -1,6 +1,6 @@
 export interface RouteKey {
-  organizationId: string;
-  projectName: string;
-  branchName: string;
-  postfix: string;
+  readonly organizationId: string;
+  readonly projectName: string;
+  readonly branchName: string;
+  readonly postfix: string;
 }

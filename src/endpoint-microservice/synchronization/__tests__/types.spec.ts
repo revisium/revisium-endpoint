@@ -124,5 +124,29 @@ describe('Synchronization Types', () => {
       expect(customConfig.strategies.dbPolling.intervalMs).toBe(60000);
       expect(customConfig.mutex.timeoutMs).toBe(60000);
     });
+
+    it('should have immutable default configuration', () => {
+      // Verify that DEFAULT_SYNC_CONFIG is frozen
+      expect(Object.isFrozen(DEFAULT_SYNC_CONFIG)).toBe(true);
+      expect(Object.isFrozen(DEFAULT_SYNC_CONFIG.strategies)).toBe(true);
+      expect(Object.isFrozen(DEFAULT_SYNC_CONFIG.strategies.pgNotify)).toBe(
+        true,
+      );
+      expect(Object.isFrozen(DEFAULT_SYNC_CONFIG.mutex)).toBe(true);
+
+      // Attempting to modify should not work (in strict mode would throw)
+      const originalValue = DEFAULT_SYNC_CONFIG.strategies.pgNotify.enabled;
+      try {
+        // @ts-ignore - intentionally trying to modify frozen object
+        DEFAULT_SYNC_CONFIG.strategies.pgNotify.enabled = false;
+      } catch {
+        // Expected in strict mode
+      }
+
+      // Value should remain unchanged
+      expect(DEFAULT_SYNC_CONFIG.strategies.pgNotify.enabled).toBe(
+        originalValue,
+      );
+    });
   });
 });

@@ -1,10 +1,10 @@
 import { EndpointType } from '@prisma/client';
 
 export interface EndpointChangeEvent {
-  type: 'created' | 'updated' | 'deleted';
-  endpointId: string;
-  endpointType: EndpointType;
-  revisionId?: string;
-  version?: number;
-  timestamp: Date;
+  readonly type: 'created' | 'updated' | 'deleted';
+  readonly endpointId: string;
+  readonly endpointType: EndpointType;
+  readonly revisionId?: string;
+  readonly version?: number;
+  readonly timestamp: Date;
 }
