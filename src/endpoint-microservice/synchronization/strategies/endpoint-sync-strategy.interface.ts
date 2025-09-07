@@ -3,7 +3,7 @@ import { EndpointChangeEvent } from '../types';
 
 export interface EndpointSyncStrategy {
   readonly name: string;
-  readonly priority: number;
+  readonly initializationOrder: number;
 
   isEnabled(appOptions: AppOptions): boolean;
   initialize(): Promise<void>;
