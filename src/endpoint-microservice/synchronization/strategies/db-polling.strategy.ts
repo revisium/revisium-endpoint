@@ -32,7 +32,7 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
     this.batchSize = this.configService.get('SYNC_DB_POLLING_BATCH_SIZE', 50);
   }
 
-  public isEnabled(_appOptions: AppOptions): boolean {
+  public isEnabled(_: AppOptions): boolean {
     return this.configService.get('SYNC_DB_POLLING_ENABLED', true);
   }
 

@@ -45,11 +45,8 @@ export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
     );
   }
 
-  public isEnabled(appOptions: AppOptions): boolean {
-    return (
-      appOptions.mode === 'monolith' &&
-      this.configService.get('SYNC_PG_NOTIFY_ENABLED', true)
-    );
+  public isEnabled(_: AppOptions): boolean {
+    return this.configService.get('SYNC_PG_NOTIFY_ENABLED', true);
   }
 
   public async initialize(): Promise<void> {

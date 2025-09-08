@@ -15,7 +15,9 @@ import {
   APP_OPTIONS_TOKEN,
   AppOptions,
 } from 'src/endpoint-microservice/shared/app-mode';
+import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { EndpointSyncStrategy } from './strategies/endpoint-sync-strategy.interface';
+import { InitialSyncService } from './services/initial-sync.service';
 import { EndpointChangeEvent } from './types';
 
 @Injectable()
@@ -32,6 +34,8 @@ export class EndpointSyncManager
     @Inject('SYNC_STRATEGIES')
     private readonly syncStrategies: EndpointSyncStrategy[],
     private readonly commandBus: CommandBus,
+    private readonly initialSyncService: InitialSyncService,
+    private readonly internalCoreApiService: InternalCoreApiService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -39,6 +43,19 @@ export class EndpointSyncManager
     this.logger.log(
       `Initialized ${this.enabledStrategies.length} synchronization strategies`,
     );
+
+    // Wait for Core API to be ready before initial sync
+    setImmediate(async () => {
+      try {
+        await this.internalCoreApiService.initApi();
+        await this.performInitialSync();
+      } catch (error) {
+        this.logger.error(
+          `Failed to initialize Core API or perform initial sync: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : error,
+        );
+      }
+    });
   }
 
   async onApplicationShutdown() {
@@ -175,5 +192,21 @@ export class EndpointSyncManager
     }
 
     return false;
+  }
+
+  private async performInitialSync(): Promise<void> {
+    this.logger.log('Starting initial synchronization...');
+
+    try {
+      await this.initialSyncService.performInitialSync(
+        this.handleEndpointChange.bind(this),
+      );
+      this.logger.log('Initial synchronization completed successfully');
+    } catch (error) {
+      this.logger.error(
+        `Initial synchronization failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 }
