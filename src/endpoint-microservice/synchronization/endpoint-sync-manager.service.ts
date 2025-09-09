@@ -40,6 +40,13 @@ export class EndpointSyncManager
   ) {}
 
   async onApplicationBootstrap() {
+    if (process.env.NODE_ENV === 'test') {
+      this.logger.log(
+        'Skipping synchronization initialization in test environment',
+      );
+      return;
+    }
+
     await this.initializeSyncStrategies();
     this.logger.log(
       `Initialized ${this.enabledStrategies.length} synchronization strategies`,

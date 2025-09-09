@@ -423,7 +423,7 @@ describe('graphql controller', () => {
 
   afterAll(async () => {
     await app.close();
-  }, 30000);
+  }, 10000);
 
   afterEach(() => {
     jest.clearAllMocks();
