@@ -1,4 +1,3 @@
-import { EndpointType } from '@prisma/client';
 import { EndpointChangeEvent, DEFAULT_SYNC_CONFIG, SyncConfig } from '../types';
 
 describe('Synchronization Types', () => {
@@ -7,34 +6,20 @@ describe('Synchronization Types', () => {
       const event: EndpointChangeEvent = {
         type: 'created',
         endpointId: 'test-endpoint-id',
-        endpointType: EndpointType.GRAPHQL,
-        revisionId: 'test-revision-id',
-        version: 1,
-        timestamp: new Date(),
       };
 
       expect(event.type).toBe('created');
       expect(event.endpointId).toBe('test-endpoint-id');
-      expect(event.endpointType).toBe(EndpointType.GRAPHQL);
-      expect(event.revisionId).toBe('test-revision-id');
-      expect(event.version).toBe(1);
-      expect(event.timestamp).toBeInstanceOf(Date);
     });
 
     it('should create minimal endpoint change event', () => {
       const event: EndpointChangeEvent = {
         type: 'deleted',
         endpointId: 'test-endpoint-id',
-        endpointType: EndpointType.REST_API,
-        timestamp: new Date(),
       };
 
       expect(event.type).toBe('deleted');
       expect(event.endpointId).toBe('test-endpoint-id');
-      expect(event.endpointType).toBe(EndpointType.REST_API);
-      expect(event.revisionId).toBeUndefined();
-      expect(event.version).toBeUndefined();
-      expect(event.timestamp).toBeInstanceOf(Date);
     });
 
     it('should support all event types', () => {
@@ -48,8 +33,6 @@ describe('Synchronization Types', () => {
         const event: EndpointChangeEvent = {
           type,
           endpointId: 'test-endpoint',
-          endpointType: EndpointType.GRAPHQL,
-          timestamp: new Date(),
         };
 
         expect(event.type).toBe(type);

@@ -14,10 +14,6 @@ export class UpdateGraphqlEndpointHandler
   public async execute({
     endpointId,
   }: UpdateGraphqlEndpointCommand): Promise<void> {
-    if (!this.service.existEndpoint(endpointId)) {
-      throw new Error(`${endpointId} does not exist`);
-    }
-
     try {
       await this.service.stopEndpoint(endpointId);
       await this.service.runEndpoint(endpointId);

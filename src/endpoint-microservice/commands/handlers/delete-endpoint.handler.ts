@@ -17,15 +17,14 @@ export class DeleteEndpointHandler
     super(prisma);
   }
 
-  public async execute({
-    endpointId,
-    endpointType,
-  }: DeleteEndpointCommand): Promise<void> {
-    if (endpointType === 'GRAPHQL') {
+  public async execute({ endpointId }: DeleteEndpointCommand): Promise<void> {
+    const type = await this.getEndpointType(endpointId);
+
+    if (type === 'GRAPHQL') {
       await this.commandBus.execute(
         new DeleteGraphqlEndpointCommand(endpointId),
       );
-    } else if (endpointType === 'REST_API') {
+    } else if (type === 'REST_API') {
       await this.commandBus.execute(
         new DeleteRestapiEndpointCommand(endpointId),
       );

@@ -52,7 +52,8 @@ export class RestapiEndpointService {
 
   public async stopEndpoint(endpointId: string) {
     if (!this.startedEndpointIds.includes(endpointId)) {
-      throw new Error(`${endpointId} is not started`);
+      this.logger.warn(`${endpointId} is not started`);
+      return;
     }
 
     const [url, item] =

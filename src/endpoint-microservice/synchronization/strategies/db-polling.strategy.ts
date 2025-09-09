@@ -32,7 +32,7 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
     this.batchSize = this.configService.get('SYNC_DB_POLLING_BATCH_SIZE', 50);
   }
 
-  public isEnabled(_appOptions: AppOptions): boolean {
+  public isEnabled(_: AppOptions): boolean {
     return this.configService.get('SYNC_DB_POLLING_ENABLED', true);
   }
 
@@ -118,9 +118,6 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
       const event: EndpointChangeEvent = {
         type: 'updated',
         endpointId: endpoint.id,
-        endpointType: endpoint.type,
-        revisionId: endpoint.revisionId,
-        timestamp: endpoint.createdAt,
       };
 
       try {

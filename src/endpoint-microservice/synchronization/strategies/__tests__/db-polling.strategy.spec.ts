@@ -174,16 +174,10 @@ describe('DbPollingStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'updated',
         endpointId: 'endpoint-1',
-        endpointType: EndpointType.GRAPHQL,
-        revisionId: 'revision-1',
-        timestamp: createdAt,
       });
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'updated',
         endpointId: 'endpoint-2',
-        endpointType: EndpointType.REST_API,
-        revisionId: 'revision-2',
-        timestamp: createdAt,
       });
     });
 
@@ -397,9 +391,6 @@ describe('DbPollingStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'updated',
         endpointId: 'endpoint-1',
-        endpointType: EndpointType.GRAPHQL,
-        revisionId: null,
-        timestamp: expect.any(Date),
       });
     });
 
