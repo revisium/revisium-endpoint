@@ -139,7 +139,6 @@ describe('DbPollingStrategy', () => {
           createdAt: {
             gt: expect.any(Date),
           },
-          isDeleted: false,
         },
         orderBy: {
           createdAt: 'asc',

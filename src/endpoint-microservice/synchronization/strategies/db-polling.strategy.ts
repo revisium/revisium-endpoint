@@ -116,7 +116,7 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
   private async processEndpoints(endpoints: Endpoint[]) {
     const processPromises = endpoints.map(async (endpoint) => {
       const event: EndpointChangeEvent = {
-        type: 'updated',
+        type: endpoint.isDeleted ? 'deleted' : 'updated',
         endpointId: endpoint.id,
       };
 
@@ -139,7 +139,6 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
         createdAt: {
           gt: this.lastSyncTimestamp,
         },
-        isDeleted: false,
       },
       orderBy: {
         createdAt: 'asc',
