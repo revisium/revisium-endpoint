@@ -74,7 +74,8 @@ export class GraphqlEndpointService {
 
   public async stopEndpoint(endpointId: string): Promise<void> {
     if (!this.existEndpoint(endpointId)) {
-      throw new Error(`${endpointId} is not started`);
+      this.logger.warn(`${endpointId} is not started`);
+      return;
     }
 
     const [url, endpoint] =

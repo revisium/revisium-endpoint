@@ -49,9 +49,6 @@ export class InitialSyncService {
             const event: EndpointChangeEvent = {
               type: 'created',
               endpointId: endpoint.id,
-              endpointType: endpoint.type,
-              revisionId: endpoint.revisionId,
-              timestamp: endpoint.createdAt,
             };
 
             try {

@@ -118,9 +118,6 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
       const event: EndpointChangeEvent = {
         type: 'updated',
         endpointId: endpoint.id,
-        endpointType: endpoint.type,
-        revisionId: endpoint.revisionId,
-        timestamp: endpoint.createdAt,
       };
 
       try {

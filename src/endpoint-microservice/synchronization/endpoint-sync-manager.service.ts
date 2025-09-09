@@ -6,6 +6,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
+import * as process from 'node:process';
 import {
   CreateEndpointCommand,
   DeleteEndpointCommand,
@@ -54,6 +55,7 @@ export class EndpointSyncManager
           `Failed to initialize Core API or perform initial sync: ${error instanceof Error ? error.message : String(error)}`,
           error instanceof Error ? error.stack : error,
         );
+        process.exit(1);
       }
     });
   }
@@ -114,7 +116,7 @@ export class EndpointSyncManager
     }
 
     // Prevent race conditions with mutex - serialize per endpoint type+id
-    const mutexKey = `${changeEvent.endpointType}:${changeEvent.endpointId}:${changeEvent.type}`;
+    const mutexKey = `${changeEvent.endpointId}:${changeEvent.type}`;
 
     if (this.syncMutex.has(mutexKey)) {
       this.logger.debug(`Event already being processed: ${mutexKey}`);
@@ -154,7 +156,7 @@ export class EndpointSyncManager
           break;
         case 'deleted':
           await this.commandBus.execute(
-            new DeleteEndpointCommand(event.endpointId, event.endpointType),
+            new DeleteEndpointCommand(event.endpointId),
           );
           break;
         default:
@@ -174,7 +176,7 @@ export class EndpointSyncManager
   }
 
   private isDuplicateEvent(event: EndpointChangeEvent): boolean {
-    const eventKey = `${event.endpointType}:${event.endpointId}:${event.type}:${event.timestamp.getTime()}`;
+    const eventKey = `${event.endpointId}:${event.type}`;
     const lastSeen = this.recentEvents.get(eventKey);
 
     if (lastSeen && Date.now() - lastSeen.getTime() < 5000) {

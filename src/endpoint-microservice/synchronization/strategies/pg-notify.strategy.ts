@@ -1,26 +1,16 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EndpointType } from '@prisma/client';
 import { Client, Notification } from 'pg';
 import { AppOptions } from 'src/endpoint-microservice/shared/app-mode';
 import { EndpointChangeEvent } from '../types';
 import { EndpointSyncStrategy } from './endpoint-sync-strategy.interface';
 
 interface NotificationPayload {
-  table: string;
-  action: 'INSERT' | 'UPDATE' | 'DELETE';
-  data: {
-    id: string;
-    type: string;
-    revisionId: string;
-    createdAt: string;
-    isDeleted: boolean;
-  };
+  action: string;
+  endpointId: string;
 }
 
 export const NOTIFICATION_ENDPOINT_CHANGES = 'endpoint_changes';
-
-export const ENDPOINT_TABLE = 'Endpoint';
 
 @Injectable()
 export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
@@ -134,6 +124,7 @@ export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
 
     // Set up notification handler
     this.pgClient.on('notification', (msg) => {
+      console.log(msg);
       this.handleNotification(msg);
     });
 
@@ -156,16 +147,9 @@ export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
     try {
       const payload: NotificationPayload = JSON.parse(msg.payload);
 
-      if (payload.table !== ENDPOINT_TABLE) {
-        return;
-      }
-
       const event: EndpointChangeEvent = {
-        type: this.mapActionToEventType(payload.action, payload.data),
-        endpointId: payload.data.id,
-        endpointType: payload.data.type as EndpointType,
-        revisionId: payload.data.revisionId,
-        timestamp: new Date(payload.data.createdAt),
+        type: payload.action as EndpointChangeEvent['type'],
+        endpointId: payload.endpointId,
       };
 
       this.logger.debug(
@@ -183,25 +167,6 @@ export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
         `Error processing notification: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : error,
       );
-    }
-  }
-
-  private mapActionToEventType(
-    action: NotificationPayload['action'],
-    data: NotificationPayload['data'],
-  ): EndpointChangeEvent['type'] {
-    switch (action) {
-      case 'INSERT':
-        return 'created';
-      case 'UPDATE':
-        if (data.isDeleted) {
-          return 'deleted';
-        }
-        return 'updated';
-      case 'DELETE':
-        return 'deleted';
-      default:
-        return 'updated';
     }
   }
 
