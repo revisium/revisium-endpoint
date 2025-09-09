@@ -27,7 +27,7 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
   ) {
     this.intervalMs = this.configService.get(
       'SYNC_DB_POLLING_INTERVAL_MS',
-      5000,
+      30000,
     );
     this.batchSize = this.configService.get('SYNC_DB_POLLING_BATCH_SIZE', 50);
   }
