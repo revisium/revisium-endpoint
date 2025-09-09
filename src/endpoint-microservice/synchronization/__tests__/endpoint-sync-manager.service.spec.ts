@@ -14,16 +14,23 @@ import {
   DeleteEndpointCommand,
   UpdateEndpointCommand,
 } from 'src/endpoint-microservice/commands/impl';
+import { InitialSyncService } from '../services/initial-sync.service';
+import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 
-xdescribe('EndpointSyncManager', () => {
+describe('EndpointSyncManager', () => {
   let service: EndpointSyncManager;
   let commandBus: jest.Mocked<CommandBus>;
   let mockStrategy1: jest.Mocked<EndpointSyncStrategy>;
   let mockStrategy2: jest.Mocked<EndpointSyncStrategy>;
+  let originalNodeEnv: string | undefined;
 
   const appOptions: AppOptions = { mode: 'monolith' };
 
   beforeEach(async () => {
+    // Store original NODE_ENV and ensure test environment doesn't skip initialization
+    originalNodeEnv = process.env.NODE_ENV;
+    delete process.env.NODE_ENV;
+
     mockStrategy1 = {
       name: 'strategy1',
       initializationOrder: 100,
@@ -59,6 +66,18 @@ xdescribe('EndpointSyncManager', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: InitialSyncService,
+          useValue: {
+            syncAllEndpoints: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: InternalCoreApiService,
+          useValue: {
+            initApi: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -73,6 +92,13 @@ xdescribe('EndpointSyncManager', () => {
   });
 
   afterEach(() => {
+    // Restore original NODE_ENV
+    if (originalNodeEnv !== undefined) {
+      process.env.NODE_ENV = originalNodeEnv;
+    } else {
+      delete process.env.NODE_ENV;
+    }
+
     jest.clearAllMocks();
   });
 
@@ -251,11 +277,11 @@ xdescribe('EndpointSyncManager', () => {
       };
 
       const event2: EndpointChangeEvent = {
-        type: 'created',
-        endpointId: 'endpoint1', // Same ID
+        type: 'updated',
+        endpointId: 'endpoint1', // Same ID, different type
       };
 
-      // Both should be processed since they have different endpoint types
+      // Both should be processed since they have different event types
       await changeHandler(event1);
       await changeHandler(event2);
 

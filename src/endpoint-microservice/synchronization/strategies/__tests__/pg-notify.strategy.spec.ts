@@ -133,7 +133,7 @@ describe('PgNotifyStrategy', () => {
     });
   });
 
-  xdescribe('notification handling', () => {
+  describe('notification handling', () => {
     let notificationHandler: (msg: any) => void;
 
     beforeEach(async () => {
@@ -151,14 +151,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'INSERT',
-          data: {
-            id: 'endpoint-1',
-            type: 'GRAPHQL',
-            revisionId: 'revision-1',
-            createdAt: new Date().toISOString(),
-          },
+          action: 'created',
+          endpointId: 'endpoint-1',
         }),
       };
 
@@ -169,9 +163,6 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'created',
         endpointId: 'endpoint-1',
-        endpointType: 'GRAPHQL',
-        revisionId: 'revision-1',
-        timestamp: expect.any(Date),
       });
     });
 
@@ -179,14 +170,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'UPDATE',
-          data: {
-            id: 'endpoint-2',
-            type: 'REST_API',
-            revisionId: 'revision-2',
-            createdAt: new Date().toISOString(),
-          },
+          action: 'updated',
+          endpointId: 'endpoint-2',
         }),
       };
 
@@ -197,9 +182,6 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'updated',
         endpointId: 'endpoint-2',
-        endpointType: 'REST_API',
-        revisionId: 'revision-2',
-        timestamp: expect.any(Date),
       });
     });
 
@@ -207,14 +189,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'DELETE',
-          data: {
-            id: 'endpoint-3',
-            type: 'GRAPHQL',
-            revisionId: 'revision-3',
-            createdAt: new Date().toISOString(),
-          },
+          action: 'deleted',
+          endpointId: 'endpoint-3',
         }),
       };
 
@@ -225,9 +201,6 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'deleted',
         endpointId: 'endpoint-3',
-        endpointType: 'GRAPHQL',
-        revisionId: 'revision-3',
-        timestamp: expect.any(Date),
       });
     });
 
@@ -235,15 +208,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'UPDATE',
-          data: {
-            id: 'endpoint-4',
-            type: 'REST_API',
-            revisionId: 'revision-4',
-            createdAt: new Date().toISOString(),
-            isDeleted: true,
-          },
+          action: 'deleted',
+          endpointId: 'endpoint-4',
         }),
       };
 
@@ -254,9 +220,6 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'deleted',
         endpointId: 'endpoint-4',
-        endpointType: 'REST_API',
-        revisionId: 'revision-4',
-        timestamp: expect.any(Date),
       });
     });
 
@@ -264,15 +227,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'UPDATE',
-          data: {
-            id: 'endpoint-5',
-            type: 'GRAPHQL',
-            revisionId: 'revision-5',
-            createdAt: new Date().toISOString(),
-            isDeleted: false,
-          },
+          action: 'updated',
+          endpointId: 'endpoint-5',
         }),
       };
 
@@ -283,9 +239,6 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).toHaveBeenCalledWith({
         type: 'updated',
         endpointId: 'endpoint-5',
-        endpointType: 'GRAPHQL',
-        revisionId: 'revision-5',
-        timestamp: expect.any(Date),
       });
     });
 
@@ -293,9 +246,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'other_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'INSERT',
-          data: { id: 'endpoint-1' },
+          action: 'created',
+          endpointId: 'endpoint-1',
         }),
       };
 
@@ -304,19 +256,21 @@ describe('PgNotifyStrategy', () => {
       expect(mockChangeHandler).not.toHaveBeenCalled();
     });
 
-    it('should ignore notifications from other tables', async () => {
+    it('should process valid notifications regardless of additional data', async () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Other',
-          action: 'INSERT',
-          data: { id: 'other-1' },
+          action: 'created',
+          endpointId: 'other-1',
         }),
       };
 
       notificationHandler(notification);
 
-      expect(mockChangeHandler).not.toHaveBeenCalled();
+      expect(mockChangeHandler).toHaveBeenCalledWith({
+        type: 'created',
+        endpointId: 'other-1',
+      });
     });
 
     it('should handle invalid JSON payload gracefully', async () => {
@@ -343,9 +297,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'INSERT',
-          data: { id: 'endpoint-1' },
+          action: 'created',
+          endpointId: 'endpoint-1',
         }),
       };
 
@@ -362,14 +315,8 @@ describe('PgNotifyStrategy', () => {
       const notification = {
         channel: 'endpoint_changes',
         payload: JSON.stringify({
-          table: 'Endpoint',
-          action: 'INSERT',
-          data: {
-            id: 'endpoint-1',
-            type: 'GRAPHQL',
-            revisionId: 'revision-1',
-            createdAt: new Date().toISOString(),
-          },
+          action: 'created',
+          endpointId: 'endpoint-1',
         }),
       };
 

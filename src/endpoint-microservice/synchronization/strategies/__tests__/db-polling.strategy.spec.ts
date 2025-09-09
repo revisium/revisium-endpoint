@@ -443,11 +443,11 @@ describe('DbPollingStrategy', () => {
       (key: string, defaultValue: any) => {
         switch (key) {
           case 'SYNC_DB_POLLING_INTERVAL_MS':
-            return 30000;
+            return defaultValue; // Return the default value to test defaults properly
           case 'SYNC_DB_POLLING_BATCH_SIZE':
-            return 50;
+            return defaultValue; // Return the default value to test defaults properly
           case 'SYNC_DB_POLLING_ENABLED':
-            return true;
+            return defaultValue; // Return the default value to test defaults properly
           default:
             return defaultValue;
         }
