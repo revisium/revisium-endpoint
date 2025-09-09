@@ -11,10 +11,6 @@ export class UpdateRestapiEndpointHandler
   public async execute({
     endpointId,
   }: UpdateRestapiEndpointCommand): Promise<void> {
-    if (!this.service.existEndpoint(endpointId)) {
-      throw new Error(`${endpointId} does not exist`);
-    }
-
     await this.service.stopEndpoint(endpointId);
     await this.service.runEndpoint(endpointId);
   }

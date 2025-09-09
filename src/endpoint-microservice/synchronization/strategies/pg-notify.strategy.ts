@@ -122,13 +122,10 @@ export class PgNotifyStrategy implements EndpointSyncStrategy, OnModuleDestroy {
       throw new Error('PostgreSQL client not connected');
     }
 
-    // Set up notification handler
     this.pgClient.on('notification', (msg) => {
-      console.log(msg);
       this.handleNotification(msg);
     });
 
-    // Listen for endpoint changes
     await this.pgClient.query(`LISTEN ${NOTIFICATION_ENDPOINT_CHANGES}`);
     this.logger.log(
       `Listening for ${NOTIFICATION_ENDPOINT_CHANGES} notifications`,
