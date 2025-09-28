@@ -43,7 +43,7 @@ input JsonFilter {
   lt: Float
   lte: Float
   mode: FilterJsonMode
-  path: [String!]
+  path: JSON
   string_contains: String
   string_ends_with: String
   string_starts_with: String

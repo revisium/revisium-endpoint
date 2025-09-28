@@ -207,7 +207,9 @@ export class CommonSchemaService {
         },
         {
           name: 'path',
-          type: FieldType.stringList,
+          type: FieldType.ref,
+          refType: FieldRefType.scalar,
+          value: jsonScalar.name,
         },
         {
           name: 'mode',
