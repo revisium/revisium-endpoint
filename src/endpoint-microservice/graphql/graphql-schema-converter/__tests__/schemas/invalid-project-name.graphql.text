@@ -61,7 +61,7 @@ input INVALID_PROJECT_NAME_1JsonFilter {
   lt: Float
   lte: Float
   mode: INVALID_PROJECT_NAME_1FilterJsonMode
-  path: [String!]
+  path: JSON
   string_contains: String
   string_ends_with: String
   string_starts_with: String

@@ -33,7 +33,7 @@ input CustomJsonFilter {
   lt: Float
   lte: Float
   mode: CustomFilterJsonMode
-  path: [String!]
+  path: JSON
   string_contains: String
   string_ends_with: String
   string_starts_with: String
