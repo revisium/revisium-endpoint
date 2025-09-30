@@ -1,5 +1,5 @@
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 
 export type ContextType = { headers: Record<string, string> };
 

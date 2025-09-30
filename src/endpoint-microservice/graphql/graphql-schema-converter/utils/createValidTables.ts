@@ -5,7 +5,7 @@ import {
 import { generateFieldAndTypeNames } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/generateFieldAndTypeNames';
 import { isEmptyObject } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/isEmptyObject';
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 
 export const createValidTables = (
   tables: (ConverterTable & { store: JsonSchemaStore })[],

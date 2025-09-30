@@ -2,10 +2,8 @@ import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
-import {
-  resolveRefs,
-  JsonSchema,
-} from 'src/endpoint-microservice/shared/schema';
+import { resolveRefs } from '@revisium/schema-toolkit/lib';
+import { JsonSchema } from '@revisium/schema-toolkit/types';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 import {

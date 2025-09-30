@@ -1,4 +1,4 @@
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import { CreatingTableOptionsType } from '../types';
 import { SchemaProcessingContext } from '../services/strategy/schema-processing-context.interface';
 

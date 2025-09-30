@@ -2,7 +2,7 @@ import {
   JsonSchema,
   JsonSchemaTypeName,
   JsonStringSchema,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/types';
 
 export const isStringForeignSchema = (
   schema: JsonSchema,

@@ -55,6 +55,7 @@
     "@pothos/plugin-directives": "^4.2.3",
     "@pothos/plugin-federation": "^4.4.2",
     "@prisma/client": "^6.8.2",
+    "@revisium/schema-toolkit": "^0.2.1",
     "@types/pg": "^8.15.5",
     "bcrypt": "^6.0.0",
     "graphql": "^16.11.0",

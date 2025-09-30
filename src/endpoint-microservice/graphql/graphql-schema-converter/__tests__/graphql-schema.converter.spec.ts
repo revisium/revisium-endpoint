@@ -14,7 +14,7 @@ import {
   getObjectSchema,
   getRefSchema,
   getStringSchema,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/mocks';
 import * as fs from 'node:fs/promises';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
@@ -22,7 +22,7 @@ import {
   ConverterContextType,
   ConverterTable,
 } from 'src/endpoint-microservice/shared/converter';
-import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
+import { SystemSchemaIds } from '@revisium/schema-toolkit/consts';
 
 describe('GraphQL Schema Converter', () => {
   it('empty schema', async () => {

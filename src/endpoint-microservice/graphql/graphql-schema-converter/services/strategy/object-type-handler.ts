@@ -2,7 +2,7 @@ import { createPropertyContext } from 'src/endpoint-microservice/graphql/graphql
 import {
   JsonSchemaStore,
   JsonObjectStore,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/model';
 import {
   FieldType,
   FieldRefType,
@@ -18,7 +18,7 @@ import {
   hasDuplicateKeyCaseInsensitive,
   capitalize,
 } from 'src/endpoint-microservice/shared/utils/stringUtils';
-import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
+import { SystemSchemaIds } from '@revisium/schema-toolkit/consts';
 
 export class ObjectTypeHandler extends BaseSchemaTypeHandler {
   public canHandle(schema: JsonSchemaStore): boolean {
