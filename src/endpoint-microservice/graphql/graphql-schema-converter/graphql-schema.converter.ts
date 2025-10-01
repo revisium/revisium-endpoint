@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { GraphQLSchema } from 'graphql/type';
 import { lexicographicSortSchema } from 'graphql/utilities';
 import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/common-schema.service';
