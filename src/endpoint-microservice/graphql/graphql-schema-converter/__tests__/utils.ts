@@ -5,7 +5,7 @@ import {
   getNumberSchema,
   getObjectSchema,
   getStringSchema,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/mocks';
 
 export const getComplexSchema = (): ConverterTable[] => {
   const user: ConverterTable = {

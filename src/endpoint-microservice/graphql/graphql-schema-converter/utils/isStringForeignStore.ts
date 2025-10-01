@@ -1,7 +1,7 @@
 import {
   JsonSchemaStore,
   JsonStringStore,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/model';
 
 export const isStringForeignStore = (
   store: JsonSchemaStore,

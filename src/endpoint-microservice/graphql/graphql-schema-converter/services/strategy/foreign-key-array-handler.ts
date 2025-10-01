@@ -1,4 +1,4 @@
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import { isArrayStore } from '../../utils/isArrayStore';
 import { isStringForeignStore } from '../../utils/isStringForeignStore';
 import { FieldRefType, FieldType, TypeModelField } from '../schema';

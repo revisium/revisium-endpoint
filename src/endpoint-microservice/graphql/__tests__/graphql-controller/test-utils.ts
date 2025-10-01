@@ -1,12 +1,12 @@
 import { nanoid } from 'nanoid';
-import { SystemSchemaIds } from 'src/endpoint-microservice/shared/schema-ids.consts';
+import { SystemSchemaIds } from '@revisium/schema-toolkit/consts';
 import {
   getObjectSchema,
   getStringSchema,
   getNumberSchema,
   getArraySchema,
   getRefSchema,
-} from 'src/endpoint-microservice/shared/schema/schema.mocks';
+} from '@revisium/schema-toolkit/mocks';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
 export const ENDPOINT_ID = nanoid();

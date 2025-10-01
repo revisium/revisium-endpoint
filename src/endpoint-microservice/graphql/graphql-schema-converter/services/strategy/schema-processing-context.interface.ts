@@ -1,4 +1,4 @@
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import { ConverterTable } from 'src/endpoint-microservice/shared/converter';
 
 export interface SchemaProcessingContext {

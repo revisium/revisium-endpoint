@@ -1,7 +1,7 @@
 import {
   JsonArrayStore,
   JsonSchemaStore,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/model';
 
 export const isArrayStore = (
   store: JsonSchemaStore,

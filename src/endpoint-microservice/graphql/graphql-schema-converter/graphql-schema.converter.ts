@@ -19,11 +19,11 @@ import {
   Converter,
   ConverterContextType,
 } from 'src/endpoint-microservice/shared/converter';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import {
   createJsonSchemaStore,
-  JsonSchemaStore,
   pluginRefs,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/lib';
 
 export interface CacheNode {
   nodeType?: TypeModel;

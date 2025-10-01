@@ -1,4 +1,4 @@
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import { TypeModelField } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import {
   SchemaTypeHandler,

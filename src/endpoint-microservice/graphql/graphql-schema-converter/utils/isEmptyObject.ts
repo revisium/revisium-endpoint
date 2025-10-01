@@ -1,4 +1,4 @@
-import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchema } from '@revisium/schema-toolkit/types';
 
 export const isEmptyObject = (schema: JsonSchema): boolean => {
   if ('$ref' in schema) {

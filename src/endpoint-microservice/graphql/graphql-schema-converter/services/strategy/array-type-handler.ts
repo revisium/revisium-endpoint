@@ -1,5 +1,5 @@
 import { createArrayItemContext } from 'src/endpoint-microservice/graphql/graphql-schema-converter/utils/schema-processing-context.utils';
-import { JsonSchemaStore } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchemaStore } from '@revisium/schema-toolkit/model';
 import { BaseSchemaTypeHandler } from './base-schema-type-handler';
 import { SchemaProcessingContext } from './schema-processing-context.interface';
 import { FieldResult } from './schema-type-handler.interface';

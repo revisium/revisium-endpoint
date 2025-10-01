@@ -5,7 +5,7 @@ import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/inter
 import { GraphQLSchemaConverter } from 'src/endpoint-microservice/graphql/graphql-schema-converter/graphql-schema.converter';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
 import { GraphQLOptionsService } from 'src/endpoint-microservice/graphql/services/graphql-options.service';
-import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchema } from '@revisium/schema-toolkit/types';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;

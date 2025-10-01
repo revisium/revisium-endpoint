@@ -2,7 +2,7 @@ import {
   JsonArrayStore,
   JsonObjectStore,
   JsonSchemaStore,
-} from 'src/endpoint-microservice/shared/schema';
+} from '@revisium/schema-toolkit/model';
 
 export const isEmptyStore = (store: JsonSchemaStore): boolean => {
   if (store instanceof JsonObjectStore) {

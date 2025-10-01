@@ -1,4 +1,4 @@
-import { JsonSchema } from 'src/endpoint-microservice/shared/schema';
+import { JsonSchema } from '@revisium/schema-toolkit/types';
 
 export type Options = {
   hideNodeTypes?: boolean;
