@@ -19,7 +19,7 @@ export class NotificationCheck {
     if (!envPort) {
       throw new Error(`Environment variable not found: ${portPath}`);
     }
-    const port = parseInt(envPort);
+    const port = Number.parseInt(envPort);
 
     const host = this.configService.get<string>(hostPath);
 

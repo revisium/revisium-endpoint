@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { GraphQLSchema } from 'graphql/type';
 import { ClsService } from 'nestjs-cls';
 import { join } from 'path';

@@ -25,8 +25,6 @@ export type QueryModelField = (
 export class QueryModel {
   public fields = new Map<string, QueryModelField>();
 
-  constructor() {}
-
   public addField(field: QueryModelField) {
     if (this.fields.has(field.name)) {
       throw new Error(`Field with name "${field.name}" already exists`);
