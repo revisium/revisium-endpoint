@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { EndpointType } from '@prisma/client';
+import { EndpointType } from 'src/__generated__/client';
 import { EndpointSyncManager } from '../endpoint-sync-manager.service';
 import { EndpointSyncStrategy } from '../strategies/endpoint-sync-strategy.interface';
 import { EndpointChangeEvent } from '../types';
