@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { EndpointType } from '@prisma/client';
+import { EndpointType } from 'src/__generated__/client';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { DbPollingStrategy } from '../db-polling.strategy';
 import { EndpointChangeEvent } from '../../types';

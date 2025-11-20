@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
-import { EndpointType } from '@prisma/client';
+import { EndpointType } from 'src/__generated__/client';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { InitialSyncService } from '../initial-sync.service';
 import { EndpointChangeEvent } from '../../types';

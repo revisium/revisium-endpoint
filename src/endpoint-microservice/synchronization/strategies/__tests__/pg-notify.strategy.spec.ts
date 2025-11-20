@@ -15,6 +15,10 @@ const mockPgClient = {
 
 jest.mock('pg', () => ({
   Client: jest.fn().mockImplementation(() => mockPgClient),
+  types: {
+    builtins: {},
+    getTypeParser: jest.fn(),
+  },
 }));
 
 const createMockPrismaService = () =>

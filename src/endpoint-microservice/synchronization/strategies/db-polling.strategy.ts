@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Endpoint } from '@prisma/client';
+import { Endpoint } from 'src/__generated__/client';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { AppOptions } from 'src/endpoint-microservice/shared/app-mode';
 import { EndpointChangeEvent } from '../types';
