@@ -44,6 +44,9 @@ module.exports = [
     },
   },
   {
+    ignores: ['src/__generated__/**'],
+  },
+  {
     ignores: ['*.spec.ts', '*.e2e-spec.ts'],
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
