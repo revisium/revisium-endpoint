@@ -1,1 +1,1 @@
-export { EndpointMicroserviceModule } from 'src/endpoint-microservice/endpoint-microservice.module';
+export { EndpointMicroserviceModule } from './endpoint-microservice/endpoint-microservice.module';
