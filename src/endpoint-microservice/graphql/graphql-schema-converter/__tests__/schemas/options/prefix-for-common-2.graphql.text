@@ -34,6 +34,9 @@ input CustomJsonFilter {
   lte: Float
   mode: CustomFilterJsonMode
   path: JSON
+  search: String
+  searchLanguage: CustomSearchLanguage
+  searchType: CustomSearchType
   string_contains: String
   string_ends_with: String
   string_starts_with: String
@@ -60,6 +63,43 @@ type CustomPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum CustomSearchLanguage {
+  arabic
+  armenian
+  basque
+  catalan
+  danish
+  dutch
+  english
+  finnish
+  french
+  german
+  greek
+  hindi
+  hungarian
+  indonesian
+  irish
+  italian
+  lithuanian
+  nepali
+  norwegian
+  portuguese
+  romanian
+  russian
+  serbian
+  simple
+  spanish
+  swedish
+  tamil
+  turkish
+  yiddish
+}
+
+enum CustomSearchType {
+  phrase
+  plain
 }
 
 enum CustomSortOrder {

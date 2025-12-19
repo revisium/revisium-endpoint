@@ -44,6 +44,9 @@ input ProjectJsonFilter {
   lte: Float
   mode: ProjectFilterJsonMode
   path: JSON
+  search: String
+  searchLanguage: ProjectSearchLanguage
+  searchType: ProjectSearchType
   string_contains: String
   string_ends_with: String
   string_starts_with: String
@@ -70,6 +73,43 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProjectSearchLanguage {
+  arabic
+  armenian
+  basque
+  catalan
+  danish
+  dutch
+  english
+  finnish
+  french
+  german
+  greek
+  hindi
+  hungarian
+  indonesian
+  irish
+  italian
+  lithuanian
+  nepali
+  norwegian
+  portuguese
+  romanian
+  russian
+  serbian
+  simple
+  spanish
+  swedish
+  tamil
+  turkish
+  yiddish
+}
+
+enum ProjectSearchType {
+  phrase
+  plain
 }
 
 enum ProjectSortOrder {

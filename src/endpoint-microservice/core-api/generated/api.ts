@@ -21,7 +21,7 @@ export interface LoginResponse {
 
 export interface CreateUserDto {
   username: string;
-  roleId: "systemAdmin" | "systemFullApiRead" | "systemUser";
+  roleId: CreateUserDtoRoleIdEnum;
   password: string;
   email?: string;
 }
@@ -93,12 +93,7 @@ export interface UsersOrganizationConnection {
 
 export interface AddUserToOrganizationDto {
   userId: string;
-  roleId:
-    | "organizationOwner"
-    | "organizationAdmin"
-    | "developer"
-    | "editor"
-    | "reader";
+  roleId: AddUserToOrganizationDtoRoleIdEnum;
 }
 
 export interface RemoveUserFromOrganizationDto {
@@ -153,7 +148,7 @@ export interface UsersProjectConnection {
 
 export interface AddUserToProjectDto {
   userId: string;
-  roleId: "developer" | "editor" | "reader";
+  roleId: AddUserToProjectDtoRoleIdEnum;
 }
 
 export interface TouchedModelDto {
@@ -194,6 +189,67 @@ export interface CreateRevisionDto {
   comment?: string;
 }
 
+export interface RemoveMigrationDto {
+  /**
+   * Indicates a remove migration
+   * @example "remove"
+   */
+  changeType: RemoveMigrationDtoChangeTypeEnum;
+  /** Timestamp when the table was removed (ISO 8601) */
+  id: string;
+  /** Current table identifier */
+  tableId: string;
+}
+
+export interface RenameMigrationDto {
+  /**
+   * Indicates a rename migration
+   * @example "rename"
+   */
+  changeType: RenameMigrationDtoChangeTypeEnum;
+  /** Timestamp when the table was renamed (ISO 8601) */
+  id: string;
+  /** Current table identifier */
+  tableId: string;
+  /** New table identifier after renaming */
+  nextTableId: string;
+}
+
+export interface UpdateMigrationDto {
+  /**
+   * Indicates an update migration
+   * @example "update"
+   */
+  changeType: UpdateMigrationDtoChangeTypeEnum;
+  /** Identifier of the table */
+  tableId: string;
+  /** Checksum of the patch set */
+  hash: string;
+  /** Timestamp when the update was applied (ISO 8601) */
+  id: string;
+  /** Array of JSON Patch operations */
+  patches: object[];
+}
+
+export interface InitMigrationDto {
+  /**
+   * Indicates an initialization migration
+   * @example "init"
+   */
+  changeType: InitMigrationDtoChangeTypeEnum;
+  /** Identifier of the newly created table */
+  tableId: string;
+  /** Checksum of the initial schema */
+  hash: string;
+  /**
+   * Timestamp when the table was created (ISO 8601)
+   * @example "2025-07-31T12:34:56Z"
+   */
+  id: string;
+  /** JSON Schema definition of the table */
+  schema: object;
+}
+
 export interface ChildBranchResponse {
   branch: Id;
   revision: Id;
@@ -225,7 +281,7 @@ export interface EndpointModel {
   id: string;
   /** @format date-time */
   createdAt: string;
-  type: "GRAPHQL" | "REST_API";
+  type: EndpointModelTypeEnum;
 }
 
 export interface CreateBranchByRevisionDto {
@@ -233,7 +289,7 @@ export interface CreateBranchByRevisionDto {
 }
 
 export interface CreateEndpointDto {
-  type: "GRAPHQL" | "REST_API";
+  type: CreateEndpointDtoTypeEnum;
 }
 
 export interface CreateTableDto {
@@ -246,9 +302,21 @@ export interface CreateTableResponse {
   table: TableModel;
 }
 
+export interface ApplyMigrationsResponseDto {
+  /** The ID of the migration */
+  id: string;
+  /** The migration application status */
+  status: ApplyMigrationsResponseDtoStatusEnum;
+  /** Error message if the migration failed */
+  error?: string;
+}
+
 export interface OrderByDto {
-  field: "createdAt" | "updatedAt" | "publishedAt" | "id";
-  direction: "asc" | "desc";
+  field: OrderByDtoFieldEnum;
+  direction: OrderByDtoDirectionEnum;
+  path?: string;
+  type?: OrderByDtoTypeEnum;
+  aggregation?: OrderByDtoAggregationEnum;
 }
 
 export interface StringFilterDto {
@@ -262,7 +330,7 @@ export interface StringFilterDto {
   contains?: string;
   startsWith?: string;
   endsWith?: string;
-  mode?: "default" | "insensitive";
+  mode?: StringFilterDtoModeEnum;
   /** Negation filter (not): a simple string */
   not?: string;
 }
@@ -291,10 +359,10 @@ export interface DateTimeFilterDto {
 export interface JsonFilterDto {
   /** Exact JSON match */
   equals?: object;
-  /** Path in JSON (PostgreSQL: array of keys/indexes, e.g. ["pet1","petName"]) */
-  path?: string[];
+  /** Path in JSON (PostgreSQL: array of keys/indexes, e.g. ["pet1","petName"] or dot notation "pet1.petName") */
+  path?: string | string[];
   /** Case sensitivity mode for string filters within JSON ("insensitive" uses ILIKE on PostgreSQL) */
-  mode?: "default" | "insensitive";
+  mode?: JsonFilterDtoModeEnum;
   /** Substring match in JSON string value */
   string_contains?: string;
   /** Prefix match in JSON string value */
@@ -315,6 +383,14 @@ export interface JsonFilterDto {
   gt?: number;
   /** Greater-than-or-equal comparison. Must be a number or numeric JSON value */
   gte?: number;
+  /** Full-text search string for JSON content */
+  search?: string;
+  /** Language for full-text search. Default: simple */
+  searchLanguage?: JsonFilterDtoSearchLanguageEnum;
+  /** Search type: plain (individual words) or phrase (exact phrase) */
+  searchType?: JsonFilterDtoSearchTypeEnum;
+  /** Scope of search within JSON structure */
+  searchIn?: JsonFilterDtoSearchInEnum;
 }
 
 export interface RowWhereInputDto {
@@ -390,12 +466,24 @@ export interface RowsConnection {
 export interface CreateRowDto {
   rowId: string;
   data: Record<string, any>;
+  isRestore?: boolean;
 }
 
 export interface CreateRowResponse {
   table: TableModel;
   previousVersionTableId: string;
   row: RowModel;
+}
+
+export interface RemoveRowsDto {
+  /** @maxItems 1000 */
+  rowIds: string[];
+}
+
+export interface RemoveRowsResponse {
+  branch: BranchModel;
+  table?: TableModel;
+  previousVersionTableId?: string;
 }
 
 export interface UpdateTableDto {
@@ -421,9 +509,39 @@ export interface RemoveRowResponse {
 
 export interface UpdateRowDto {
   data: Record<string, any>;
+  isRestore?: boolean;
 }
 
 export interface UpdateRowResponse {
+  table?: TableModel;
+  previousVersionTableId?: string;
+  row?: RowModel;
+  previousVersionRowId?: string;
+}
+
+export interface PatchRow {
+  /**
+   * The operation to perform. Currently only "replace" is supported
+   * @example "replace"
+   */
+  op: PatchRowOpEnum;
+  /**
+   * JSON path using dot notation for objects and [index] for arrays. Examples: "name", "user.email", "items[0]", "data.list[2].value"
+   * @example "list[0].nestedList[2].name"
+   */
+  path: string;
+  /**
+   * The value to set at the specified path. Can be any valid JSON value (string, number, boolean, object, array, or null)
+   * @example "{ "key": "value" }"
+   */
+  value: string | number | boolean | object | any[] | null;
+}
+
+export interface PatchRowDto {
+  patches: PatchRow[];
+}
+
+export interface PatchRowResponse {
   table?: TableModel;
   previousVersionTableId?: string;
   row?: RowModel;
@@ -471,6 +589,172 @@ export interface ConfigurationResponse {
   github: GithubOauth;
 }
 
+export enum CreateUserDtoRoleIdEnum {
+  SystemAdmin = "systemAdmin",
+  SystemFullApiRead = "systemFullApiRead",
+  SystemUser = "systemUser",
+}
+
+export enum AddUserToOrganizationDtoRoleIdEnum {
+  OrganizationOwner = "organizationOwner",
+  OrganizationAdmin = "organizationAdmin",
+  Developer = "developer",
+  Editor = "editor",
+  Reader = "reader",
+}
+
+export enum AddUserToProjectDtoRoleIdEnum {
+  Developer = "developer",
+  Editor = "editor",
+  Reader = "reader",
+}
+
+/**
+ * Indicates a remove migration
+ * @example "remove"
+ */
+export enum RemoveMigrationDtoChangeTypeEnum {
+  Remove = "remove",
+}
+
+/**
+ * Indicates a rename migration
+ * @example "rename"
+ */
+export enum RenameMigrationDtoChangeTypeEnum {
+  Rename = "rename",
+}
+
+/**
+ * Indicates an update migration
+ * @example "update"
+ */
+export enum UpdateMigrationDtoChangeTypeEnum {
+  Update = "update",
+}
+
+/**
+ * Indicates an initialization migration
+ * @example "init"
+ */
+export enum InitMigrationDtoChangeTypeEnum {
+  Init = "init",
+}
+
+export enum EndpointModelTypeEnum {
+  GRAPHQL = "GRAPHQL",
+  REST_API = "REST_API",
+}
+
+export enum CreateEndpointDtoTypeEnum {
+  GRAPHQL = "GRAPHQL",
+  REST_API = "REST_API",
+}
+
+/** The migration application status */
+export enum ApplyMigrationsResponseDtoStatusEnum {
+  Applied = "applied",
+  Failed = "failed",
+  Skipped = "skipped",
+}
+
+export enum OrderByDtoFieldEnum {
+  CreatedAt = "createdAt",
+  UpdatedAt = "updatedAt",
+  PublishedAt = "publishedAt",
+  Id = "id",
+  Data = "data",
+}
+
+export enum OrderByDtoDirectionEnum {
+  Asc = "asc",
+  Desc = "desc",
+}
+
+export enum OrderByDtoTypeEnum {
+  Text = "text",
+  Int = "int",
+  Float = "float",
+  Boolean = "boolean",
+  Timestamp = "timestamp",
+}
+
+export enum OrderByDtoAggregationEnum {
+  Min = "min",
+  Max = "max",
+  Avg = "avg",
+  First = "first",
+  Last = "last",
+}
+
+export enum StringFilterDtoModeEnum {
+  Default = "default",
+  Insensitive = "insensitive",
+}
+
+/** Case sensitivity mode for string filters within JSON ("insensitive" uses ILIKE on PostgreSQL) */
+export enum JsonFilterDtoModeEnum {
+  Default = "default",
+  Insensitive = "insensitive",
+}
+
+/** Language for full-text search. Default: simple */
+export enum JsonFilterDtoSearchLanguageEnum {
+  Simple = "simple",
+  Arabic = "arabic",
+  Armenian = "armenian",
+  Basque = "basque",
+  Catalan = "catalan",
+  Danish = "danish",
+  Dutch = "dutch",
+  English = "english",
+  Finnish = "finnish",
+  French = "french",
+  German = "german",
+  Greek = "greek",
+  Hindi = "hindi",
+  Hungarian = "hungarian",
+  Indonesian = "indonesian",
+  Irish = "irish",
+  Italian = "italian",
+  Lithuanian = "lithuanian",
+  Nepali = "nepali",
+  Norwegian = "norwegian",
+  Portuguese = "portuguese",
+  Romanian = "romanian",
+  Russian = "russian",
+  Serbian = "serbian",
+  Spanish = "spanish",
+  Swedish = "swedish",
+  Tamil = "tamil",
+  Turkish = "turkish",
+  Yiddish = "yiddish",
+}
+
+/** Search type: plain (individual words) or phrase (exact phrase) */
+export enum JsonFilterDtoSearchTypeEnum {
+  Plain = "plain",
+  Phrase = "phrase",
+}
+
+/** Scope of search within JSON structure */
+export enum JsonFilterDtoSearchInEnum {
+  All = "all",
+  Values = "values",
+  Keys = "keys",
+  Strings = "strings",
+  Numbers = "numbers",
+  Booleans = "booleans",
+}
+
+/**
+ * The operation to perform. Currently only "replace" is supported
+ * @example "replace"
+ */
+export enum PatchRowOpEnum {
+  Replace = "replace",
+}
+
 export interface ProjectsParams {
   /** @default 100 */
   first: number;
@@ -511,9 +795,24 @@ export interface RevisionsParams {
   first: number;
   after?: string;
   before?: string;
+  inclusive?: boolean;
+  /** Sort order: asc (default) or desc */
+  sort?: SortEnum;
   organizationId: string;
   projectName: string;
   branchName: string;
+}
+
+/** Sort order: asc (default) or desc */
+export enum SortEnum {
+  Asc = "asc",
+  Desc = "desc",
+}
+
+/** Sort order: asc (default) or desc */
+export enum RevisionsParams1SortEnum {
+  Asc = "asc",
+  Desc = "desc",
 }
 
 export interface TablesParams {
@@ -804,7 +1103,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 1.4.1
+ * @version 2.5.0-alpha.10
  * @contact
  */
 export class Api<
@@ -1550,6 +1849,59 @@ export class Api<
     /**
      * No description
      *
+     * @tags Revision
+     * @name Migrations
+     * @request GET:/api/revision/{revisionId}/migrations
+     * @secure
+     */
+    migrations: (revisionId: string, params: RequestParams = {}) =>
+      this.request<
+        (
+          | InitMigrationDto
+          | UpdateMigrationDto
+          | RenameMigrationDto
+          | RemoveMigrationDto
+        )[],
+        any
+      >({
+        path: `/api/revision/${revisionId}/migrations`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Revision
+     * @name ApplyMigrations
+     * @request POST:/api/revision/{revisionId}/apply-migrations
+     * @secure
+     */
+    applyMigrations: (
+      revisionId: string,
+      data: (
+        | InitMigrationDto
+        | UpdateMigrationDto
+        | RenameMigrationDto
+        | RemoveMigrationDto
+      )[],
+      params: RequestParams = {},
+    ) =>
+      this.request<ApplyMigrationsResponseDto[], any>({
+        path: `/api/revision/${revisionId}/apply-migrations`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags Table
      * @name Table
      * @request GET:/api/revision/{revisionId}/tables/{tableId}
@@ -1647,6 +1999,30 @@ export class Api<
       this.request<RowsConnection, any>({
         path: `/api/revision/${revisionId}/tables/${tableId}/rows`,
         method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Table
+     * @name DeleteRows
+     * @request DELETE:/api/revision/{revisionId}/tables/{tableId}/rows
+     * @secure
+     */
+    deleteRows: (
+      revisionId: string,
+      tableId: string,
+      data: RemoveRowsDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<RemoveRowsResponse, any>({
+        path: `/api/revision/${revisionId}/tables/${tableId}/rows`,
+        method: "DELETE",
         body: data,
         secure: true,
         type: ContentType.Json,
@@ -1880,6 +2256,31 @@ export class Api<
      * No description
      *
      * @tags Row
+     * @name PatchRow
+     * @request PATCH:/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}
+     * @secure
+     */
+    patchRow: (
+      revisionId: string,
+      tableId: string,
+      rowId: string,
+      data: PatchRowDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<PatchRowResponse, any>({
+        path: `/api/revision/${revisionId}/tables/${tableId}/rows/${rowId}`,
+        method: "PATCH",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Row
      * @name RowCountForeignKeysBy
      * @request GET:/api/revision/{revisionId}/tables/{tableId}/rows/{rowId}/count-foreign-keys-by
      * @secure
@@ -2071,78 +2472,6 @@ export class Api<
      * No description
      *
      * @tags health
-     * @name Liveness
-     * @request GET:/health/liveness
-     */
-    liveness: (params: RequestParams = {}) =>
-      this.request<
-        {
-          /** @example "ok" */
-          status?: string;
-          /** @example {"database":{"status":"up"}} */
-          info?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-          /** @example {} */
-          error?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-          /** @example {"database":{"status":"up"}} */
-          details?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-        },
-        {
-          /** @example "error" */
-          status?: string;
-          /** @example {"database":{"status":"up"}} */
-          info?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-          /** @example {"redis":{"status":"down","message":"Could not connect"}} */
-          error?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-          /** @example {"database":{"status":"up"},"redis":{"status":"down","message":"Could not connect"}} */
-          details?: Record<
-            string,
-            {
-              status: string;
-              [key: string]: any;
-            }
-          >;
-        }
-      >({
-        path: `/health/liveness`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags health
      * @name Readiness
      * @request GET:/health/readiness
      */
@@ -2206,6 +2535,78 @@ export class Api<
         }
       >({
         path: `/health/readiness`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags health
+     * @name Liveness
+     * @request GET:/health/liveness
+     */
+    liveness: (params: RequestParams = {}) =>
+      this.request<
+        {
+          /** @example "ok" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        },
+        {
+          /** @example "error" */
+          status?: string;
+          /** @example {"database":{"status":"up"}} */
+          info?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"redis":{"status":"down","message":"Could not connect"}} */
+          error?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+          /** @example {"database":{"status":"up"},"redis":{"status":"down","message":"Could not connect"}} */
+          details?: Record<
+            string,
+            {
+              status: string;
+              [key: string]: any;
+            }
+          >;
+        }
+      >({
+        path: `/health/liveness`,
         method: "GET",
         format: "json",
         ...params,

@@ -62,6 +62,9 @@ input INVALID_PROJECT_NAME_1JsonFilter {
   lte: Float
   mode: INVALID_PROJECT_NAME_1FilterJsonMode
   path: JSON
+  search: String
+  searchLanguage: INVALID_PROJECT_NAME_1SearchLanguage
+  searchType: INVALID_PROJECT_NAME_1SearchType
   string_contains: String
   string_ends_with: String
   string_starts_with: String
@@ -88,6 +91,43 @@ type INVALID_PROJECT_NAME_1PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum INVALID_PROJECT_NAME_1SearchLanguage {
+  arabic
+  armenian
+  basque
+  catalan
+  danish
+  dutch
+  english
+  finnish
+  french
+  german
+  greek
+  hindi
+  hungarian
+  indonesian
+  irish
+  italian
+  lithuanian
+  nepali
+  norwegian
+  portuguese
+  romanian
+  russian
+  serbian
+  simple
+  spanish
+  swedish
+  tamil
+  turkish
+  yiddish
+}
+
+enum INVALID_PROJECT_NAME_1SearchType {
+  phrase
+  plain
 }
 
 enum INVALID_PROJECT_NAME_1SortOrder {
