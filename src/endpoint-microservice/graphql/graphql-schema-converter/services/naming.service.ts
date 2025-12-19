@@ -153,6 +153,24 @@ export class NamingService {
   }
 
   /**
+   * Generate search type enum name for full-text search
+   */
+  public getSystemSearchTypeEnumName(): string {
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
+    return `${formattedProject}SearchType`;
+  }
+
+  /**
+   * Generate search language enum name for full-text search
+   */
+  public getSystemSearchLanguageEnumName(): string {
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
+    return `${formattedProject}SearchLanguage`;
+  }
+
+  /**
    * Generate type names with postfix (used for nested types)
    */
   public getTypeNameWithPostfix(baseName: string, postfix: string): string {

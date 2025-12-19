@@ -90,6 +90,9 @@ input JsonFilter {
   lte: Float
   mode: FilterJsonMode
   path: JSON
+  search: String
+  searchLanguage: SearchLanguage
+  searchType: SearchType
   string_contains: String
   string_ends_with: String
   string_starts_with: String
@@ -184,6 +187,43 @@ type Query {
   userCustom(id: String!): UserCustom!
   users(data: GetUsersInput): UserConnection!
   usersCustom(data: GetUsersInput): UserCustomConnection!
+}
+
+enum SearchLanguage {
+  arabic
+  armenian
+  basque
+  catalan
+  danish
+  dutch
+  english
+  finnish
+  french
+  german
+  greek
+  hindi
+  hungarian
+  indonesian
+  irish
+  italian
+  lithuanian
+  nepali
+  norwegian
+  portuguese
+  romanian
+  russian
+  serbian
+  simple
+  spanish
+  swedish
+  tamil
+  turkish
+  yiddish
+}
+
+enum SearchType {
+  phrase
+  plain
 }
 
 enum SortOrder {

@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DateTimeResolver, JSONResolver } from 'graphql-scalars';
+import {
+  JsonFilterDtoSearchLanguageEnum,
+  JsonFilterDtoSearchTypeEnum,
+} from 'src/endpoint-microservice/core-api/generated/api';
 import { ContextService } from './context.service';
 import { NamingService } from './naming.service';
 import { FieldType, FieldRefType } from './schema';
+
+const SEARCH_LANGUAGES = Object.values(JsonFilterDtoSearchLanguageEnum);
+const SEARCH_TYPES = Object.values(JsonFilterDtoSearchTypeEnum);
 
 export enum SortDirection {
   ASC = 'asc',
@@ -194,6 +201,14 @@ export class CommonSchemaService {
       .addEnum(this.namingService.getSystemFilterModeEnumName('json'))
       .addValues(['default', 'insensitive']);
 
+    const searchType = this.contextService.schema
+      .addEnum(this.namingService.getSystemSearchTypeEnumName())
+      .addValues(SEARCH_TYPES);
+
+    const searchLanguage = this.contextService.schema
+      .addEnum(this.namingService.getSystemSearchLanguageEnumName())
+      .addValues(SEARCH_LANGUAGES);
+
     const jsonScalar = this.contextService.schema.getScalar('JSON');
 
     this.contextService.schema
@@ -262,6 +277,22 @@ export class CommonSchemaService {
         {
           name: 'gte',
           type: FieldType.float,
+        },
+        {
+          name: 'search',
+          type: FieldType.string,
+        },
+        {
+          name: 'searchLanguage',
+          type: FieldType.ref,
+          refType: FieldRefType.enum,
+          value: searchLanguage.name,
+        },
+        {
+          name: 'searchType',
+          type: FieldType.ref,
+          refType: FieldRefType.enum,
+          value: searchType.name,
         },
       ]);
   }

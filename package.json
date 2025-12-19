@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "generate:api": "npx swagger-typescript-api generate -p http://localhost:8080/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --disable-throw-on-error",
+    "generate:api": "npx swagger-typescript-api generate -p http://localhost:8080/api-json -o src/endpoint-microservice/core-api/generated -n api.ts --extract-request-params --extract-enums --disable-throw-on-error",
     "prisma:generate": "npx prisma generate && npm run prisma:postgenerate",
     "prisma:postgenerate": "echo \"export * from './client';\" > src/__generated__/client/index.ts",
     "build": "nest build && tsc-alias -p tsconfig.build.json",
