@@ -293,9 +293,7 @@ export class RestapiEndpointService {
 
     openApiJson.info.title = `Revisium organizationId: "${organizationId}", project: "${projectName}", branch: "${branchName}/${postfix}"`;
     const url = `/endpoint/restapi/${organizationId}/${projectName}/${branchName}/${postfix}`;
-    if (!openApiJson.servers) {
-      openApiJson.servers = [];
-    }
+    openApiJson.servers ??= [];
     openApiJson.servers.push({ url });
 
     return openApiJson;

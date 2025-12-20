@@ -17,7 +17,7 @@ export const getSafetyName = (
     return getSafetyName(`${prefix}_${name}`, prefix, depth + 1);
   }
   if (!CONTAIN_NAME_PATTERN.test(name)) {
-    return getSafetyName(name.replace(/\W/g, '_'), prefix, depth + 1);
+    return getSafetyName(name.replaceAll(/\W/g, '_'), prefix, depth + 1);
   }
   return name;
 };

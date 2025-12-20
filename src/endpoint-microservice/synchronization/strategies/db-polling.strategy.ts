@@ -94,8 +94,11 @@ export class DbPollingStrategy implements EndpointSyncStrategy {
 
       await this.processEndpoints(modifiedEndpoints);
 
-      const latestTimestamp =
-        modifiedEndpoints[modifiedEndpoints.length - 1].createdAt;
+      const lastEndpoint = modifiedEndpoints.at(-1);
+      if (!lastEndpoint) {
+        return;
+      }
+      const latestTimestamp = lastEndpoint.createdAt;
       this.lastSyncTimestamp = new Date(
         Math.max(latestTimestamp.getTime(), currentTimestamp.getTime()),
       );
