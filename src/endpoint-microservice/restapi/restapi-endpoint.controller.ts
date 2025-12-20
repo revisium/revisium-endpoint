@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { GetTableRowsDto } from 'src/endpoint-microservice/core-api/generated/api';
 import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
@@ -40,7 +41,7 @@ export class RestapiEndpointController {
     postfix: string,
     @Param('tableId')
     tableId: string,
-    @Body() body: object,
+    @Body() body: GetTableRowsDto,
     @Req()
     req: Request,
     @Res() res: Response,

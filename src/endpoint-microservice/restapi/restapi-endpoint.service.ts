@@ -5,7 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
-import { GetTableRowsDto } from 'src/endpoint-microservice/core-api/generated/api';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { paginatedExcludeDataFromRowModel } from 'src/endpoint-microservice/core-api/utils/transformFromPrismaToRowModel';
@@ -178,7 +177,7 @@ export class RestapiEndpointService {
         const { data, error } = await this.proxyCoreApi.api.rows(
           revision.id,
           tableId,
-          options as GetTableRowsDto,
+          options,
           { headers: headers },
         );
 
