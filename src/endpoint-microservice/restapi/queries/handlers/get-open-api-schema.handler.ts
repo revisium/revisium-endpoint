@@ -10,6 +10,7 @@ import {
   createCRUDPaths,
   createGetByIdPath,
   createGetListPath,
+  getFilterAndSortSchemas,
   getIdPathParam,
   getPaginatedResponseSchema,
   getPaginationParams,
@@ -46,7 +47,9 @@ export class GetOpenApiSchemaHandler
             type: 'http',
           },
         },
-        schemas: {},
+        schemas: {
+          ...getFilterAndSortSchemas(),
+        },
       },
     };
 

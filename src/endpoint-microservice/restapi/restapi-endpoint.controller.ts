@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -15,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { GetTableRowsDto } from 'src/endpoint-microservice/core-api/generated/api';
 import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
@@ -27,9 +29,10 @@ export class RestapiEndpointController {
     private readonly restapiEndpointService: RestapiEndpointService,
   ) {}
 
-  @Get(
+  @Post(
     '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId',
   )
+  @HttpCode(HttpStatus.OK)
   async getRows(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
@@ -38,8 +41,7 @@ export class RestapiEndpointController {
     postfix: string,
     @Param('tableId')
     tableId: string,
-    @Query('first', ParseIntPipe) first: number,
-    @Query('after') after: string | undefined,
+    @Body() body: GetTableRowsDto,
     @Req()
     req: Request,
     @Res() res: Response,
@@ -59,8 +61,7 @@ export class RestapiEndpointController {
     const result = await endpointMiddleware.getRows(
       parseHeaders(req.headers),
       tableId,
-      first,
-      after,
+      body,
     );
     res.json(result);
   }

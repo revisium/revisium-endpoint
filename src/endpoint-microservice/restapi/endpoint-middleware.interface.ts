@@ -1,4 +1,7 @@
-import { RowModel } from 'src/endpoint-microservice/core-api/generated/api';
+import {
+  GetTableRowsDto,
+  RowModel,
+} from 'src/endpoint-microservice/core-api/generated/api';
 import { IPaginatedType } from 'src/endpoint-microservice/shared/types/pagination.interface';
 
 export interface EndpointMiddleware {
@@ -27,8 +30,7 @@ export interface EndpointMiddleware {
   getRows(
     headers: Record<string, string>,
     tableId: string,
-    first: number,
-    after: string | undefined,
+    options: GetTableRowsDto,
   ): Promise<IPaginatedType<Omit<RowModel, 'data'>>>;
   getRowForeignKeysBy(
     headers: Record<string, string>,
