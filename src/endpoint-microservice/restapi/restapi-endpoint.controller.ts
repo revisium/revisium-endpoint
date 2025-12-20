@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -27,9 +28,10 @@ export class RestapiEndpointController {
     private readonly restapiEndpointService: RestapiEndpointService,
   ) {}
 
-  @Get(
+  @Post(
     '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId',
   )
+  @HttpCode(HttpStatus.OK)
   async getRows(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
@@ -38,8 +40,7 @@ export class RestapiEndpointController {
     postfix: string,
     @Param('tableId')
     tableId: string,
-    @Query('first', ParseIntPipe) first: number,
-    @Query('after') after: string | undefined,
+    @Body() body: object,
     @Req()
     req: Request,
     @Res() res: Response,
@@ -59,8 +60,7 @@ export class RestapiEndpointController {
     const result = await endpointMiddleware.getRows(
       parseHeaders(req.headers),
       tableId,
-      first,
-      after,
+      body,
     );
     res.json(result);
   }

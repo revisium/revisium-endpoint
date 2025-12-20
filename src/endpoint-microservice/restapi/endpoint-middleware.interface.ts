@@ -27,8 +27,7 @@ export interface EndpointMiddleware {
   getRows(
     headers: Record<string, string>,
     tableId: string,
-    first: number,
-    after: string | undefined,
+    options: object,
   ): Promise<IPaginatedType<Omit<RowModel, 'data'>>>;
   getRowForeignKeysBy(
     headers: Record<string, string>,
