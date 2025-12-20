@@ -1,5 +1,27 @@
 import { GraphQLScalarType } from 'graphql/type';
 
+abstract class BaseFieldModel<T extends { name: string }> {
+  public readonly fields = new Map<string, T>();
+
+  public addField(field: T): this {
+    if (this.fields.has(field.name)) {
+      throw new Error(`Field with name "${field.name}" already exists`);
+    }
+
+    this.fields.set(field.name, field);
+
+    return this;
+  }
+
+  public addFields(fields: T[]): this {
+    for (const field of fields) {
+      this.addField(field);
+    }
+
+    return this;
+  }
+}
+
 export type ArgsType = (
   | { type: FieldType.string }
   | { type: FieldType.ref; value: string }
@@ -22,19 +44,7 @@ export type QueryModelField = (
   resolver: (...args: any[]) => any;
 };
 
-export class QueryModel {
-  public fields = new Map<string, QueryModelField>();
-
-  public addField(field: QueryModelField) {
-    if (this.fields.has(field.name)) {
-      throw new Error(`Field with name "${field.name}" already exists`);
-    }
-
-    this.fields.set(field.name, field);
-
-    return this;
-  }
-}
+export class QueryModel extends BaseFieldModel<QueryModelField> {}
 
 export enum FieldRefType {
   enum = 'enum',
@@ -82,22 +92,13 @@ export type TypeModelEntity = {
   resolve: (...args: any[]) => any;
 };
 
-export class TypeModel {
-  public readonly fields = new Map<string, TypeModelField>();
+export class TypeModel extends BaseFieldModel<TypeModelField> {
   private readonly fieldThunks = new Map<string, TypeModelFieldThunk>();
 
   public entity: TypeModelEntity | null = null;
 
-  constructor(public readonly name: string) {}
-
-  public addField(field: TypeModelField) {
-    if (this.fields.has(field.name)) {
-      throw new Error(`Field with name "${field.name}" already exists`);
-    }
-
-    this.fields.set(field.name, field);
-
-    return this;
+  constructor(public readonly name: string) {
+    super();
   }
 
   public addFieldThunk(name: string, fieldThunk: TypeModelFieldThunk) {
@@ -106,14 +107,6 @@ export class TypeModel {
     }
 
     this.fieldThunks.set(name, fieldThunk);
-
-    return this;
-  }
-
-  public addFields(fields: TypeModelField[]) {
-    for (const field of fields) {
-      this.addField(field);
-    }
 
     return this;
   }
@@ -140,27 +133,9 @@ export type InputModelField = (
   | { type: FieldType.refList; refType: FieldRefType; value: string }
 ) & { name: string; required?: true };
 
-export class InputModel {
-  public fields = new Map<string, InputModelField>();
-
-  constructor(public readonly name: string) {}
-
-  public addField(field: InputModelField) {
-    if (this.fields.has(field.name)) {
-      throw new Error(`Field with name "${field.name}" already exists`);
-    }
-
-    this.fields.set(field.name, field);
-
-    return this;
-  }
-
-  public addFields(fields: InputModelField[]) {
-    for (const field of fields) {
-      this.addField(field);
-    }
-
-    return this;
+export class InputModel extends BaseFieldModel<InputModelField> {
+  constructor(public readonly name: string) {
+    super();
   }
 }
 

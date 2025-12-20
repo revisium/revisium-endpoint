@@ -53,9 +53,7 @@ export class GetOpenApiSchemaHandler
       },
     };
 
-    if (!openApiJson.paths) {
-      openApiJson.paths = {};
-    }
+    openApiJson.paths ??= {};
 
     for (const schemaRow of schemas) {
       const schemaId = schemaRow.id;
@@ -87,12 +85,8 @@ export class GetOpenApiSchemaHandler
           },
         };
       }
-      if (!openApiJson.components) {
-        openApiJson.components = { schemas: {} };
-      }
-      if (!openApiJson.components.schemas) {
-        openApiJson.components.schemas = {};
-      }
+      openApiJson.components ??= { schemas: {} };
+      openApiJson.components.schemas ??= {};
       openApiJson.components.schemas[schemaRow.id] = resolveRefs(
         schemaRow.data as JsonSchema,
       );

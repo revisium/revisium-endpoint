@@ -16,7 +16,8 @@ export const pluralize = (str: string): string => {
 
   // consonant + y -> ies
   const vowels = ['a', 'e', 'i', 'o', 'u'];
-  if (last === 'y' && !vowels.includes(lower.charAt(lower.length - 2))) {
+  const secondToLast = lower.at(-2);
+  if (last === 'y' && secondToLast && !vowels.includes(secondToLast)) {
     return str.slice(0, -1) + 'ies';
   }
 

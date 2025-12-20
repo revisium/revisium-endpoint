@@ -111,7 +111,7 @@ export class EndpointSyncManager
     }
   }
 
-  private handleEndpointChange = async (
+  private readonly handleEndpointChange = async (
     changeEvent: EndpointChangeEvent,
   ): Promise<void> => {
     // Skip duplicate events

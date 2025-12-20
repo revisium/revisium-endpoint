@@ -46,7 +46,7 @@ export class ObjectTypeHandler extends BaseSchemaTypeHandler {
 
   private validateAndGetObjectSchema(schema: JsonSchemaStore): JsonObjectStore {
     if (!(schema instanceof JsonObjectStore)) {
-      throw new Error('Schema must be a JsonObjectStore');
+      throw new TypeError('Schema must be a JsonObjectStore');
     }
     return schema;
   }

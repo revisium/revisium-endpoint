@@ -92,7 +92,7 @@ export class GraphQLOptionsService {
       return value;
     }
 
-    if (!/^[_A-Za-z][_0-9A-Za-z]*$/.test(value)) {
+    if (!/^[_A-Za-z]\w*$/.test(value)) {
       throw new Error(
         `Invalid GraphQL identifier for ${envName}: ${value}. Must be empty or match GraphQL naming convention (start with letter or underscore, followed by letters, digits, or underscores)`,
       );
