@@ -1,3 +1,4 @@
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueryBus } from '@nestjs/cqrs';
 import * as fs from 'node:fs/promises';
@@ -229,6 +230,7 @@ describe('OpenAPI Schema Snapshot', () => {
     }
   }
 
+  let app: INestApplication;
   let queryBus: QueryBus;
 
   beforeAll(async () => {
@@ -245,9 +247,13 @@ describe('OpenAPI Schema Snapshot', () => {
       .useValue(createMockPrismaService())
       .compile();
 
-    const app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication();
     await app.init();
 
     queryBus = app.get(QueryBus);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });
