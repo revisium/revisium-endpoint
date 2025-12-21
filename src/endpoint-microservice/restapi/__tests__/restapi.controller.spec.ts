@@ -15,16 +15,17 @@ import {
   PROJECT_NAME,
   BRANCH_NAME,
   USER_TABLE_ID,
+  CONF_TABLE_ID,
   user1,
   user2,
   user3,
 } from './test-utils';
 
 describe('restapi controller', () => {
-  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/:tableId', () => {
+  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
     it('should return all rows with basic pagination', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({ first: 100 })
         .expect(200);
@@ -36,7 +37,7 @@ describe('restapi controller', () => {
 
     it('should pass orderBy to Core API', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -51,7 +52,7 @@ describe('restapi controller', () => {
 
     it('should pass where filter to Core API', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -65,7 +66,7 @@ describe('restapi controller', () => {
 
     it('should filter by readonly field', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -80,7 +81,7 @@ describe('restapi controller', () => {
 
     it('should filter by data path with gte operator', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -98,7 +99,7 @@ describe('restapi controller', () => {
 
     it('should sort by data path', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -115,7 +116,7 @@ describe('restapi controller', () => {
 
     it('should support complex where with AND/OR', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -130,7 +131,7 @@ describe('restapi controller', () => {
 
     it('should support sorting by nested data field', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -166,7 +167,7 @@ describe('restapi controller', () => {
 
     it('should support combined filtering and sorting', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -184,43 +185,104 @@ describe('restapi controller', () => {
 
     it('should support after cursor', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({ first: 100, after: 'cursor123' })
         .expect(200);
 
       expect(response.body).toBeDefined();
     });
+  });
 
-    it('should resolve plural path to table', async () => {
+  describe('DELETE /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
+    it('should bulk delete rows by IDs', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl('users'))
+        .delete(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
-        .send({ first: 100 })
-        .expect(200);
+        .send({ rowIds: ['user-1', 'user-2'] });
 
-      expect(response.body.totalCount).toBe(3);
-      expect(mockProxyCoreApiService.api.rows).toHaveBeenCalledWith(
-        expect.any(String),
-        USER_TABLE_ID,
-        expect.any(Object),
-        expect.any(Object),
-      );
+      expect(response.status).toBe(200);
+      expect(response.body).toBe(true);
     });
 
-    it('should return 400 for unknown table', async () => {
+    it('should delete rows from uppercase table name', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl('nonexistent'))
+        .delete(getRowsUrl(CONF_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
-        .send({ first: 100 })
-        .expect(400);
+        .send({ rowIds: ['1', '2', '3'] })
+        .expect(200);
 
-      expect(response.body.message).toBe('Table "nonexistent" not found');
+      expect(response.body).toBe(true);
     });
   });
 
-  function getUrl(tableId: string) {
-    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/${tableId}`;
+  describe('GET /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should get single row by ID', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBe(user1.id);
+      expect(response.body.data.firstName).toBe('John');
+    });
+  });
+
+  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should create a new row', async () => {
+      const response = await request(app.getHttpServer())
+        .post(getRowUrl(USER_TABLE_ID, 'new-row'))
+        .set('Authorization', 'Bearer test-token')
+        .send({ data: { firstName: 'New', lastName: 'User' } })
+        .expect(201);
+
+      expect(response.body.id).toBe('new-row');
+    });
+  });
+
+  describe('PUT /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should update an existing row', async () => {
+      const response = await request(app.getHttpServer())
+        .put(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .send({ data: { firstName: 'Updated', lastName: 'User' } })
+        .expect(200);
+
+      expect(response.body.id).toBe('updated-row');
+    });
+  });
+
+  describe('PATCH /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should patch an existing row', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .send({
+          patches: [{ op: 'replace', path: 'firstName', value: 'Patched' }],
+        })
+        .expect(200);
+
+      expect(response.body.id).toBe('patched-row');
+    });
+  });
+
+  describe('DELETE /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should delete a row', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body).toBe(true);
+    });
+  });
+
+  function getRowsUrl(tableId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/rows`;
+  }
+
+  function getRowUrl(tableId: string, rowId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/row/${rowId}`;
   }
 
   let app: INestApplication;

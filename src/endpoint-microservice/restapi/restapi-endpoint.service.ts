@@ -7,14 +7,9 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
-import { paginatedExcludeDataFromRowModel } from 'src/endpoint-microservice/core-api/utils/transformFromPrismaToRowModel';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { EndpointMiddleware } from 'src/endpoint-microservice/restapi/endpoint-middleware.interface';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
-import {
-  RestapiNamingService,
-  TableUrlMapping,
-} from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
@@ -29,7 +24,6 @@ export class RestapiEndpointService {
       revisionId: string;
       countTables: number;
       openApiJson: object;
-      tableUrlMappings: TableUrlMapping[];
     } & EndpointMiddleware
   >();
   private startedEndpointIds: string[] = [];
@@ -39,7 +33,6 @@ export class RestapiEndpointService {
     private readonly prisma: PrismaService,
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly proxyCoreApi: ProxyCoreApiService,
-    private readonly namingService: RestapiNamingService,
   ) {}
 
   public getEndpointMiddleware(
@@ -99,10 +92,6 @@ export class RestapiEndpointService {
     );
 
     const tableIds = await this.getTableIds(revision.id);
-    const tableUrlMappings = this.namingService.createTableUrlMappings(
-      tableIds,
-      branch.project.name,
-    );
 
     this.startedEndpointIds.push(endpointId);
     this.map.set(url, {
@@ -116,20 +105,100 @@ export class RestapiEndpointService {
         postfix: postfix,
         revisionId: revision.id,
       }),
-      tableUrlMappings,
-      resolveTableId: (urlPath: string) => {
-        const byPlural = this.namingService.getRawTableIdByPlural(
-          urlPath,
-          tableUrlMappings,
+
+      getRevision: async (headers) => {
+        const { data, error } = await this.proxyCoreApi.api.revision(
+          revision.id,
+          { headers },
         );
-        if (byPlural) {
-          return byPlural;
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
         }
-        return this.namingService.getRawTableIdBySingular(
-          urlPath,
-          tableUrlMappings,
-        );
+
+        return data;
       },
+      getRevisionChanges: async () => {
+        return { message: 'Not implemented' };
+      },
+      getTables: async (headers) => {
+        const { data, error } = await this.proxyCoreApi.api.tables(
+          { revisionId: revision.id, first: 1000 },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
+      },
+
+      getTable: async (headers, tableId) => {
+        const { data, error } = await this.proxyCoreApi.api.table(
+          revision.id,
+          tableId,
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
+      },
+      getTableSchema: async (headers, tableId) => {
+        const { data, error } = await this.proxyCoreApi.api.tableSchema(
+          revision.id,
+          tableId,
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
+      },
+      getTableChanges: async () => {
+        return { message: 'Not implemented' };
+      },
+
+      getRows: async (headers, tableId, options) => {
+        const { data, error } = await this.proxyCoreApi.api.rows(
+          revision.id,
+          tableId,
+          options,
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
+      },
+      bulkCreateRows: async () => {
+        return { message: 'Not implemented' };
+      },
+      bulkPatchRows: async () => {
+        return { message: 'Not implemented' };
+      },
+      deleteRows: async (headers, tableId, rowIds) => {
+        const { error } = await this.proxyCoreApi.api.deleteRows(
+          revision.id,
+          tableId,
+          { rowIds },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return true;
+      },
+
       getRow: async (headers, tableId, rowId) => {
         const { data, error } = await this.proxyCoreApi.api.row(
           revision.id,
@@ -144,21 +213,23 @@ export class RestapiEndpointService {
 
         return data;
       },
-      deleteRow: async (headers, tableId, rowId) => {
-        const { error } = await this.proxyCoreApi.api.deleteRow(
-          revision.id,
-          tableId,
-          rowId,
-          {
-            headers,
-          },
-        );
+      createRow: async (headers, tableId, rowId, data) => {
+        const { data: responseData, error } =
+          await this.proxyCoreApi.api.createRow(
+            revision.id,
+            tableId,
+            {
+              rowId,
+              data,
+            },
+            { headers },
+          );
 
         if (error) {
           throw new HttpException(error, error.statusCode);
         }
 
-        return true;
+        return responseData.row;
       },
       updateRow: async (headers, tableId, rowId, data) => {
         const { data: responseData, error } =
@@ -182,15 +253,13 @@ export class RestapiEndpointService {
 
         return responseData.row;
       },
-      createRow: async (headers, tableId, rowId, data) => {
+      patchRow: async (headers, tableId, rowId, patches) => {
         const { data: responseData, error } =
-          await this.proxyCoreApi.api.createRow(
+          await this.proxyCoreApi.api.patchRow(
             revision.id,
             tableId,
-            {
-              rowId,
-              data,
-            },
+            rowId,
+            { patches },
             { headers },
           );
 
@@ -198,21 +267,28 @@ export class RestapiEndpointService {
           throw new HttpException(error, error.statusCode);
         }
 
+        if (!responseData.row) {
+          throw new NotFoundException('Row not found');
+        }
+
         return responseData.row;
       },
-      getRows: async (headers, tableId, options) => {
-        const { data, error } = await this.proxyCoreApi.api.rows(
+      deleteRow: async (headers, tableId, rowId) => {
+        const { error } = await this.proxyCoreApi.api.deleteRow(
           revision.id,
           tableId,
-          options,
-          { headers: headers },
+          rowId,
+          { headers },
         );
 
         if (error) {
           throw new HttpException(error, error.statusCode);
         }
 
-        return paginatedExcludeDataFromRowModel(data);
+        return true;
+      },
+      getRowChanges: async () => {
+        return { message: 'Not implemented' };
       },
       getRowForeignKeysBy: async (
         headers,
@@ -238,7 +314,24 @@ export class RestapiEndpointService {
           throw new HttpException(error, error.statusCode);
         }
 
-        return paginatedExcludeDataFromRowModel(data);
+        return data;
+      },
+      uploadFile: async (headers, tableId, rowId, fileId, file) => {
+        const blob = new Blob([file.buffer], { type: file.mimetype });
+        const { data, error } = await this.proxyCoreApi.api.uploadFile(
+          revision.id,
+          tableId,
+          rowId,
+          fileId,
+          { file: blob as unknown as File },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
       },
     });
 

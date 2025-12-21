@@ -2,16 +2,16 @@ import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
-import { RestapiNamingService } from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
 import { resolveRefs } from '@revisium/schema-toolkit/lib';
 import { JsonSchema } from '@revisium/schema-toolkit/types';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 import {
-  createCRUDPaths,
-  createGetByIdPath,
-  createListPath,
+  createFileUploadPath,
   createForeignKeyPath,
+  createSingleRowPath,
+  createTableInfoMap,
+  createTableRowsPath,
   getFilterAndSortSchemas,
   TablePathInfo,
 } from './open-api-schema.utils';
@@ -24,7 +24,6 @@ export class GetOpenApiSchemaHandler
 {
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
-    private readonly namingService: RestapiNamingService,
   ) {}
 
   public execute({ data }: GetOpenApiSchemaQuery): Promise<OpenApiSchema> {
@@ -35,13 +34,13 @@ export class GetOpenApiSchemaHandler
     const schemas = await this.getSchemas(revisionId);
     const isDraftRevision = await this.getIsDraftRevision(revisionId);
 
-    const tableInfoMap = this.createTableInfoMap(
+    const tableInfoMap = createTableInfoMap(
       schemas.map((s) => s.id),
       projectName,
     );
 
     const openApiJson: OpenApiSchema = {
-      openapi: '3.0.2',
+      openapi: '3.1.0',
       info: { version: revisionId, title: '' },
       servers: [],
       tags: this.createTags(tableInfoMap),
@@ -55,7 +54,7 @@ export class GetOpenApiSchemaHandler
           },
         },
         schemas: {
-          ...getFilterAndSortSchemas(projectName, this.namingService),
+          ...getFilterAndSortSchemas(projectName),
         },
       },
     };
@@ -70,19 +69,19 @@ export class GetOpenApiSchemaHandler
         continue;
       }
 
-      openApiJson.paths[`/${info.pluralPath}`] = createListPath(
+      openApiJson.paths[`/tables/${rawTableId}/rows`] = createTableRowsPath(
         info,
-        rawTableId,
         projectName,
-        this.namingService,
+        isDraftRevision,
       );
 
-      openApiJson.paths[`/${info.singularPath}/{id}`] = {
-        ...createGetByIdPath(info, rawTableId, this.namingService),
-        ...(isDraftRevision
-          ? createCRUDPaths(info, rawTableId, this.namingService)
-          : {}),
-      };
+      openApiJson.paths[`/tables/${rawTableId}/row/{rowId}`] =
+        createSingleRowPath(info, projectName, isDraftRevision);
+
+      if (isDraftRevision) {
+        openApiJson.paths[`/tables/${rawTableId}/row/{rowId}/files/{fileId}`] =
+          createFileUploadPath(info);
+      }
 
       const foreignKeys = await this.getForeignKeys(revisionId, rawTableId);
 
@@ -93,14 +92,8 @@ export class GetOpenApiSchemaHandler
         }
 
         openApiJson.paths[
-          `/${info.singularPath}/{id}/foreign-keys-by/${fkInfo.pluralPath}`
-        ] = createForeignKeyPath(
-          info,
-          fkInfo,
-          rawTableId,
-          fk.id,
-          this.namingService,
-        );
+          `/tables/${rawTableId}/row/{rowId}/foreign-keys-by/${fk.id}`
+        ] = createForeignKeyPath(info, fkInfo);
       }
 
       openApiJson.components ??= { schemas: {} };
@@ -113,32 +106,12 @@ export class GetOpenApiSchemaHandler
     return openApiJson;
   }
 
-  private createTableInfoMap(
-    tableIds: string[],
-    projectName: string,
-  ): Map<string, TablePathInfo> {
-    const map = new Map<string, TablePathInfo>();
-
-    for (const rawTableId of tableIds) {
-      const paths = this.namingService.getUrlPaths(rawTableId);
-      map.set(rawTableId, {
-        rawTableId,
-        singularPath: paths.singular,
-        pluralPath: paths.plural,
-        schemaName: this.namingService.getSchemaName(rawTableId, projectName),
-        tag: paths.singular,
-      });
-    }
-
-    return map;
-  }
-
   private createTags(
     tableInfoMap: Map<string, TablePathInfo>,
   ): Array<{ name: string; description: string }> {
     return Array.from(tableInfoMap.values()).map((info) => ({
       name: info.tag,
-      description: `Operations on ${info.singularPath} table`,
+      description: `Operations on ${info.rawTableId} table`,
     }));
   }
 

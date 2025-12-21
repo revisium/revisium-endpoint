@@ -20,6 +20,7 @@ export const ORGANIZATION_ID = 'org';
 
 export const USER_TABLE_ID = 'user';
 export const POST_TABLE_ID = 'post';
+export const CONF_TABLE_ID = 'Conf3';
 
 export const createUserSchema = () =>
   getObjectSchema({
@@ -34,6 +35,11 @@ export const createPostSchema = () =>
     title: getStringSchema(),
     content: getStringSchema(),
     views: getNumberSchema(),
+  });
+
+export const createConfSchema = () =>
+  getObjectSchema({
+    test: getStringSchema(),
   });
 
 export const createMockSchemaTableData = () => ({
@@ -51,8 +57,14 @@ export const createMockSchemaTableData = () => ({
           data: createPostSchema(),
         },
       },
+      {
+        node: {
+          id: CONF_TABLE_ID,
+          data: createConfSchema(),
+        },
+      },
     ],
-    totalCount: 2,
+    totalCount: 3,
   },
   error: null,
 });
@@ -311,6 +323,25 @@ export const createMockInternalCoreApiService = () => ({
   },
 });
 
+export const createDeleteRowsMock = () => {
+  return jest
+    .fn()
+    .mockImplementation(
+      (revisionId: string, tableId: string, _data: { rowIds: string[] }) => {
+        if (tableId === USER_TABLE_ID || tableId === CONF_TABLE_ID) {
+          return Promise.resolve({ data: { success: true }, error: null });
+        }
+        return Promise.resolve({
+          data: null,
+          error: {
+            message: 'A row with this name does not exist in the revision',
+            statusCode: 400,
+          },
+        });
+      },
+    );
+};
+
 export const createMockProxyCoreApiService = () => ({
   api: {
     endpointRelatives: jest.fn().mockResolvedValue(createMockCoreApiResponse()),
@@ -322,6 +353,24 @@ export const createMockProxyCoreApiService = () => ({
     }),
     tableForeignKeysBy: jest.fn().mockResolvedValue({
       data: { edges: [] },
+      error: null,
+    }),
+    deleteRow: jest.fn().mockResolvedValue({ error: null }),
+    deleteRows: createDeleteRowsMock(),
+    createRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'new-row' } },
+      error: null,
+    }),
+    updateRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'updated-row' } },
+      error: null,
+    }),
+    patchRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'patched-row' } },
+      error: null,
+    }),
+    rowForeignKeysBy: jest.fn().mockResolvedValue({
+      data: { edges: [], totalCount: 0 },
       error: null,
     }),
   },

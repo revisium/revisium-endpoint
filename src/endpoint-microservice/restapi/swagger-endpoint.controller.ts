@@ -22,8 +22,6 @@ export class SwaggerEndpointController {
     private readonly restapiEndpointService: RestapiEndpointService,
   ) {}
 
-  // TODO avoid unpkg.com
-
   @Get('/endpoint/swagger/:organizationId/:projectName/:branchName/:postfix')
   getSwagger(
     @Param('organizationId') organizationId: string,
@@ -67,6 +65,7 @@ export class SwaggerEndpointController {
     window.ui = SwaggerUIBundle({
       url: "${url}",
       dom_id: '#swagger-ui',
+      persistAuthorization: true,
       tryItOutEnabled: true,
       filter: true,
       docExpansion: ${endpointMiddleware.countTables > MAX_DOC_EXPANSION ? '"none"' : '"list"'}

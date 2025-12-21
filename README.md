@@ -106,19 +106,19 @@ For detailed validation rules and error messages, see the `GraphQLOptionsService
 
 ```bash
 # Default configuration (project "blog")
-# URLs: /users, /user/{id}
+# URLs: /tables/users/rows, /tables/users/row/{rowId}
 # Schemas: BlogUser, BlogStringFilter
 
 # Custom prefix
 RESTAPI_PREFIX_FOR_TABLES=Api
 RESTAPI_PREFIX_FOR_COMMON=Common
-# URLs: /users, /user/{id}
+# URLs: /tables/users/rows, /tables/users/row/{rowId}
 # Schemas: ApiUser, CommonStringFilter
 
 # No prefix
 RESTAPI_PREFIX_FOR_TABLES=""
 RESTAPI_PREFIX_FOR_COMMON=""
-# URLs: /users, /user/{id}
+# URLs: /tables/users/rows, /tables/users/row/{rowId}
 # Schemas: User, StringFilter
 ```
 
