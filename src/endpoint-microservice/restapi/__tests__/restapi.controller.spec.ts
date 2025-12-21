@@ -191,6 +191,32 @@ describe('restapi controller', () => {
 
       expect(response.body).toBeDefined();
     });
+
+    it('should resolve plural path to table', async () => {
+      const response = await request(app.getHttpServer())
+        .post(getUrl('users'))
+        .set('Authorization', 'Bearer test-token')
+        .send({ first: 100 })
+        .expect(200);
+
+      expect(response.body.totalCount).toBe(3);
+      expect(mockProxyCoreApiService.api.rows).toHaveBeenCalledWith(
+        expect.any(String),
+        USER_TABLE_ID,
+        expect.any(Object),
+        expect.any(Object),
+      );
+    });
+
+    it('should return 400 for unknown table', async () => {
+      const response = await request(app.getHttpServer())
+        .post(getUrl('nonexistent'))
+        .set('Authorization', 'Bearer test-token')
+        .send({ first: 100 })
+        .expect(400);
+
+      expect(response.body.message).toBe('Table "nonexistent" not found');
+    });
   });
 
   function getUrl(tableId: string) {

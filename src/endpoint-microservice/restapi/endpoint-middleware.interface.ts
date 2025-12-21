@@ -5,6 +5,7 @@ import {
 import { IPaginatedType } from 'src/endpoint-microservice/shared/types/pagination.interface';
 
 export interface EndpointMiddleware {
+  resolveTableId(urlPath: string): string | undefined;
   getRow(
     headers: Record<string, string>,
     tableId: string,
