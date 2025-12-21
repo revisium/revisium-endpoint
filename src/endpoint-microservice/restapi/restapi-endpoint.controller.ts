@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -17,6 +18,7 @@ import {
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { GetTableRowsDto } from 'src/endpoint-microservice/core-api/generated/api';
+import { EndpointMiddleware } from 'src/endpoint-microservice/restapi/endpoint-middleware.interface';
 import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
@@ -28,6 +30,17 @@ export class RestapiEndpointController {
   constructor(
     private readonly restapiEndpointService: RestapiEndpointService,
   ) {}
+
+  private resolveTableId(
+    middleware: EndpointMiddleware,
+    urlPath: string,
+  ): string {
+    const rawTableId = middleware.resolveTableId(urlPath);
+    if (!rawTableId) {
+      throw new BadRequestException(`Table "${urlPath}" not found`);
+    }
+    return rawTableId;
+  }
 
   @Post(
     '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/:tableId',
@@ -58,9 +71,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+
     const result = await endpointMiddleware.getRows(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       body,
     );
     res.json(result);
@@ -95,9 +110,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+
     const result = await endpointMiddleware.getRow(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       rowId,
     );
     res.json(result);
@@ -133,9 +150,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+
     const result = await endpointMiddleware.createRow(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       rowId,
       data,
     );
@@ -172,9 +191,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+
     const result = await endpointMiddleware.updateRow(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       rowId,
       data,
     );
@@ -210,9 +231,11 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+
     const result = await endpointMiddleware.deleteRow(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       rowId,
     );
     res.json(result);
@@ -251,11 +274,17 @@ export class RestapiEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    const rawTableId = this.resolveTableId(endpointMiddleware, tableId);
+    const rawForeignKeyByTableId = this.resolveTableId(
+      endpointMiddleware,
+      foreignKeyByTableId,
+    );
+
     const result = await endpointMiddleware.getRowForeignKeysBy(
       parseHeaders(req.headers),
-      tableId,
+      rawTableId,
       rowId,
-      foreignKeyByTableId,
+      rawForeignKeyByTableId,
       first,
       after,
     );

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Options } from 'src/endpoint-microservice/shared/converter';
+import { isValidIdentifier } from 'src/endpoint-microservice/shared/utils/naming';
 
 @Injectable()
 export class GraphQLOptionsService {
@@ -88,11 +89,7 @@ export class GraphQLOptionsService {
   }
 
   private validateGraphQLIdentifier(value: string, envName: string): string {
-    if (value === '') {
-      return value;
-    }
-
-    if (!/^[_A-Za-z]\w*$/.test(value)) {
+    if (!isValidIdentifier(value)) {
       throw new Error(
         `Invalid GraphQL identifier for ${envName}: ${value}. Must be empty or match GraphQL naming convention (start with letter or underscore, followed by letters, digits, or underscores)`,
       );

@@ -11,7 +11,12 @@ import { paginatedExcludeDataFromRowModel } from 'src/endpoint-microservice/core
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
 import { EndpointMiddleware } from 'src/endpoint-microservice/restapi/endpoint-middleware.interface';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
+import {
+  RestapiNamingService,
+  TableUrlMapping,
+} from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
+import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 
 @Injectable()
 export class RestapiEndpointService {
@@ -24,6 +29,7 @@ export class RestapiEndpointService {
       revisionId: string;
       countTables: number;
       openApiJson: object;
+      tableUrlMappings: TableUrlMapping[];
     } & EndpointMiddleware
   >();
   private startedEndpointIds: string[] = [];
@@ -33,6 +39,7 @@ export class RestapiEndpointService {
     private readonly prisma: PrismaService,
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly proxyCoreApi: ProxyCoreApiService,
+    private readonly namingService: RestapiNamingService,
   ) {}
 
   public getEndpointMiddleware(
@@ -91,11 +98,17 @@ export class RestapiEndpointService {
       postfix,
     );
 
+    const tableIds = await this.getTableIds(revision.id);
+    const tableUrlMappings = this.namingService.createTableUrlMappings(
+      tableIds,
+      branch.project.name,
+    );
+
     this.startedEndpointIds.push(endpointId);
     this.map.set(url, {
       endpointId,
       revisionId: revision.id,
-      countTables: await this.getCountTables(revision.id),
+      countTables: tableIds.length,
       openApiJson: await this.generateOpenApiJson({
         organizationId: branch.project.organizationId,
         projectName: branch.project.name,
@@ -103,6 +116,20 @@ export class RestapiEndpointService {
         postfix: postfix,
         revisionId: revision.id,
       }),
+      tableUrlMappings,
+      resolveTableId: (urlPath: string) => {
+        const byPlural = this.namingService.getRawTableIdByPlural(
+          urlPath,
+          tableUrlMappings,
+        );
+        if (byPlural) {
+          return byPlural;
+        }
+        return this.namingService.getRawTableIdBySingular(
+          urlPath,
+          tableUrlMappings,
+        );
+      },
       getRow: async (headers, tableId, rowId) => {
         const { data, error } = await this.proxyCoreApi.api.row(
           revision.id,
@@ -153,7 +180,7 @@ export class RestapiEndpointService {
           throw new NotFoundException('Row not found');
         }
 
-        return responseData.row.data;
+        return responseData.row;
       },
       createRow: async (headers, tableId, rowId, data) => {
         const { data: responseData, error } =
@@ -171,7 +198,7 @@ export class RestapiEndpointService {
           throw new HttpException(error, error.statusCode);
         }
 
-        return responseData.row.data;
+        return responseData.row;
       },
       getRows: async (headers, tableId, options) => {
         const { data, error } = await this.proxyCoreApi.api.rows(
@@ -260,17 +287,18 @@ export class RestapiEndpointService {
     });
   }
 
-  private async getCountTables(revisionId: string) {
-    const { data, error } = await this.internalCoreApi.api.tables({
+  private async getTableIds(revisionId: string): Promise<string[]> {
+    const { data, error } = await this.internalCoreApi.api.rows(
       revisionId,
-      first: 0,
-    });
+      SystemTables.Schema,
+      { first: 1000 },
+    );
 
     if (error) {
       throw new HttpException(error, error.statusCode);
     }
 
-    return data.totalCount;
+    return data.edges.map((edge) => edge.node.id);
   }
 
   private async generateOpenApiJson({
@@ -289,7 +317,7 @@ export class RestapiEndpointService {
     const openApiJson = await this.queryBus.execute<
       GetOpenApiSchemaQuery,
       OpenApiSchema
-    >(new GetOpenApiSchemaQuery({ revisionId }));
+    >(new GetOpenApiSchemaQuery({ revisionId, projectName }));
 
     openApiJson.info.title = `Revisium organizationId: "${organizationId}", project: "${projectName}", branch: "${branchName}/${postfix}"`;
     const url = `/endpoint/restapi/${organizationId}/${projectName}/${branchName}/${postfix}`;

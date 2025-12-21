@@ -7,11 +7,15 @@ import { REST_API_COMMANDS } from 'src/endpoint-microservice/restapi/commands/ha
 import { REST_API_QUERIES } from 'src/endpoint-microservice/restapi/queries/handlers';
 import { RestapiEndpointController } from 'src/endpoint-microservice/restapi/restapi-endpoint.controller';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
+import { RestapiNamingService } from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
+import { RestapiOptionsService } from 'src/endpoint-microservice/restapi/services/restapi-options.service';
 import { SwaggerEndpointController } from 'src/endpoint-microservice/restapi/swagger-endpoint.controller';
 
 @Module({
   imports: [CqrsModule, DatabaseModule, CoreApiModule, MetricsModule],
   providers: [
+    RestapiOptionsService,
+    RestapiNamingService,
     RestapiEndpointService,
     ...REST_API_COMMANDS,
     ...REST_API_QUERIES,

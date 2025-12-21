@@ -2,6 +2,7 @@ import { HttpException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { GetOpenApiSchemaQuery } from 'src/endpoint-microservice/restapi/queries/impl';
+import { RestapiNamingService } from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
 import { resolveRefs } from '@revisium/schema-toolkit/lib';
 import { JsonSchema } from '@revisium/schema-toolkit/types';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
@@ -9,12 +10,11 @@ import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-s
 import {
   createCRUDPaths,
   createGetByIdPath,
-  createGetListPath,
+  createListPath,
+  createForeignKeyPath,
   getFilterAndSortSchemas,
-  getIdPathParam,
-  getPaginatedResponseSchema,
-  getPaginationParams,
-} from './open-api-shema.utils';
+  TablePathInfo,
+} from './open-api-schema.utils';
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
@@ -24,20 +24,27 @@ export class GetOpenApiSchemaHandler
 {
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
+    private readonly namingService: RestapiNamingService,
   ) {}
 
   public execute({ data }: GetOpenApiSchemaQuery): Promise<OpenApiSchema> {
-    return this.getOpenApiSchema(data.revisionId);
+    return this.getOpenApiSchema(data.revisionId, data.projectName);
   }
 
-  private async getOpenApiSchema(revisionId: string) {
+  private async getOpenApiSchema(revisionId: string, projectName: string) {
     const schemas = await this.getSchemas(revisionId);
     const isDraftRevision = await this.getIsDraftRevision(revisionId);
+
+    const tableInfoMap = this.createTableInfoMap(
+      schemas.map((s) => s.id),
+      projectName,
+    );
 
     const openApiJson: OpenApiSchema = {
       openapi: '3.0.2',
       info: { version: revisionId, title: '' },
       servers: [],
+      tags: this.createTags(tableInfoMap),
       paths: {},
       components: {
         securitySchemes: {
@@ -48,7 +55,7 @@ export class GetOpenApiSchemaHandler
           },
         },
         schemas: {
-          ...getFilterAndSortSchemas(),
+          ...getFilterAndSortSchemas(projectName, this.namingService),
         },
       },
     };
@@ -56,43 +63,83 @@ export class GetOpenApiSchemaHandler
     openApiJson.paths ??= {};
 
     for (const schemaRow of schemas) {
-      const schemaId = schemaRow.id;
+      const rawTableId = schemaRow.id;
+      const info = tableInfoMap.get(rawTableId);
 
-      openApiJson.paths[`/${schemaId}`] = createGetListPath(schemaId);
+      if (!info) {
+        continue;
+      }
 
-      openApiJson.paths[`/${schemaId}/{id}`] = {
-        ...createGetByIdPath(schemaId),
-        ...(isDraftRevision ? createCRUDPaths(schemaId) : {}),
+      openApiJson.paths[`/${info.pluralPath}`] = createListPath(
+        info,
+        rawTableId,
+        projectName,
+        this.namingService,
+      );
+
+      openApiJson.paths[`/${info.singularPath}/{id}`] = {
+        ...createGetByIdPath(info, rawTableId, this.namingService),
+        ...(isDraftRevision
+          ? createCRUDPaths(info, rawTableId, this.namingService)
+          : {}),
       };
 
-      const foreignKeys = await this.getForeignKeys(revisionId, schemaId);
+      const foreignKeys = await this.getForeignKeys(revisionId, rawTableId);
 
       for (const fk of foreignKeys) {
-        openApiJson.paths[`/${schemaId}/{id}/foreign-keys-by/${fk.id}`] = {
-          get: {
-            security: [{ 'access-token': [] }],
-            tags: [schemaId],
-            parameters: [getIdPathParam(), ...getPaginationParams()],
-            responses: {
-              '200': {
-                content: {
-                  'application/json': {
-                    schema: getPaginatedResponseSchema(),
-                  },
-                },
-              },
-            },
-          },
-        };
+        const fkInfo = tableInfoMap.get(fk.id);
+        if (!fkInfo) {
+          continue;
+        }
+
+        openApiJson.paths[
+          `/${info.singularPath}/{id}/foreign-keys-by/${fkInfo.pluralPath}`
+        ] = createForeignKeyPath(
+          info,
+          fkInfo,
+          rawTableId,
+          fk.id,
+          this.namingService,
+        );
       }
+
       openApiJson.components ??= { schemas: {} };
       openApiJson.components.schemas ??= {};
-      openApiJson.components.schemas[schemaRow.id] = resolveRefs(
+      openApiJson.components.schemas[info.schemaName] = resolveRefs(
         schemaRow.data as JsonSchema,
       );
     }
 
     return openApiJson;
+  }
+
+  private createTableInfoMap(
+    tableIds: string[],
+    projectName: string,
+  ): Map<string, TablePathInfo> {
+    const map = new Map<string, TablePathInfo>();
+
+    for (const rawTableId of tableIds) {
+      const paths = this.namingService.getUrlPaths(rawTableId);
+      map.set(rawTableId, {
+        rawTableId,
+        singularPath: paths.singular,
+        pluralPath: paths.plural,
+        schemaName: this.namingService.getSchemaName(rawTableId, projectName),
+        tag: paths.singular,
+      });
+    }
+
+    return map;
+  }
+
+  private createTags(
+    tableInfoMap: Map<string, TablePathInfo>,
+  ): Array<{ name: string; description: string }> {
+    return Array.from(tableInfoMap.values()).map((info) => ({
+      name: info.tag,
+      description: `Operations on ${info.singularPath} table`,
+    }));
   }
 
   private async getIsDraftRevision(revisionId: string) {
