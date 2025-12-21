@@ -88,3 +88,38 @@ The service validates all environment variables at startup and will fail to star
 - Postfix configurations violate mutual exclusivity rules
 
 For detailed validation rules and error messages, see the `GraphQLOptionsService` implementation.
+
+### REST API Schema Configuration
+
+| Variable | Default | Validation | Description |
+|----------|---------|------------|-------------|
+| `RESTAPI_PREFIX_FOR_TABLES` | Project name | GraphQL identifier or `""` | Prefix for table-related OpenAPI schemas |
+| `RESTAPI_PREFIX_FOR_COMMON` | Project name | GraphQL identifier or `""` | Prefix for common OpenAPI schemas (filters, orderBy) |
+
+#### REST API Configuration Rules
+
+1. **Identifiers**: Must match `/^[_A-Za-z][_0-9A-Za-z]*$/` or be empty string
+2. **Default Behavior**: When not set, uses capitalized project name as prefix
+3. **Empty Prefix**: Setting `""` removes prefix from schema names
+
+#### REST API Configuration Examples
+
+```bash
+# Default configuration (project "blog")
+# URLs: /users, /user/{id}
+# Schemas: BlogUser, BlogStringFilter
+
+# Custom prefix
+RESTAPI_PREFIX_FOR_TABLES=Api
+RESTAPI_PREFIX_FOR_COMMON=Common
+# URLs: /users, /user/{id}
+# Schemas: ApiUser, CommonStringFilter
+
+# No prefix
+RESTAPI_PREFIX_FOR_TABLES=""
+RESTAPI_PREFIX_FOR_COMMON=""
+# URLs: /users, /user/{id}
+# Schemas: User, StringFilter
+```
+
+For detailed validation rules, see the `RestapiOptionsService` implementation.
