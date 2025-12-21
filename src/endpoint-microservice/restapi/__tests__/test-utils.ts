@@ -20,6 +20,7 @@ export const ORGANIZATION_ID = 'org';
 
 export const USER_TABLE_ID = 'user';
 export const POST_TABLE_ID = 'post';
+export const CONF_TABLE_ID = 'Conf3';
 
 export const createUserSchema = () =>
   getObjectSchema({
@@ -34,6 +35,11 @@ export const createPostSchema = () =>
     title: getStringSchema(),
     content: getStringSchema(),
     views: getNumberSchema(),
+  });
+
+export const createConfSchema = () =>
+  getObjectSchema({
+    test: getStringSchema(),
   });
 
 export const createMockSchemaTableData = () => ({
@@ -51,8 +57,14 @@ export const createMockSchemaTableData = () => ({
           data: createPostSchema(),
         },
       },
+      {
+        node: {
+          id: CONF_TABLE_ID,
+          data: createConfSchema(),
+        },
+      },
     ],
-    totalCount: 2,
+    totalCount: 3,
   },
   error: null,
 });
@@ -311,17 +323,109 @@ export const createMockInternalCoreApiService = () => ({
   },
 });
 
+export const createDeleteRowsMock = () => {
+  return jest
+    .fn()
+    .mockImplementation(
+      (revisionId: string, tableId: string, _data: { rowIds: string[] }) => {
+        if (tableId === USER_TABLE_ID || tableId === CONF_TABLE_ID) {
+          return Promise.resolve({ data: { success: true }, error: null });
+        }
+        return Promise.resolve({
+          data: null,
+          error: {
+            message: 'A row with this name does not exist in the revision',
+            statusCode: 400,
+          },
+        });
+      },
+    );
+};
+
 export const createMockProxyCoreApiService = () => ({
   api: {
     endpointRelatives: jest.fn().mockResolvedValue(createMockCoreApiResponse()),
     rows: createRowsMock(),
     row: createRowMock(),
     revision: jest.fn().mockResolvedValue({
-      data: { isDraft: true },
+      data: { id: REVISION_ID, isDraft: true, isHead: true },
       error: null,
     }),
+    tables: jest.fn().mockResolvedValue({
+      data: {
+        edges: [
+          { cursor: USER_TABLE_ID, node: { id: USER_TABLE_ID } },
+          { cursor: POST_TABLE_ID, node: { id: POST_TABLE_ID } },
+          { cursor: CONF_TABLE_ID, node: { id: CONF_TABLE_ID } },
+        ],
+        totalCount: 3,
+        pageInfo: {
+          startCursor: USER_TABLE_ID,
+          endCursor: CONF_TABLE_ID,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
+      error: null,
+    }),
+    table: jest
+      .fn()
+      .mockImplementation((_revisionId: string, tableId: string) => {
+        return Promise.resolve({
+          data: { id: tableId, count: { all: 3, published: 2 } },
+          error: null,
+        });
+      }),
+    tableSchema: jest
+      .fn()
+      .mockImplementation((_revisionId: string, tableId: string) => {
+        if (tableId === USER_TABLE_ID) {
+          return Promise.resolve({ data: createUserSchema(), error: null });
+        }
+        if (tableId === POST_TABLE_ID) {
+          return Promise.resolve({ data: createPostSchema(), error: null });
+        }
+        if (tableId === CONF_TABLE_ID) {
+          return Promise.resolve({ data: createConfSchema(), error: null });
+        }
+        return Promise.resolve({
+          data: null,
+          error: { message: 'Table not found', statusCode: 404 },
+        });
+      }),
     tableForeignKeysBy: jest.fn().mockResolvedValue({
       data: { edges: [] },
+      error: null,
+    }),
+    deleteRow: jest.fn().mockResolvedValue({ error: null }),
+    deleteRows: createDeleteRowsMock(),
+    createRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'new-row' } },
+      error: null,
+    }),
+    updateRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'updated-row' } },
+      error: null,
+    }),
+    patchRow: jest.fn().mockResolvedValue({
+      data: { row: { id: 'patched-row' } },
+      error: null,
+    }),
+    rowForeignKeysBy: jest.fn().mockResolvedValue({
+      data: {
+        edges: [],
+        totalCount: 0,
+        pageInfo: {
+          startCursor: null,
+          endCursor: null,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
+      error: null,
+    }),
+    uploadFile: jest.fn().mockResolvedValue({
+      data: { fileId: 'file-123', url: 'https://example.com/file.txt' },
       error: null,
     }),
   },

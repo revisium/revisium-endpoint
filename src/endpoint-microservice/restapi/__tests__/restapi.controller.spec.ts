@@ -15,16 +15,294 @@ import {
   PROJECT_NAME,
   BRANCH_NAME,
   USER_TABLE_ID,
+  POST_TABLE_ID,
+  CONF_TABLE_ID,
   user1,
   user2,
   user3,
 } from './test-utils';
 
 describe('restapi controller', () => {
-  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/:tableId', () => {
+  describe('RevisionController', () => {
+    describe('GET /endpoint/restapi/:org/:project/:branch/:postfix', () => {
+      it('should return revision info', async () => {
+        const response = await request(app.getHttpServer())
+          .get(getRevisionUrl())
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.id).toBeDefined();
+        expect(response.body.isDraft).toBe(true);
+        expect(response.body.isHead).toBe(true);
+      });
+    });
+
+    describe('GET /endpoint/restapi/:org/:project/:branch/:postfix/changes', () => {
+      it('should return revision changes (not implemented)', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${getRevisionUrl()}/changes`)
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.message).toBe('Not implemented');
+      });
+    });
+
+    describe('GET /endpoint/restapi/:org/:project/:branch/:postfix/tables', () => {
+      it('should return all tables', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${getRevisionUrl()}/tables`)
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.totalCount).toBe(3);
+        expect(response.body.edges).toHaveLength(3);
+      });
+    });
+  });
+
+  describe('TableController', () => {
+    describe('GET /tables/:tableId', () => {
+      it('should return table info', async () => {
+        const response = await request(app.getHttpServer())
+          .get(getTableUrl(USER_TABLE_ID))
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.id).toBe(USER_TABLE_ID);
+        expect(response.body.count).toBeDefined();
+      });
+    });
+
+    describe('GET /tables/:tableId/schema', () => {
+      it('should return table schema', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${getTableUrl(USER_TABLE_ID)}/schema`)
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.type).toBe('object');
+        expect(response.body.properties).toBeDefined();
+      });
+    });
+
+    describe('GET /tables/:tableId/changes', () => {
+      it('should return table changes (not implemented)', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${getTableUrl(USER_TABLE_ID)}/changes`)
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.message).toBe('Not implemented');
+      });
+    });
+
+    describe('PUT /tables/:tableId/rows (bulkCreateRows)', () => {
+      it('should return not implemented for bulk create', async () => {
+        const response = await request(app.getHttpServer())
+          .put(getRowsUrl(USER_TABLE_ID))
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [
+              { rowId: 'new-1', data: { firstName: 'Test1' } },
+              { rowId: 'new-2', data: { firstName: 'Test2' } },
+            ],
+          })
+          .expect(200);
+
+        expect(response.body.message).toBe('Not implemented');
+      });
+    });
+
+    describe('PATCH /tables/:tableId/rows (bulkPatchRows)', () => {
+      it('should return not implemented for bulk patch', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(getRowsUrl(USER_TABLE_ID))
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [
+              {
+                rowId: 'user-1',
+                patches: [
+                  { op: 'replace', path: 'firstName', value: 'Updated' },
+                ],
+              },
+            ],
+          })
+          .expect(200);
+
+        expect(response.body.message).toBe('Not implemented');
+      });
+    });
+  });
+
+  describe('RowController additional endpoints', () => {
+    describe('GET /row/:rowId/changes', () => {
+      it('should return row changes (not implemented)', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${getRowUrl(USER_TABLE_ID, user1.id)}/changes`)
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.message).toBe('Not implemented');
+      });
+    });
+
+    describe('GET /row/:rowId/foreign-keys-by/:fkTableId', () => {
+      it('should return foreign key references', async () => {
+        const response = await request(app.getHttpServer())
+          .get(
+            `${getRowUrl(USER_TABLE_ID, user1.id)}/foreign-keys-by/${POST_TABLE_ID}?first=10`,
+          )
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.edges).toBeDefined();
+        expect(response.body.totalCount).toBeDefined();
+        expect(
+          mockProxyCoreApiService.api.rowForeignKeysBy,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            tableId: USER_TABLE_ID,
+            rowId: user1.id,
+            foreignKeyByTableId: POST_TABLE_ID,
+            first: 10,
+          }),
+          expect.any(Object),
+        );
+      });
+
+      it('should pass after cursor for pagination', async () => {
+        const response = await request(app.getHttpServer())
+          .get(
+            `${getRowUrl(USER_TABLE_ID, user1.id)}/foreign-keys-by/${POST_TABLE_ID}?first=10&after=cursor123`,
+          )
+          .set('Authorization', 'Bearer test-token')
+          .expect(200);
+
+        expect(response.body.edges).toBeDefined();
+        expect(
+          mockProxyCoreApiService.api.rowForeignKeysBy,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            first: 10,
+            after: 'cursor123',
+          }),
+          expect.any(Object),
+        );
+      });
+    });
+
+    describe('POST /row/:rowId/files/:fileId', () => {
+      it('should upload file', async () => {
+        const buffer = Buffer.from('test file content');
+
+        const response = await request(app.getHttpServer())
+          .post(`${getRowUrl(USER_TABLE_ID, user1.id)}/files/file-123`)
+          .set('Authorization', 'Bearer test-token')
+          .attach('file', buffer, 'test.txt')
+          .expect(201);
+
+        expect(response.body.fileId).toBe('file-123');
+        expect(response.body.url).toBeDefined();
+      });
+    });
+  });
+
+  describe('Endpoint not found scenarios', () => {
+    it('should return 404 when endpoint not started', async () => {
+      await request(app.getHttpServer())
+        .get(
+          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head',
+        )
+        .set('Authorization', 'Bearer test-token')
+        .expect(404);
+    });
+
+    it('should return 404 for rows endpoint when endpoint not started', async () => {
+      await request(app.getHttpServer())
+        .post(
+          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users/rows',
+        )
+        .set('Authorization', 'Bearer test-token')
+        .send({ first: 10 })
+        .expect(404);
+    });
+
+    it('should return 404 for table endpoint when endpoint not started', async () => {
+      await request(app.getHttpServer())
+        .get(
+          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users',
+        )
+        .set('Authorization', 'Bearer test-token')
+        .expect(404);
+    });
+
+    it('should return 404 for row endpoint when endpoint not started', async () => {
+      await request(app.getHttpServer())
+        .get(
+          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users/row/user-1',
+        )
+        .set('Authorization', 'Bearer test-token')
+        .expect(404);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should return error when Core API row fails', async () => {
+      mockProxyCoreApiService.api.row.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Row not found', statusCode: 404 },
+      });
+
+      await request(app.getHttpServer())
+        .get(getRowUrl(USER_TABLE_ID, 'nonexistent'))
+        .set('Authorization', 'Bearer test-token')
+        .expect(404);
+    });
+
+    it('should return error when Core API rows fails', async () => {
+      mockProxyCoreApiService.api.rows.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Internal error', statusCode: 500 },
+      });
+
+      await request(app.getHttpServer())
+        .post(getRowsUrl(USER_TABLE_ID))
+        .set('Authorization', 'Bearer test-token')
+        .send({ first: 10 })
+        .expect(500);
+    });
+
+    it('should return error when Core API tables fails', async () => {
+      mockProxyCoreApiService.api.tables.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Unauthorized', statusCode: 401 },
+      });
+
+      await request(app.getHttpServer())
+        .get(`${getRevisionUrl()}/tables`)
+        .set('Authorization', 'Bearer test-token')
+        .expect(401);
+    });
+
+    it('should return error when Core API revision fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Not found', statusCode: 404 },
+      });
+
+      await request(app.getHttpServer())
+        .get(getRevisionUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(404);
+    });
+  });
+
+  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
     it('should return all rows with basic pagination', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({ first: 100 })
         .expect(200);
@@ -36,7 +314,7 @@ describe('restapi controller', () => {
 
     it('should pass orderBy to Core API', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -51,7 +329,7 @@ describe('restapi controller', () => {
 
     it('should pass where filter to Core API', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -65,7 +343,7 @@ describe('restapi controller', () => {
 
     it('should filter by readonly field', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -80,7 +358,7 @@ describe('restapi controller', () => {
 
     it('should filter by data path with gte operator', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -98,7 +376,7 @@ describe('restapi controller', () => {
 
     it('should sort by data path', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -115,7 +393,7 @@ describe('restapi controller', () => {
 
     it('should support complex where with AND/OR', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -130,7 +408,7 @@ describe('restapi controller', () => {
 
     it('should support sorting by nested data field', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -166,7 +444,7 @@ describe('restapi controller', () => {
 
     it('should support combined filtering and sorting', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({
           first: 100,
@@ -184,43 +462,112 @@ describe('restapi controller', () => {
 
     it('should support after cursor', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl(USER_TABLE_ID))
+        .post(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
         .send({ first: 100, after: 'cursor123' })
         .expect(200);
 
       expect(response.body).toBeDefined();
     });
+  });
 
-    it('should resolve plural path to table', async () => {
+  describe('DELETE /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
+    it('should bulk delete rows by IDs', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl('users'))
+        .delete(getRowsUrl(USER_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
-        .send({ first: 100 })
-        .expect(200);
+        .send({ rowIds: ['user-1', 'user-2'] });
 
-      expect(response.body.totalCount).toBe(3);
-      expect(mockProxyCoreApiService.api.rows).toHaveBeenCalledWith(
-        expect.any(String),
-        USER_TABLE_ID,
-        expect.any(Object),
-        expect.any(Object),
-      );
+      expect(response.status).toBe(200);
+      expect(response.body).toBe(true);
     });
 
-    it('should return 400 for unknown table', async () => {
+    it('should delete rows from uppercase table name', async () => {
       const response = await request(app.getHttpServer())
-        .post(getUrl('nonexistent'))
+        .delete(getRowsUrl(CONF_TABLE_ID))
         .set('Authorization', 'Bearer test-token')
-        .send({ first: 100 })
-        .expect(400);
+        .send({ rowIds: ['1', '2', '3'] })
+        .expect(200);
 
-      expect(response.body.message).toBe('Table "nonexistent" not found');
+      expect(response.body).toBe(true);
     });
   });
 
-  function getUrl(tableId: string) {
-    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/${tableId}`;
+  describe('GET /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should get single row by ID', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBe(user1.id);
+      expect(response.body.data.firstName).toBe('John');
+    });
+  });
+
+  describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should create a new row', async () => {
+      const response = await request(app.getHttpServer())
+        .post(getRowUrl(USER_TABLE_ID, 'new-row'))
+        .set('Authorization', 'Bearer test-token')
+        .send({ data: { firstName: 'New', lastName: 'User' } })
+        .expect(201);
+
+      expect(response.body.id).toBe('new-row');
+    });
+  });
+
+  describe('PUT /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should update an existing row', async () => {
+      const response = await request(app.getHttpServer())
+        .put(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .send({ data: { firstName: 'Updated', lastName: 'User' } })
+        .expect(200);
+
+      expect(response.body.id).toBe('updated-row');
+    });
+  });
+
+  describe('PATCH /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should patch an existing row', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .send({
+          patches: [{ op: 'replace', path: 'firstName', value: 'Patched' }],
+        })
+        .expect(200);
+
+      expect(response.body.id).toBe('patched-row');
+    });
+  });
+
+  describe('DELETE /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/row/:rowId', () => {
+    it('should delete a row', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(getRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body).toBe(true);
+    });
+  });
+
+  function getRevisionUrl() {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head`;
+  }
+
+  function getTableUrl(tableId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}`;
+  }
+
+  function getRowsUrl(tableId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/rows`;
+  }
+
+  function getRowUrl(tableId: string, rowId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/row/${rowId}`;
   }
 
   let app: INestApplication;

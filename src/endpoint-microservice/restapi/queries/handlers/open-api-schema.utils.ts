@@ -10,41 +10,82 @@ import {
   OrderByDtoTypeEnum,
   StringFilterDtoModeEnum,
 } from 'src/endpoint-microservice/core-api/generated/api';
-import { RestapiNamingService } from 'src/endpoint-microservice/restapi/services/restapi-naming.service';
 
 export interface TablePathInfo {
   rawTableId: string;
-  singularPath: string;
-  pluralPath: string;
   schemaName: string;
   tag: string;
 }
 
+const capitalize = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
+
+const getSchemaName = (tableId: string, projectName: string): string => {
+  const prefix = capitalize(projectName);
+  const name = capitalize(tableId);
+  return `${prefix}${name}`;
+};
+
+const getCommonSchemaName = (name: string, projectName: string): string => {
+  const prefix = capitalize(projectName);
+  return `${prefix}${name}`;
+};
+
+const getOperationId = (
+  operation: 'get' | 'create' | 'update' | 'patch' | 'delete' | 'list',
+  tableId: string,
+): string => {
+  const name = capitalize(tableId);
+  switch (operation) {
+    case 'get':
+      return `get${name}`;
+    case 'create':
+      return `create${name}`;
+    case 'update':
+      return `update${name}`;
+    case 'patch':
+      return `patch${name}`;
+    case 'delete':
+      return `delete${name}`;
+    case 'list':
+      return `list${name}`;
+  }
+};
+
+const getBulkOperationId = (
+  operation: 'delete' | 'create' | 'patch',
+  tableId: string,
+): string => {
+  const name = capitalize(tableId);
+  switch (operation) {
+    case 'delete':
+      return `bulkDelete${name}`;
+    case 'create':
+      return `bulkCreate${name}`;
+    case 'patch':
+      return `bulkPatch${name}`;
+  }
+};
+
+const getForeignKeyOperationId = (
+  tableId: string,
+  foreignKeyTableId: string,
+): string => {
+  const name = capitalize(tableId);
+  const fkName = capitalize(foreignKeyTableId);
+  return `get${name}ForeignKeysBy${fkName}`;
+};
+
 export const getFilterAndSortSchemas = (
   projectName: string,
-  namingService: RestapiNamingService,
 ): Record<string, oas31.SchemaObject> => {
-  const stringFilter = namingService.getCommonSchemaName(
-    'StringFilter',
-    projectName,
-  );
-  const boolFilter = namingService.getCommonSchemaName(
-    'BoolFilter',
-    projectName,
-  );
-  const dateTimeFilter = namingService.getCommonSchemaName(
-    'DateTimeFilter',
-    projectName,
-  );
-  const jsonFilter = namingService.getCommonSchemaName(
-    'JsonFilter',
-    projectName,
-  );
-  const rowWhereInput = namingService.getCommonSchemaName(
-    'RowWhereInput',
-    projectName,
-  );
-  const orderBy = namingService.getCommonSchemaName('OrderBy', projectName);
+  const stringFilter = getCommonSchemaName('StringFilter', projectName);
+  const boolFilter = getCommonSchemaName('BoolFilter', projectName);
+  const dateTimeFilter = getCommonSchemaName('DateTimeFilter', projectName);
+  const jsonFilter = getCommonSchemaName('JsonFilter', projectName);
+  const rowWhereInput = getCommonSchemaName('RowWhereInput', projectName);
+  const orderBy = getCommonSchemaName('OrderBy', projectName);
+  const patchOperation = getCommonSchemaName('PatchOperation', projectName);
 
   return {
     [stringFilter]: {
@@ -192,11 +233,32 @@ export const getFilterAndSortSchemas = (
         },
       },
     },
+    [patchOperation]: {
+      type: 'object',
+      description: 'JSON Patch operation (RFC 6902 subset - only replace)',
+      required: ['op', 'path', 'value'],
+      properties: {
+        op: {
+          type: 'string',
+          enum: ['replace'],
+          description: 'Operation type (only "replace" is supported)',
+        },
+        path: {
+          type: 'string',
+          description:
+            'JSON path using dot notation for objects and [index] for arrays (e.g., "name", "user.email", "items[0]")',
+        },
+        value: {
+          description:
+            'The value to set at the specified path (any valid JSON value)',
+        },
+      },
+    },
   };
 };
 
-export const getIdPathParam = (): oas31.ParameterObject => ({
-  name: 'id',
+export const getRowIdPathParam = (): oas31.ParameterObject => ({
+  name: 'rowId',
   in: 'path',
   required: true,
   description: 'Row ID',
@@ -277,10 +339,15 @@ export const getSystemFieldsRequired = (): string[] => [
   'readonly',
 ];
 
-export const getRowNodeSchema = (): oas31.SchemaObject => ({
+export const getRowNodeSchema = (
+  dataSchemaRef: string,
+): oas31.SchemaObject => ({
   type: 'object',
-  required: getSystemFieldsRequired(),
-  properties: getSystemFieldsProperties(),
+  required: [...getSystemFieldsRequired(), 'data'],
+  properties: {
+    ...getSystemFieldsProperties(),
+    data: { $ref: dataSchemaRef },
+  },
 });
 
 export const getSingleRowResponseSchema = (
@@ -294,7 +361,9 @@ export const getSingleRowResponseSchema = (
   },
 });
 
-export const getPaginatedResponseSchema = (): oas31.SchemaObject => ({
+export const getPaginatedResponseSchema = (
+  dataSchemaRef: string,
+): oas31.SchemaObject => ({
   type: 'object',
   required: ['edges', 'pageInfo', 'totalCount'],
   properties: {
@@ -305,7 +374,7 @@ export const getPaginatedResponseSchema = (): oas31.SchemaObject => ({
         required: ['cursor', 'node'],
         properties: {
           cursor: { type: 'string' },
-          node: getRowNodeSchema(),
+          node: getRowNodeSchema(dataSchemaRef),
         },
       },
     },
@@ -323,15 +392,9 @@ export const getPaginatedResponseSchema = (): oas31.SchemaObject => ({
   },
 });
 
-export const getQueryBodySchema = (
-  projectName: string,
-  namingService: RestapiNamingService,
-): oas31.SchemaObject => {
-  const orderBy = namingService.getCommonSchemaName('OrderBy', projectName);
-  const rowWhereInput = namingService.getCommonSchemaName(
-    'RowWhereInput',
-    projectName,
-  );
+export const getQueryBodySchema = (projectName: string): oas31.SchemaObject => {
+  const orderBy = getCommonSchemaName('OrderBy', projectName);
+  const rowWhereInput = getCommonSchemaName('RowWhereInput', projectName);
 
   return {
     type: 'object',
@@ -360,115 +423,218 @@ export const getQueryBodySchema = (
   };
 };
 
-export const createListPath = (
+export const createTableRowsPath = (
   info: TablePathInfo,
-  rawTableId: string,
   projectName: string,
-  namingService: RestapiNamingService,
-): oas31.PathItemObject => ({
-  post: {
-    operationId: namingService.getOperationId('list', rawTableId),
-    summary: `Query ${info.singularPath} list`,
-    description: `Returns a paginated list of ${info.singularPath} rows with filtering and sorting`,
-    security: [{ 'access-token': [] }],
-    tags: [info.tag],
-    requestBody: {
-      required: true,
-      description: 'Query parameters for filtering and pagination',
-      content: {
-        'application/json': {
-          schema: getQueryBodySchema(projectName, namingService),
+  isDraft: boolean,
+): oas31.PathItemObject => {
+  const schemaRef = `#/components/schemas/${info.schemaName}`;
+
+  const result: oas31.PathItemObject = {
+    post: {
+      operationId: getOperationId('list', info.rawTableId),
+      summary: `Query ${info.rawTableId} rows`,
+      description: `Returns a paginated list of ${info.rawTableId} rows with filtering and sorting`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      requestBody: {
+        required: true,
+        description: 'Query parameters for filtering and pagination',
+        content: {
+          'application/json': {
+            schema: getQueryBodySchema(projectName),
+          },
         },
       },
-    },
-    responses: {
-      '200': createJsonResponse(
-        'Paginated list of rows',
-        getPaginatedResponseSchema(),
-      ),
-      '401': UNAUTHORIZED_RESPONSE,
-    },
-  },
-});
-
-export const createGetByIdPath = (
-  info: TablePathInfo,
-  rawTableId: string,
-  namingService: RestapiNamingService,
-): oas31.PathItemObject => ({
-  get: {
-    operationId: namingService.getOperationId('get', rawTableId),
-    summary: `Get ${info.singularPath} by ID`,
-    description: `Returns a single ${info.singularPath} row by its ID`,
-    security: [{ 'access-token': [] }],
-    tags: [info.tag],
-    parameters: [getIdPathParam()],
-    responses: {
-      '200': createJsonResponse(
-        'Successful response',
-        getSingleRowResponseSchema(`#/components/schemas/${info.schemaName}`),
-      ),
-      '401': UNAUTHORIZED_RESPONSE,
-      '404': NOT_FOUND_RESPONSE,
-    },
-  },
-});
-
-export const createCRUDPaths = (
-  info: TablePathInfo,
-  rawTableId: string,
-  namingService: RestapiNamingService,
-): Partial<oas31.PathItemObject> => {
-  const schemaRef = `#/components/schemas/${info.schemaName}`;
-  const rowResponseSchema = getSingleRowResponseSchema(schemaRef);
-  const dataRequestBody: oas31.RequestBodyObject = {
-    required: true,
-    description: 'Row data',
-    content: {
-      'application/json': {
-        schema: { $ref: schemaRef },
+      responses: {
+        '200': createJsonResponse(
+          'Paginated list of rows',
+          getPaginatedResponseSchema(schemaRef),
+        ),
+        '401': UNAUTHORIZED_RESPONSE,
       },
     },
   };
 
-  return {
-    post: {
-      operationId: namingService.getOperationId('create', rawTableId),
-      summary: `Create ${info.singularPath}`,
-      description: `Creates a new ${info.singularPath} row with the specified ID`,
+  if (isDraft) {
+    result.delete = {
+      operationId: getBulkOperationId('delete', info.rawTableId),
+      summary: `Bulk delete ${info.rawTableId} rows`,
+      description: `Deletes multiple ${info.rawTableId} rows by their IDs. Maximum 1000 rows per request.`,
       security: [{ 'access-token': [] }],
       tags: [info.tag],
-      parameters: [getIdPathParam()],
+      requestBody: {
+        required: true,
+        description: 'Array of row IDs to delete',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['rowIds'],
+              properties: {
+                rowIds: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  maxItems: 1000,
+                  description: 'Array of row IDs to delete (max 1000)',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': createJsonResponse('Deletion successful', { type: 'boolean' }),
+        '401': UNAUTHORIZED_RESPONSE,
+      },
+    };
+  }
+
+  return result;
+};
+
+export const createSingleRowPath = (
+  info: TablePathInfo,
+  projectName: string,
+  isDraft: boolean,
+): oas31.PathItemObject => {
+  const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const rowResponseSchema = getSingleRowResponseSchema(schemaRef);
+  const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
+
+  const result: oas31.PathItemObject = {
+    get: {
+      operationId: getOperationId('get', info.rawTableId),
+      summary: `Get ${info.rawTableId} by ID`,
+      description: `Returns a single ${info.rawTableId} row by its ID`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getRowIdPathParam()],
+      responses: {
+        '200': createJsonResponse('Successful response', rowResponseSchema),
+        '401': UNAUTHORIZED_RESPONSE,
+        '404': NOT_FOUND_RESPONSE,
+      },
+    },
+  };
+
+  if (isDraft) {
+    const dataRequestBody: oas31.RequestBodyObject = {
+      required: true,
+      description: 'Row data',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['data'],
+            properties: {
+              data: { $ref: schemaRef },
+            },
+          },
+        },
+      },
+    };
+
+    result.post = {
+      operationId: getOperationId('create', info.rawTableId),
+      summary: `Create ${info.rawTableId}`,
+      description: `Creates a new ${info.rawTableId} row with the specified ID`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getRowIdPathParam()],
       requestBody: dataRequestBody,
       responses: {
         '200': createJsonResponse('Created row', rowResponseSchema),
         '401': UNAUTHORIZED_RESPONSE,
         '409': CONFLICT_RESPONSE,
       },
-    },
-    put: {
-      operationId: namingService.getOperationId('update', rawTableId),
-      summary: `Update ${info.singularPath}`,
-      description: `Updates an existing ${info.singularPath} row`,
+    };
+
+    result.put = {
+      operationId: getOperationId('update', info.rawTableId),
+      summary: `Update ${info.rawTableId}`,
+      description: `Updates an existing ${info.rawTableId} row (full replacement)`,
       security: [{ 'access-token': [] }],
       tags: [info.tag],
-      parameters: [getIdPathParam()],
+      parameters: [getRowIdPathParam()],
       requestBody: dataRequestBody,
       responses: {
         '200': createJsonResponse('Updated row', rowResponseSchema),
         '401': UNAUTHORIZED_RESPONSE,
         '404': NOT_FOUND_RESPONSE,
       },
-    },
-    delete: {
-      operationId: namingService.getOperationId('delete', rawTableId),
-      summary: `Delete ${info.singularPath}`,
-      description: `Deletes a ${info.singularPath} row by its ID`,
+    };
+
+    result.patch = {
+      operationId: getOperationId('patch', info.rawTableId),
+      summary: `Patch ${info.rawTableId}`,
+      description: `Partially updates a ${info.rawTableId} row using JSON Patch operations`,
       security: [{ 'access-token': [] }],
       tags: [info.tag],
-      parameters: [getIdPathParam()],
+      parameters: [getRowIdPathParam()],
+      requestBody: {
+        required: true,
+        description: 'JSON Patch operations',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['patches'],
+              properties: {
+                patches: {
+                  type: 'array',
+                  items: { $ref: patchOperationRef },
+                  description: 'Array of patch operations to apply',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': createJsonResponse('Patched row', rowResponseSchema),
+        '401': UNAUTHORIZED_RESPONSE,
+        '404': NOT_FOUND_RESPONSE,
+      },
+    };
+
+    result.delete = {
+      operationId: getOperationId('delete', info.rawTableId),
+      summary: `Delete ${info.rawTableId}`,
+      description: `Deletes a ${info.rawTableId} row by its ID`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getRowIdPathParam()],
       responses: {
         '200': createJsonResponse('Deletion successful', { type: 'boolean' }),
+        '401': UNAUTHORIZED_RESPONSE,
+        '404': NOT_FOUND_RESPONSE,
+      },
+    };
+  }
+
+  return result;
+};
+
+export const createForeignKeyPath = (
+  info: TablePathInfo,
+  fkInfo: TablePathInfo,
+): oas31.PathItemObject => {
+  const fkSchemaRef = `#/components/schemas/${fkInfo.schemaName}`;
+
+  return {
+    get: {
+      operationId: getForeignKeyOperationId(info.rawTableId, fkInfo.rawTableId),
+      summary: `Get ${info.rawTableId} foreign keys by ${fkInfo.rawTableId}`,
+      description: `Returns rows from ${fkInfo.rawTableId} that reference this ${info.rawTableId}`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getRowIdPathParam(), ...getPaginationParams()],
+      responses: {
+        '200': createJsonResponse(
+          'Paginated list of related rows',
+          getPaginatedResponseSchema(fkSchemaRef),
+        ),
         '401': UNAUTHORIZED_RESPONSE,
         '404': NOT_FOUND_RESPONSE,
       },
@@ -476,30 +642,81 @@ export const createCRUDPaths = (
   };
 };
 
-export const createForeignKeyPath = (
+export const createFileUploadPath = (
   info: TablePathInfo,
-  fkInfo: TablePathInfo,
-  rawTableId: string,
-  fkRawTableId: string,
-  namingService: RestapiNamingService,
 ): oas31.PathItemObject => ({
-  get: {
-    operationId: namingService.getForeignKeyOperationId(
-      rawTableId,
-      fkRawTableId,
-    ),
-    summary: `Get ${info.singularPath} foreign keys by ${fkInfo.pluralPath}`,
-    description: `Returns rows from ${fkInfo.singularPath} that reference this ${info.singularPath}`,
+  post: {
+    operationId: `upload${capitalize(info.rawTableId)}File`,
+    summary: `Upload file for ${info.rawTableId}`,
+    description: `Uploads a file to a specific field in the ${info.rawTableId} row`,
     security: [{ 'access-token': [] }],
     tags: [info.tag],
-    parameters: [getIdPathParam(), ...getPaginationParams()],
+    parameters: [
+      getRowIdPathParam(),
+      {
+        name: 'fileId',
+        in: 'path',
+        required: true,
+        description: 'File field ID',
+        schema: { type: 'string' },
+      },
+    ],
+    requestBody: {
+      required: true,
+      description: 'File to upload',
+      content: {
+        'multipart/form-data': {
+          schema: {
+            type: 'object',
+            required: ['file'],
+            properties: {
+              file: {
+                type: 'string',
+                format: 'binary',
+                description: 'The file to upload',
+              },
+            },
+          },
+        },
+      },
+    },
     responses: {
-      '200': createJsonResponse(
-        'Paginated list of related rows',
-        getPaginatedResponseSchema(),
-      ),
+      '200': {
+        description: 'File uploaded successfully',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                fileId: { type: 'string' },
+                url: { type: 'string' },
+                fileName: { type: 'string' },
+                mimeType: { type: 'string' },
+                size: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
       '401': UNAUTHORIZED_RESPONSE,
       '404': NOT_FOUND_RESPONSE,
     },
   },
 });
+
+export const createTableInfoMap = (
+  tableIds: string[],
+  projectName: string,
+): Map<string, TablePathInfo> => {
+  const map = new Map<string, TablePathInfo>();
+
+  for (const rawTableId of tableIds) {
+    map.set(rawTableId, {
+      rawTableId,
+      schemaName: getSchemaName(rawTableId, projectName),
+      tag: rawTableId,
+    });
+  }
+
+  return map;
+};

@@ -13,11 +13,13 @@ import {
   createMockPrismaService,
   REVISION_ID,
   PROJECT_NAME,
+  USER_TABLE_ID,
+  POST_TABLE_ID,
 } from './test-utils';
 
 describe('restapi OpenAPI generation', () => {
-  describe('URL paths (singular/plural like GraphQL)', () => {
-    it('should use singular path for single item and plural path for list', async () => {
+  describe('URL paths structure', () => {
+    it('should use /tables/{tableId}/rows for list and /tables/{tableId}/row/{rowId} for single', async () => {
       const openApiJson = await queryBus.execute<
         GetOpenApiSchemaQuery,
         OpenApiSchema
@@ -28,13 +30,17 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      expect(openApiJson.paths).toHaveProperty('/users');
-      expect(openApiJson.paths).toHaveProperty('/user/{id}');
-      expect(openApiJson.paths).toHaveProperty('/posts');
-      expect(openApiJson.paths).toHaveProperty('/post/{id}');
+      expect(openApiJson.paths).toHaveProperty(`/tables/${USER_TABLE_ID}/rows`);
+      expect(openApiJson.paths).toHaveProperty(
+        `/tables/${USER_TABLE_ID}/row/{rowId}`,
+      );
+      expect(openApiJson.paths).toHaveProperty(`/tables/${POST_TABLE_ID}/rows`);
+      expect(openApiJson.paths).toHaveProperty(
+        `/tables/${POST_TABLE_ID}/row/{rowId}`,
+      );
     });
 
-    it('should use singular path as tag name', async () => {
+    it('should use tableId as tag name', async () => {
       const openApiJson = await queryBus.execute<
         GetOpenApiSchemaQuery,
         OpenApiSchema
@@ -45,8 +51,9 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const userPath = openApiJson.paths?.['/user/{id}'];
-      expect(userPath?.get?.tags).toContain('user');
+      const userRowPath =
+        openApiJson.paths?.[`/tables/${USER_TABLE_ID}/row/{rowId}`];
+      expect(userRowPath?.get?.tags).toContain(USER_TABLE_ID);
     });
   });
 
@@ -77,8 +84,9 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const userPath = openApiJson.paths?.['/user/{id}'];
-      const responseSchema = userPath?.get?.responses?.['200']?.content?.[
+      const userRowPath =
+        openApiJson.paths?.[`/tables/${USER_TABLE_ID}/row/{rowId}`];
+      const responseSchema = userRowPath?.get?.responses?.['200']?.content?.[
         'application/json'
       ]?.schema as {
         type?: string;
@@ -188,8 +196,8 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const userPath = openApiJson.paths?.['/users'];
-      const requestBody = userPath?.post?.requestBody as {
+      const userRowsPath = openApiJson.paths?.[`/tables/${USER_TABLE_ID}/rows`];
+      const requestBody = userRowsPath?.post?.requestBody as {
         content?: {
           'application/json'?: {
             schema?: {
@@ -225,7 +233,7 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      expect(openApiJson.paths).toHaveProperty('/users');
+      expect(openApiJson.paths).toHaveProperty(`/tables/${USER_TABLE_ID}/rows`);
       expect(openApiJson.components?.schemas).toHaveProperty('MyprojectUser');
       expect(openApiJson.components?.schemas).toHaveProperty(
         'MyprojectStringFilter',
@@ -243,7 +251,7 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      expect(openApiJson.paths).toHaveProperty('/users');
+      expect(openApiJson.paths).toHaveProperty(`/tables/${USER_TABLE_ID}/rows`);
       expect(openApiJson.components?.schemas).toHaveProperty('MyProjectUser');
     });
   });
@@ -260,10 +268,11 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const listPath = openApiJson.paths?.['/users'];
-      expect(listPath?.post?.operationId).toBe('getUsers');
+      const listPath = openApiJson.paths?.[`/tables/${USER_TABLE_ID}/rows`];
+      expect(listPath?.post?.operationId).toBe('listUser');
 
-      const singlePath = openApiJson.paths?.['/user/{id}'];
+      const singlePath =
+        openApiJson.paths?.[`/tables/${USER_TABLE_ID}/row/{rowId}`];
       expect(singlePath?.get?.operationId).toBe('getUser');
     });
 
@@ -278,10 +287,11 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const singlePath = openApiJson.paths?.['/user/{id}'];
-      expect(singlePath?.get?.summary).toBe('Get user by ID');
+      const singlePath =
+        openApiJson.paths?.[`/tables/${USER_TABLE_ID}/row/{rowId}`];
+      expect(singlePath?.get?.summary).toBe(`Get ${USER_TABLE_ID} by ID`);
       expect(singlePath?.get?.description).toBe(
-        'Returns a single user row by its ID',
+        `Returns a single ${USER_TABLE_ID} row by its ID`,
       );
     });
   });
