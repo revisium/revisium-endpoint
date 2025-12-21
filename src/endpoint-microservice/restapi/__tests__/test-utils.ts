@@ -348,9 +348,51 @@ export const createMockProxyCoreApiService = () => ({
     rows: createRowsMock(),
     row: createRowMock(),
     revision: jest.fn().mockResolvedValue({
-      data: { isDraft: true },
+      data: { id: REVISION_ID, isDraft: true, isHead: true },
       error: null,
     }),
+    tables: jest.fn().mockResolvedValue({
+      data: {
+        edges: [
+          { cursor: USER_TABLE_ID, node: { id: USER_TABLE_ID } },
+          { cursor: POST_TABLE_ID, node: { id: POST_TABLE_ID } },
+          { cursor: CONF_TABLE_ID, node: { id: CONF_TABLE_ID } },
+        ],
+        totalCount: 3,
+        pageInfo: {
+          startCursor: USER_TABLE_ID,
+          endCursor: CONF_TABLE_ID,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
+      error: null,
+    }),
+    table: jest
+      .fn()
+      .mockImplementation((_revisionId: string, tableId: string) => {
+        return Promise.resolve({
+          data: { id: tableId, count: { all: 3, published: 2 } },
+          error: null,
+        });
+      }),
+    tableSchema: jest
+      .fn()
+      .mockImplementation((_revisionId: string, tableId: string) => {
+        if (tableId === USER_TABLE_ID) {
+          return Promise.resolve({ data: createUserSchema(), error: null });
+        }
+        if (tableId === POST_TABLE_ID) {
+          return Promise.resolve({ data: createPostSchema(), error: null });
+        }
+        if (tableId === CONF_TABLE_ID) {
+          return Promise.resolve({ data: createConfSchema(), error: null });
+        }
+        return Promise.resolve({
+          data: null,
+          error: { message: 'Table not found', statusCode: 404 },
+        });
+      }),
     tableForeignKeysBy: jest.fn().mockResolvedValue({
       data: { edges: [] },
       error: null,
@@ -370,7 +412,20 @@ export const createMockProxyCoreApiService = () => ({
       error: null,
     }),
     rowForeignKeysBy: jest.fn().mockResolvedValue({
-      data: { edges: [], totalCount: 0 },
+      data: {
+        edges: [],
+        totalCount: 0,
+        pageInfo: {
+          startCursor: null,
+          endCursor: null,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      },
+      error: null,
+    }),
+    uploadFile: jest.fn().mockResolvedValue({
+      data: { fileId: 'file-123', url: 'https://example.com/file.txt' },
       error: null,
     }),
   },

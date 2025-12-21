@@ -317,13 +317,15 @@ export class RestapiEndpointService {
         return data;
       },
       uploadFile: async (headers, tableId, rowId, fileId, file) => {
-        const blob = new Blob([file.buffer], { type: file.mimetype });
+        const fileObj = new File([file.buffer], file.originalname, {
+          type: file.mimetype,
+        });
         const { data, error } = await this.proxyCoreApi.api.uploadFile(
           revision.id,
           tableId,
           rowId,
           fileId,
-          { file: blob as unknown as File },
+          { file: fileObj },
           { headers },
         );
 
