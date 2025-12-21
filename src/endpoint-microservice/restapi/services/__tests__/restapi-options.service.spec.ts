@@ -4,14 +4,17 @@ import { RestapiOptionsService } from '../restapi-options.service';
 describe('RestapiOptionsService', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-
+  const clearRestapiEnvVars = (): void => {
     Object.keys(process.env).forEach((key) => {
       if (key.startsWith('RESTAPI_')) {
         delete process.env[key];
       }
     });
+  };
+
+  beforeEach(() => {
+    originalEnv = { ...process.env };
+    clearRestapiEnvVars();
   });
 
   afterEach(() => {
@@ -70,12 +73,7 @@ describe('RestapiOptionsService', () => {
       ];
 
       for (const identifier of validIdentifiers) {
-        Object.keys(process.env).forEach((key) => {
-          if (key.startsWith('RESTAPI_')) {
-            delete process.env[key];
-          }
-        });
-
+        clearRestapiEnvVars();
         process.env.RESTAPI_PREFIX_FOR_TABLES = identifier;
         const service = await createService();
         expect(service.getOptions()?.prefixForTables).toBe(identifier);
@@ -95,12 +93,7 @@ describe('RestapiOptionsService', () => {
       ];
 
       for (const identifier of invalidIdentifiers) {
-        Object.keys(process.env).forEach((key) => {
-          if (key.startsWith('RESTAPI_')) {
-            delete process.env[key];
-          }
-        });
-
+        clearRestapiEnvVars();
         process.env.RESTAPI_PREFIX_FOR_TABLES = identifier;
         await expect(createService()).rejects.toThrow(
           `Invalid identifier for RESTAPI_PREFIX_FOR_TABLES: ${identifier}`,
@@ -115,12 +108,7 @@ describe('RestapiOptionsService', () => {
       ];
 
       for (const envVar of envVars) {
-        Object.keys(process.env).forEach((key) => {
-          if (key.startsWith('RESTAPI_')) {
-            delete process.env[key];
-          }
-        });
-
+        clearRestapiEnvVars();
         process.env[envVar] = 'invalid-identifier';
         await expect(createService()).rejects.toThrow(
           `Invalid identifier for ${envVar}: invalid-identifier`,

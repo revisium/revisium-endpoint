@@ -220,6 +220,28 @@ export const getPaginationParams = (): oas31.ParameterObject[] => [
   },
 ];
 
+const UNAUTHORIZED_RESPONSE: oas31.ResponseObject = {
+  description: 'Unauthorized - invalid or missing token',
+};
+
+const NOT_FOUND_RESPONSE: oas31.ResponseObject = {
+  description: 'Not found',
+};
+
+const CONFLICT_RESPONSE: oas31.ResponseObject = {
+  description: 'Conflict - row with this ID already exists',
+};
+
+const createJsonResponse = (
+  description: string,
+  schema: oas31.SchemaObject | oas31.ReferenceObject,
+): oas31.ResponseObject => ({
+  description,
+  content: {
+    'application/json': { schema },
+  },
+});
+
 export const getSystemFieldsProperties = (): Record<
   string,
   oas31.SchemaObject
@@ -360,17 +382,11 @@ export const createListPath = (
       },
     },
     responses: {
-      '200': {
-        description: 'Paginated list of rows',
-        content: {
-          'application/json': {
-            schema: getPaginatedResponseSchema(),
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
+      '200': createJsonResponse(
+        'Paginated list of rows',
+        getPaginatedResponseSchema(),
+      ),
+      '401': UNAUTHORIZED_RESPONSE,
     },
   },
 });
@@ -388,22 +404,12 @@ export const createGetByIdPath = (
     tags: [info.tag],
     parameters: [getIdPathParam()],
     responses: {
-      '200': {
-        description: 'Successful response',
-        content: {
-          'application/json': {
-            schema: getSingleRowResponseSchema(
-              `#/components/schemas/${info.schemaName}`,
-            ),
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
-      '404': {
-        description: 'Not found',
-      },
+      '200': createJsonResponse(
+        'Successful response',
+        getSingleRowResponseSchema(`#/components/schemas/${info.schemaName}`),
+      ),
+      '401': UNAUTHORIZED_RESPONSE,
+      '404': NOT_FOUND_RESPONSE,
     },
   },
 });
@@ -412,102 +418,63 @@ export const createCRUDPaths = (
   info: TablePathInfo,
   rawTableId: string,
   namingService: RestapiNamingService,
-): Partial<oas31.PathItemObject> => ({
-  post: {
-    operationId: namingService.getOperationId('create', rawTableId),
-    summary: `Create ${info.singularPath}`,
-    description: `Creates a new ${info.singularPath} row with the specified ID`,
-    security: [{ 'access-token': [] }],
-    tags: [info.tag],
-    parameters: [getIdPathParam()],
-    requestBody: {
-      required: true,
-      description: 'Row data',
-      content: {
-        'application/json': {
-          schema: { $ref: `#/components/schemas/${info.schemaName}` },
-        },
+): Partial<oas31.PathItemObject> => {
+  const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const rowResponseSchema = getSingleRowResponseSchema(schemaRef);
+  const dataRequestBody: oas31.RequestBodyObject = {
+    required: true,
+    description: 'Row data',
+    content: {
+      'application/json': {
+        schema: { $ref: schemaRef },
       },
     },
-    responses: {
-      '200': {
-        description: 'Created row',
-        content: {
-          'application/json': {
-            schema: getSingleRowResponseSchema(
-              `#/components/schemas/${info.schemaName}`,
-            ),
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
-      '409': {
-        description: 'Conflict - row with this ID already exists',
-      },
-    },
-  },
-  put: {
-    operationId: namingService.getOperationId('update', rawTableId),
-    summary: `Update ${info.singularPath}`,
-    description: `Updates an existing ${info.singularPath} row`,
-    security: [{ 'access-token': [] }],
-    tags: [info.tag],
-    parameters: [getIdPathParam()],
-    requestBody: {
-      required: true,
-      description: 'Updated row data',
-      content: {
-        'application/json': {
-          schema: { $ref: `#/components/schemas/${info.schemaName}` },
-        },
+  };
+
+  return {
+    post: {
+      operationId: namingService.getOperationId('create', rawTableId),
+      summary: `Create ${info.singularPath}`,
+      description: `Creates a new ${info.singularPath} row with the specified ID`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getIdPathParam()],
+      requestBody: dataRequestBody,
+      responses: {
+        '200': createJsonResponse('Created row', rowResponseSchema),
+        '401': UNAUTHORIZED_RESPONSE,
+        '409': CONFLICT_RESPONSE,
       },
     },
-    responses: {
-      '200': {
-        description: 'Updated row',
-        content: {
-          'application/json': {
-            schema: getSingleRowResponseSchema(
-              `#/components/schemas/${info.schemaName}`,
-            ),
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
-      '404': {
-        description: 'Not found',
+    put: {
+      operationId: namingService.getOperationId('update', rawTableId),
+      summary: `Update ${info.singularPath}`,
+      description: `Updates an existing ${info.singularPath} row`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getIdPathParam()],
+      requestBody: dataRequestBody,
+      responses: {
+        '200': createJsonResponse('Updated row', rowResponseSchema),
+        '401': UNAUTHORIZED_RESPONSE,
+        '404': NOT_FOUND_RESPONSE,
       },
     },
-  },
-  delete: {
-    operationId: namingService.getOperationId('delete', rawTableId),
-    summary: `Delete ${info.singularPath}`,
-    description: `Deletes a ${info.singularPath} row by its ID`,
-    security: [{ 'access-token': [] }],
-    tags: [info.tag],
-    parameters: [getIdPathParam()],
-    responses: {
-      '200': {
-        description: 'Deletion successful',
-        content: {
-          'application/json': {
-            schema: { type: 'boolean' },
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
-      '404': {
-        description: 'Not found',
+    delete: {
+      operationId: namingService.getOperationId('delete', rawTableId),
+      summary: `Delete ${info.singularPath}`,
+      description: `Deletes a ${info.singularPath} row by its ID`,
+      security: [{ 'access-token': [] }],
+      tags: [info.tag],
+      parameters: [getIdPathParam()],
+      responses: {
+        '200': createJsonResponse('Deletion successful', { type: 'boolean' }),
+        '401': UNAUTHORIZED_RESPONSE,
+        '404': NOT_FOUND_RESPONSE,
       },
     },
-  },
-});
+  };
+};
 
 export const createForeignKeyPath = (
   info: TablePathInfo,
@@ -527,20 +494,12 @@ export const createForeignKeyPath = (
     tags: [info.tag],
     parameters: [getIdPathParam(), ...getPaginationParams()],
     responses: {
-      '200': {
-        description: 'Paginated list of related rows',
-        content: {
-          'application/json': {
-            schema: getPaginatedResponseSchema(),
-          },
-        },
-      },
-      '401': {
-        description: 'Unauthorized - invalid or missing token',
-      },
-      '404': {
-        description: 'Not found',
-      },
+      '200': createJsonResponse(
+        'Paginated list of related rows',
+        getPaginatedResponseSchema(),
+      ),
+      '401': UNAUTHORIZED_RESPONSE,
+      '404': NOT_FOUND_RESPONSE,
     },
   },
 });

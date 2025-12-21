@@ -14,7 +14,7 @@ import {
   createForeignKeyPath,
   getFilterAndSortSchemas,
   TablePathInfo,
-} from './open-api-shema.utils';
+} from './open-api-schema.utils';
 
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
