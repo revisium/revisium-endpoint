@@ -224,6 +224,8 @@ enum SearchLanguage {
 enum SearchType {
   phrase
   plain
+  prefix
+  tsquery
 }
 
 enum SortOrder {

@@ -5548,7 +5548,9 @@
             "type": "string",
             "enum": [
               "plain",
-              "phrase"
+              "phrase",
+              "prefix",
+              "tsquery"
             ]
           },
           "searchIn": {

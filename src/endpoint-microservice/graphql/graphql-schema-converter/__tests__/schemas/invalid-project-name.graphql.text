@@ -128,6 +128,8 @@ enum INVALID_PROJECT_NAME_1SearchLanguage {
 enum INVALID_PROJECT_NAME_1SearchType {
   phrase
   plain
+  prefix
+  tsquery
 }
 
 enum INVALID_PROJECT_NAME_1SortOrder {
