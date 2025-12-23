@@ -731,10 +731,12 @@ export enum JsonFilterDtoSearchLanguageEnum {
   Yiddish = "yiddish",
 }
 
-/** Search type: plain (individual words) or phrase (exact phrase) */
+/** Search type: plain (individual words), phrase (exact phrase), prefix (word beginnings with :*), tsquery (raw PostgreSQL tsquery syntax) */
 export enum JsonFilterDtoSearchTypeEnum {
   Plain = "plain",
   Phrase = "phrase",
+  Prefix = "prefix",
+  Tsquery = "tsquery",
 }
 
 /** Scope of search within JSON structure */

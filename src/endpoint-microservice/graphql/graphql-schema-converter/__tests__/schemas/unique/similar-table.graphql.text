@@ -156,6 +156,8 @@ enum ProjectSearchLanguage {
 enum ProjectSearchType {
   phrase
   plain
+  prefix
+  tsquery
 }
 
 enum ProjectSortOrder {
