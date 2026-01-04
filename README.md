@@ -22,7 +22,7 @@ Requires [@revisium/core](https://github.com/revisium/revisium-core) as the back
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                   Generated APIs                        │
 ├───────────────────────────┬─────────────────────────────┤
@@ -71,8 +71,7 @@ See [Configuration Guide](docs/configuration.md) for environment variables.
 | Package | Description |
 |---------|-------------|
 | [@revisium/core](https://github.com/revisium/revisium-core) | Backend API — required data source |
-| [@revisium/schema-toolkit](https://github.com/revisium/revisium-schema-toolkit) | JSON Schema utilities for schema transformation |
-| [pg-sync](https://github.com/revisium/pg-sync) | PostgreSQL-based notifications for multi-pod deployments (alternative to Redis) |
+| [@revisium/schema-toolkit](https://github.com/revisium/schema-toolkit) | JSON Schema utilities for schema transformation |
 
 ## License
 
