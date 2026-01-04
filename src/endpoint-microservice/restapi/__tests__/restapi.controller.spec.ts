@@ -377,6 +377,45 @@ describe('restapi controller', () => {
         .set('Authorization', 'Bearer test-token')
         .expect(404);
     });
+
+    it('should return error when Core API createRows fails', async () => {
+      mockProxyCoreApiService.api.createRows.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Validation failed', statusCode: 400 },
+      });
+
+      await request(app.getHttpServer())
+        .put(getRowsUrl(USER_TABLE_ID))
+        .set('Authorization', 'Bearer test-token')
+        .send({ rows: [{ rowId: 'test', data: {} }] })
+        .expect(400);
+    });
+
+    it('should return error when Core API updateRows fails', async () => {
+      mockProxyCoreApiService.api.updateRows.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Row not found', statusCode: 404 },
+      });
+
+      await request(app.getHttpServer())
+        .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+        .set('Authorization', 'Bearer test-token')
+        .send({ rows: [{ rowId: 'nonexistent', data: {} }] })
+        .expect(404);
+    });
+
+    it('should return error when Core API patchRows fails', async () => {
+      mockProxyCoreApiService.api.patchRows.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Invalid patch', statusCode: 400 },
+      });
+
+      await request(app.getHttpServer())
+        .patch(getRowsUrl(USER_TABLE_ID))
+        .set('Authorization', 'Bearer test-token')
+        .send({ rows: [{ rowId: 'user-1', patches: [] }] })
+        .expect(400);
+    });
   });
 
   describe('POST /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
