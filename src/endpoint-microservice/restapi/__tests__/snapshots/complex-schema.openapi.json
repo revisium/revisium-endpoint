@@ -1025,7 +1025,7 @@
       "patch": {
         "operationId": "bulkPatchAuthor",
         "summary": "Bulk patch author rows",
-        "description": "Patches multiple author rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple author rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []
@@ -2374,7 +2374,7 @@
       "patch": {
         "operationId": "bulkPatchCategory",
         "summary": "Bulk patch category rows",
-        "description": "Patches multiple category rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple category rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []
@@ -3891,7 +3891,7 @@
       "patch": {
         "operationId": "bulkPatchMedia",
         "summary": "Bulk patch media rows",
-        "description": "Patches multiple media rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple media rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []
@@ -5072,7 +5072,7 @@
       "patch": {
         "operationId": "bulkPatchPost",
         "summary": "Bulk patch post rows",
-        "description": "Patches multiple post rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple post rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []
@@ -6253,7 +6253,7 @@
       "patch": {
         "operationId": "bulkPatchSettings",
         "summary": "Bulk patch settings rows",
-        "description": "Patches multiple settings rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple settings rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []
@@ -7434,7 +7434,7 @@
       "patch": {
         "operationId": "bulkPatchTag",
         "summary": "Bulk patch tag rows",
-        "description": "Patches multiple tag rows using JSON Patch operations. Maximum 1000 rows per request.",
+        "description": "Patches multiple tag rows. Maximum 1000 rows per request.",
         "security": [
           {
             "access-token": []

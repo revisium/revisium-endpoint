@@ -755,103 +755,85 @@ const getBulkResponseSchema = (schemaRef: string): oas31.SchemaObject => ({
   },
 });
 
+interface BulkOperationConfig {
+  operation: 'create' | 'update' | 'patch' | 'delete';
+  verb: string;
+  descriptionSuffix?: string;
+  requestDescription: string;
+  responseDescription: string;
+  getRequestSchema: () => oas31.SchemaObject;
+  getResponseSchema: () => oas31.SchemaObject | oas31.ReferenceObject;
+}
+
+const createBulkOperation = (
+  info: TablePathInfo,
+  config: BulkOperationConfig,
+): oas31.OperationObject => ({
+  operationId: getBulkOperationId(config.operation, info.rawTableId),
+  summary: `Bulk ${config.operation} ${info.rawTableId} rows`,
+  description: `${config.verb} multiple ${info.rawTableId} rows${config.descriptionSuffix ?? ''}. Maximum 1000 rows per request.`,
+  security: [{ 'access-token': [] }],
+  tags: [info.tag],
+  requestBody: {
+    required: true,
+    description: config.requestDescription,
+    content: {
+      'application/json': {
+        schema: config.getRequestSchema(),
+      },
+    },
+  },
+  responses: {
+    '200': createJsonResponse(
+      config.responseDescription,
+      config.getResponseSchema(),
+    ),
+    '401': UNAUTHORIZED_RESPONSE,
+  },
+});
+
 export const createBulkRowsPath = (
   info: TablePathInfo,
   projectName: string,
 ): oas31.PathItemObject => {
   const schemaRef = `#/components/schemas/${info.schemaName}`;
   const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
+  const bulkResponseSchema = getBulkResponseSchema(schemaRef);
 
   return {
-    post: {
-      operationId: getBulkOperationId('create', info.rawTableId),
-      summary: `Bulk create ${info.rawTableId} rows`,
-      description: `Creates multiple ${info.rawTableId} rows. Maximum 1000 rows per request.`,
-      security: [{ 'access-token': [] }],
-      tags: [info.tag],
-      requestBody: {
-        required: true,
-        description: 'Array of rows to create',
-        content: {
-          'application/json': {
-            schema: getBulkRowsRequestSchema(schemaRef),
-          },
-        },
-      },
-      responses: {
-        '200': createJsonResponse(
-          'Created rows',
-          getBulkResponseSchema(schemaRef),
-        ),
-        '401': UNAUTHORIZED_RESPONSE,
-      },
-    },
-    put: {
-      operationId: getBulkOperationId('update', info.rawTableId),
-      summary: `Bulk update ${info.rawTableId} rows`,
-      description: `Updates multiple ${info.rawTableId} rows. Maximum 1000 rows per request.`,
-      security: [{ 'access-token': [] }],
-      tags: [info.tag],
-      requestBody: {
-        required: true,
-        description: 'Array of rows to update',
-        content: {
-          'application/json': {
-            schema: getBulkRowsRequestSchema(schemaRef),
-          },
-        },
-      },
-      responses: {
-        '200': createJsonResponse(
-          'Updated rows',
-          getBulkResponseSchema(schemaRef),
-        ),
-        '401': UNAUTHORIZED_RESPONSE,
-      },
-    },
-    patch: {
-      operationId: getBulkOperationId('patch', info.rawTableId),
-      summary: `Bulk patch ${info.rawTableId} rows`,
-      description: `Patches multiple ${info.rawTableId} rows using JSON Patch operations. Maximum 1000 rows per request.`,
-      security: [{ 'access-token': [] }],
-      tags: [info.tag],
-      requestBody: {
-        required: true,
-        description: 'Array of rows with patch operations',
-        content: {
-          'application/json': {
-            schema: getBulkPatchRequestSchema(patchOperationRef),
-          },
-        },
-      },
-      responses: {
-        '200': createJsonResponse(
-          'Patched rows',
-          getBulkResponseSchema(schemaRef),
-        ),
-        '401': UNAUTHORIZED_RESPONSE,
-      },
-    },
-    delete: {
-      operationId: getBulkOperationId('delete', info.rawTableId),
-      summary: `Bulk delete ${info.rawTableId} rows`,
-      description: `Deletes multiple ${info.rawTableId} rows by their IDs. Maximum 1000 rows per request.`,
-      security: [{ 'access-token': [] }],
-      tags: [info.tag],
-      requestBody: {
-        required: true,
-        description: 'Array of row IDs to delete',
-        content: {
-          'application/json': {
-            schema: getBulkDeleteRequestSchema(),
-          },
-        },
-      },
-      responses: {
-        '200': createJsonResponse('Deletion successful', { type: 'boolean' }),
-        '401': UNAUTHORIZED_RESPONSE,
-      },
-    },
+    post: createBulkOperation(info, {
+      operation: 'create',
+      verb: 'Creates',
+      requestDescription: 'Array of rows to create',
+      responseDescription: 'Created rows',
+      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getResponseSchema: () => bulkResponseSchema,
+    }),
+    put: createBulkOperation(info, {
+      operation: 'update',
+      verb: 'Updates',
+      requestDescription: 'Array of rows to update',
+      responseDescription: 'Updated rows',
+      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getResponseSchema: () => bulkResponseSchema,
+    }),
+    patch: createBulkOperation(info, {
+      operation: 'patch',
+      verb: 'Patches',
+      requestDescription: 'Array of rows with patch operations',
+      responseDescription: 'Patched rows',
+      getRequestSchema: () => getBulkPatchRequestSchema(patchOperationRef),
+      getResponseSchema: () => bulkResponseSchema,
+    }),
+    delete: createBulkOperation(info, {
+      operation: 'delete',
+      verb: 'Deletes',
+      descriptionSuffix: ' by their IDs',
+      requestDescription: 'Array of row IDs to delete',
+      responseDescription: 'Deletion successful',
+      getRequestSchema: () => getBulkDeleteRequestSchema(),
+      getResponseSchema: () => ({ type: 'boolean' }) as oas31.SchemaObject,
+    }),
   };
 };
 
