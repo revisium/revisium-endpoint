@@ -2,6 +2,9 @@ import {
   GetTableRowsDto,
   PatchRow,
   RowModel,
+  CreateRowsResponse,
+  UpdateRowsResponse,
+  PatchRowsResponse,
 } from 'src/endpoint-microservice/core-api/generated/api';
 import { IPaginatedType } from 'src/endpoint-microservice/shared/types/pagination.interface';
 
@@ -29,12 +32,17 @@ export interface EndpointMiddleware {
     headers: Record<string, string>,
     tableId: string,
     rows: Array<{ rowId: string; data: object }>,
-  ): Promise<object>;
+  ): Promise<CreateRowsResponse>;
+  bulkUpdateRows(
+    headers: Record<string, string>,
+    tableId: string,
+    rows: Array<{ rowId: string; data: object }>,
+  ): Promise<UpdateRowsResponse>;
   bulkPatchRows(
     headers: Record<string, string>,
     tableId: string,
     rows: Array<{ rowId: string; patches: PatchRow[] }>,
-  ): Promise<object>;
+  ): Promise<PatchRowsResponse>;
   deleteRows(
     headers: Record<string, string>,
     tableId: string,

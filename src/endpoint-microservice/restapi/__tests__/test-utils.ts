@@ -342,6 +342,99 @@ export const createDeleteRowsMock = () => {
     );
 };
 
+export const createBulkCreateRowsMock = () => {
+  return jest
+    .fn()
+    .mockImplementation(
+      (
+        _revisionId: string,
+        tableId: string,
+        data: { rows: Array<{ rowId: string; data: object }> },
+      ) => {
+        if (tableId === USER_TABLE_ID || tableId === CONF_TABLE_ID) {
+          return Promise.resolve({
+            data: {
+              table: { id: tableId },
+              previousVersionTableId: 'prev-table-version',
+              rows: data.rows.map((r) => ({
+                id: r.rowId,
+                versionId: `v-${r.rowId}`,
+                data: r.data,
+              })),
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({
+          data: null,
+          error: { message: 'Table not found', statusCode: 404 },
+        });
+      },
+    );
+};
+
+export const createBulkUpdateRowsMock = () => {
+  return jest
+    .fn()
+    .mockImplementation(
+      (
+        _revisionId: string,
+        tableId: string,
+        data: { rows: Array<{ rowId: string; data: object }> },
+      ) => {
+        if (tableId === USER_TABLE_ID || tableId === CONF_TABLE_ID) {
+          return Promise.resolve({
+            data: {
+              table: { id: tableId },
+              previousVersionTableId: 'prev-table-version',
+              rows: data.rows.map((r) => ({
+                id: r.rowId,
+                versionId: `v-${r.rowId}`,
+                data: r.data,
+              })),
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({
+          data: null,
+          error: { message: 'Table not found', statusCode: 404 },
+        });
+      },
+    );
+};
+
+export const createBulkPatchRowsMock = () => {
+  return jest
+    .fn()
+    .mockImplementation(
+      (
+        _revisionId: string,
+        tableId: string,
+        data: { rows: Array<{ rowId: string; patches: unknown[] }> },
+      ) => {
+        if (tableId === USER_TABLE_ID || tableId === CONF_TABLE_ID) {
+          return Promise.resolve({
+            data: {
+              table: { id: tableId },
+              previousVersionTableId: 'prev-table-version',
+              rows: data.rows.map((r) => ({
+                id: r.rowId,
+                versionId: `v-${r.rowId}`,
+                data: { patched: true },
+              })),
+            },
+            error: null,
+          });
+        }
+        return Promise.resolve({
+          data: null,
+          error: { message: 'Table not found', statusCode: 404 },
+        });
+      },
+    );
+};
+
 export const createMockProxyCoreApiService = () => ({
   api: {
     endpointRelatives: jest.fn().mockResolvedValue(createMockCoreApiResponse()),
@@ -403,14 +496,17 @@ export const createMockProxyCoreApiService = () => ({
       data: { row: { id: 'new-row' } },
       error: null,
     }),
+    createRows: createBulkCreateRowsMock(),
     updateRow: jest.fn().mockResolvedValue({
       data: { row: { id: 'updated-row' } },
       error: null,
     }),
+    updateRows: createBulkUpdateRowsMock(),
     patchRow: jest.fn().mockResolvedValue({
       data: { row: { id: 'patched-row' } },
       error: null,
     }),
+    patchRows: createBulkPatchRowsMock(),
     rowForeignKeysBy: jest.fn().mockResolvedValue({
       data: {
         edges: [],

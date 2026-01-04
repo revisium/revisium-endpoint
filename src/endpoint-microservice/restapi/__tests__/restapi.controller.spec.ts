@@ -98,7 +98,7 @@ describe('restapi controller', () => {
     });
 
     describe('PUT /tables/:tableId/rows (bulkCreateRows)', () => {
-      it('should return not implemented for bulk create', async () => {
+      it('should bulk create rows', async () => {
         const response = await request(app.getHttpServer())
           .put(getRowsUrl(USER_TABLE_ID))
           .set('Authorization', 'Bearer test-token')
@@ -110,12 +110,69 @@ describe('restapi controller', () => {
           })
           .expect(200);
 
-        expect(response.body.message).toBe('Not implemented');
+        expect(response.body.table).toBeDefined();
+        expect(response.body.rows).toHaveLength(2);
+        expect(response.body.rows[0].id).toBe('new-1');
+        expect(response.body.rows[1].id).toBe('new-2');
+      });
+
+      it('should call createRows on Core API', async () => {
+        await request(app.getHttpServer())
+          .put(getRowsUrl(USER_TABLE_ID))
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [{ rowId: 'test-row', data: { firstName: 'Test' } }],
+          })
+          .expect(200);
+
+        expect(mockProxyCoreApiService.api.createRows).toHaveBeenCalledWith(
+          expect.any(String),
+          USER_TABLE_ID,
+          { rows: [{ rowId: 'test-row', data: { firstName: 'Test' } }] },
+          expect.any(Object),
+        );
+      });
+    });
+
+    describe('POST /tables/:tableId/update-rows (bulkUpdateRows)', () => {
+      it('should bulk update rows', async () => {
+        const response = await request(app.getHttpServer())
+          .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [
+              { rowId: 'user-1', data: { firstName: 'Updated1' } },
+              { rowId: 'user-2', data: { firstName: 'Updated2' } },
+            ],
+          })
+          .expect(200);
+
+        expect(response.body.table).toBeDefined();
+        expect(response.body.rows).toHaveLength(2);
+        expect(response.body.rows[0].id).toBe('user-1');
+        expect(response.body.rows[1].id).toBe('user-2');
+      });
+
+      it('should call updateRows on Core API', async () => {
+        await request(app.getHttpServer())
+          .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [{ rowId: 'user-1', data: { firstName: 'Updated' } }],
+          })
+          .expect(200);
+
+        expect(mockProxyCoreApiService.api.updateRows).toHaveBeenCalledWith(
+          expect.any(String),
+          USER_TABLE_ID,
+          { rows: [{ rowId: 'user-1', data: { firstName: 'Updated' } }] },
+          expect.any(Object),
+        );
       });
     });
 
     describe('PATCH /tables/:tableId/rows (bulkPatchRows)', () => {
-      it('should return not implemented for bulk patch', async () => {
+      it('should bulk patch rows', async () => {
         const response = await request(app.getHttpServer())
           .patch(getRowsUrl(USER_TABLE_ID))
           .set('Authorization', 'Bearer test-token')
@@ -131,7 +188,30 @@ describe('restapi controller', () => {
           })
           .expect(200);
 
-        expect(response.body.message).toBe('Not implemented');
+        expect(response.body.table).toBeDefined();
+        expect(response.body.rows).toHaveLength(1);
+        expect(response.body.rows[0].id).toBe('user-1');
+      });
+
+      it('should call patchRows on Core API', async () => {
+        const patches = [
+          { op: 'replace', path: 'firstName', value: 'Patched' },
+        ];
+
+        await request(app.getHttpServer())
+          .patch(getRowsUrl(USER_TABLE_ID))
+          .set('Authorization', 'Bearer test-token')
+          .send({
+            rows: [{ rowId: 'user-1', patches }],
+          })
+          .expect(200);
+
+        expect(mockProxyCoreApiService.api.patchRows).toHaveBeenCalledWith(
+          expect.any(String),
+          USER_TABLE_ID,
+          { rows: [{ rowId: 'user-1', patches }] },
+          expect.any(Object),
+        );
       });
     });
   });

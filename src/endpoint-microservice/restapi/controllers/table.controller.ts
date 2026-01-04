@@ -115,6 +115,25 @@ export class TableController extends BaseRestapiController {
     res.json(result);
   }
 
+  @Post('update-rows')
+  @HttpCode(HttpStatus.OK)
+  async bulkUpdateRows(
+    @Param('tableId') tableId: string,
+    @Body() body: { rows: Array<{ rowId: string; data: object }> },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const middleware = this.getMiddlewareFromRequest(req, res);
+    if (!middleware) return;
+
+    const result = await middleware.bulkUpdateRows(
+      this.parseHeaders(req),
+      tableId,
+      body.rows,
+    );
+    res.json(result);
+  }
+
   @Patch('rows')
   async bulkPatchRows(
     @Param('tableId') tableId: string,

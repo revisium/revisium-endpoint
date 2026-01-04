@@ -178,11 +178,47 @@ export class RestapiEndpointService {
 
         return data;
       },
-      bulkCreateRows: async () => {
-        return { message: 'Not implemented' };
+      bulkCreateRows: async (headers, tableId, rows) => {
+        const { data, error } = await this.proxyCoreApi.api.createRows(
+          revision.id,
+          tableId,
+          { rows: rows.map((r) => ({ rowId: r.rowId, data: r.data })) },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
       },
-      bulkPatchRows: async () => {
-        return { message: 'Not implemented' };
+      bulkUpdateRows: async (headers, tableId, rows) => {
+        const { data, error } = await this.proxyCoreApi.api.updateRows(
+          revision.id,
+          tableId,
+          { rows: rows.map((r) => ({ rowId: r.rowId, data: r.data })) },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
+      },
+      bulkPatchRows: async (headers, tableId, rows) => {
+        const { data, error } = await this.proxyCoreApi.api.patchRows(
+          revision.id,
+          tableId,
+          { rows: rows.map((r) => ({ rowId: r.rowId, patches: r.patches })) },
+          { headers },
+        );
+
+        if (error) {
+          throw new HttpException(error, error.statusCode);
+        }
+
+        return data;
       },
       deleteRows: async (headers, tableId, rowIds) => {
         const { error } = await this.proxyCoreApi.api.deleteRows(

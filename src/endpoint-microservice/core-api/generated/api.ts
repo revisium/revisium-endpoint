@@ -31,10 +31,11 @@ export interface UpdatePasswordDto {
   newPassword: string;
 }
 
-export interface UserModel {
+export interface MeModel {
   id: string;
   username?: string;
   email?: string;
+  hasPassword: boolean;
 }
 
 export interface ProjectModel {
@@ -67,6 +68,12 @@ export interface CreateProjectDto {
   projectName: string;
   /** @default "master" */
   branchName?: string;
+}
+
+export interface UserModel {
+  id: string;
+  username?: string;
+  email?: string;
 }
 
 export interface RoleModel {
@@ -387,7 +394,7 @@ export interface JsonFilterDto {
   search?: string;
   /** Language for full-text search. Default: simple */
   searchLanguage?: JsonFilterDtoSearchLanguageEnum;
-  /** Search type: plain (individual words) or phrase (exact phrase) */
+  /** Search type: plain (individual words), phrase (exact phrase), prefix (word beginnings with :*), tsquery (raw PostgreSQL tsquery syntax) */
   searchType?: JsonFilterDtoSearchTypeEnum;
   /** Scope of search within JSON structure */
   searchIn?: JsonFilterDtoSearchInEnum;
@@ -475,6 +482,74 @@ export interface CreateRowResponse {
   row: RowModel;
 }
 
+export interface CreateRowsRowDto {
+  rowId: string;
+  data: Record<string, any>;
+}
+
+export interface CreateRowsDto {
+  /** @maxItems 1000 */
+  rows: CreateRowsRowDto[];
+  isRestore?: boolean;
+}
+
+export interface CreateRowsResponse {
+  table: TableModel;
+  previousVersionTableId: string;
+  rows: RowModel[];
+}
+
+export interface UpdateRowsRowDto {
+  rowId: string;
+  data: Record<string, any>;
+}
+
+export interface UpdateRowsDto {
+  /** @maxItems 1000 */
+  rows: UpdateRowsRowDto[];
+  isRestore?: boolean;
+}
+
+export interface UpdateRowsResponse {
+  table: TableModel;
+  previousVersionTableId: string;
+  rows: RowModel[];
+}
+
+export interface PatchRow {
+  /**
+   * The operation to perform. Currently only "replace" is supported
+   * @example "replace"
+   */
+  op: PatchRowOpEnum;
+  /**
+   * JSON path using dot notation for objects and [index] for arrays. Examples: "name", "user.email", "items[0]", "data.list[2].value"
+   * @example "list[0].nestedList[2].name"
+   */
+  path: string;
+  /**
+   * The value to set at the specified path. Can be any valid JSON value (string, number, boolean, object, array, or null)
+   * @example "{ "key": "value" }"
+   */
+  value: string | number | boolean | object | any[] | null;
+}
+
+export interface PatchRowsRowDto {
+  rowId: string;
+  patches: PatchRow[];
+}
+
+export interface PatchRowsDto {
+  /** @maxItems 1000 */
+  rows: PatchRowsRowDto[];
+}
+
+export interface PatchRowsResponse {
+  table: TableModel;
+  previousVersionTableId: string;
+  rows: RowModel[];
+}
+
 export interface RemoveRowsDto {
   /** @maxItems 1000 */
   rowIds: string[];
@@ -517,24 +592,6 @@ export interface UpdateRowResponse {
   previousVersionTableId?: string;
   row?: RowModel;
   previousVersionRowId?: string;
-}
-
-export interface PatchRow {
-  /**
-   * The operation to perform. Currently only "replace" is supported
-   * @example "replace"
-   */
-  op: PatchRowOpEnum;
-  /**
-   * JSON path using dot notation for objects and [index] for arrays. Examples: "name", "user.email", "items[0]", "data.list[2].value"
-   * @example "list[0].nestedList[2].name"
-   */
-  path: string;
-  /**
-   * The value to set at the specified path. Can be any valid JSON value (string, number, boolean, object, array, or null)
-   * @example "{ "key": "value" }"
-   */
-  value: string | number | boolean | object | any[] | null;
 }
 
 export interface PatchRowDto {
@@ -1105,7 +1162,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
 /**
  * @title Revisium API
- * @version 2.5.0-alpha.10
+ * @version 2.6.0-alpha.3
  * @contact
  */
 export class Api<
@@ -1178,7 +1235,7 @@ export class Api<
      * @secure
      */
     me: (params: RequestParams = {}) =>
-      this.request<UserModel, any>({
+      this.request<MeModel, any>({
         path: `/api/user/me`,
         method: "GET",
         secure: true,
@@ -2049,6 +2106,78 @@ export class Api<
       this.request<CreateRowResponse, any>({
         path: `/api/revision/${revisionId}/tables/${tableId}/create-row`,
         method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Table
+     * @name CreateRows
+     * @request POST:/api/revision/{revisionId}/tables/{tableId}/create-rows
+     * @secure
+     */
+    createRows: (
+      revisionId: string,
+      tableId: string,
+      data: CreateRowsDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<CreateRowsResponse, any>({
+        path: `/api/revision/${revisionId}/tables/${tableId}/create-rows`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Table
+     * @name UpdateRows
+     * @request PUT:/api/revision/{revisionId}/tables/{tableId}/update-rows
+     * @secure
+     */
+    updateRows: (
+      revisionId: string,
+      tableId: string,
+      data: UpdateRowsDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UpdateRowsResponse, any>({
+        path: `/api/revision/${revisionId}/tables/${tableId}/update-rows`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Table
+     * @name PatchRows
+     * @request PATCH:/api/revision/{revisionId}/tables/{tableId}/patch-rows
+     * @secure
+     */
+    patchRows: (
+      revisionId: string,
+      tableId: string,
+      data: PatchRowsDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<PatchRowsResponse, any>({
+        path: `/api/revision/${revisionId}/tables/${tableId}/patch-rows`,
+        method: "PATCH",
         body: data,
         secure: true,
         type: ContentType.Json,
