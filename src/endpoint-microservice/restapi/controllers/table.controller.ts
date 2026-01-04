@@ -97,7 +97,7 @@ export class TableController extends BaseRestapiController {
     res.json(result);
   }
 
-  @Put('rows')
+  @Post('rows/bulk')
   async bulkCreateRows(
     @Param('tableId') tableId: string,
     @Body() body: { rows: Array<{ rowId: string; data: object }> },
@@ -115,8 +115,7 @@ export class TableController extends BaseRestapiController {
     res.json(result);
   }
 
-  @Post('update-rows')
-  @HttpCode(HttpStatus.OK)
+  @Put('rows/bulk')
   async bulkUpdateRows(
     @Param('tableId') tableId: string,
     @Body() body: { rows: Array<{ rowId: string; data: object }> },
@@ -134,7 +133,7 @@ export class TableController extends BaseRestapiController {
     res.json(result);
   }
 
-  @Patch('rows')
+  @Patch('rows/bulk')
   async bulkPatchRows(
     @Param('tableId') tableId: string,
     @Body() body: { rows: Array<{ rowId: string; patches: PatchRow[] }> },
@@ -152,7 +151,7 @@ export class TableController extends BaseRestapiController {
     res.json(result);
   }
 
-  @Delete('rows')
+  @Delete('rows/bulk')
   async bulkDeleteRows(
     @Param('tableId') tableId: string,
     @Body() body: { rowIds: string[] },

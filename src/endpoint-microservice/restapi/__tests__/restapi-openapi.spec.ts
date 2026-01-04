@@ -268,8 +268,8 @@ describe('restapi OpenAPI generation', () => {
         }),
       );
 
-      const listPath = openApiJson.paths?.[`/tables/${USER_TABLE_ID}/rows`];
-      expect(listPath?.post?.operationId).toBe('listUser');
+      const queryPath = openApiJson.paths?.[`/tables/${USER_TABLE_ID}/rows`];
+      expect(queryPath?.post?.operationId).toBe('listUser');
 
       const singlePath =
         openApiJson.paths?.[`/tables/${USER_TABLE_ID}/row/{rowId}`];

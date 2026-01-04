@@ -201,58 +201,6 @@
             "description": "Unauthorized - invalid or missing token"
           }
         }
-      },
-      "delete": {
-        "operationId": "bulkDeleteAuthor",
-        "summary": "Bulk delete author rows",
-        "description": "Deletes multiple author rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "author"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
       }
     },
     "/tables/author/row/{rowId}": {
@@ -803,6 +751,468 @@
         }
       }
     },
+    "/tables/author/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreateAuthor",
+        "summary": "Bulk create author rows",
+        "description": "Creates multiple author rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "author"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectAuthor",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectAuthor"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdateAuthor",
+        "summary": "Bulk update author rows",
+        "description": "Updates multiple author rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "author"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectAuthor",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectAuthor"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchAuthor",
+        "summary": "Bulk patch author rows",
+        "description": "Patches multiple author rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "author"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectAuthor"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeleteAuthor",
+        "summary": "Bulk delete author rows",
+        "description": "Deletes multiple author rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "author"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      }
+    },
     "/tables/author/row/{rowId}/foreign-keys-by/post": {
       "get": {
         "operationId": "getAuthorForeignKeysByPost",
@@ -1132,58 +1542,6 @@
                       "minimum": 0
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "bulkDeleteCategory",
-        "summary": "Bulk delete category rows",
-        "description": "Deletes multiple category rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "category"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
                 }
               }
             }
@@ -1742,6 +2100,468 @@
         }
       }
     },
+    "/tables/category/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreateCategory",
+        "summary": "Bulk create category rows",
+        "description": "Creates multiple category rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "category"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectCategory",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectCategory"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdateCategory",
+        "summary": "Bulk update category rows",
+        "description": "Updates multiple category rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "category"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectCategory",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectCategory"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchCategory",
+        "summary": "Bulk patch category rows",
+        "description": "Patches multiple category rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "category"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectCategory"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeleteCategory",
+        "summary": "Bulk delete category rows",
+        "description": "Deletes multiple category rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "category"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      }
+    },
     "/tables/category/row/{rowId}/foreign-keys-by/category": {
       "get": {
         "operationId": "getCategoryForeignKeysByCategory",
@@ -2239,58 +3059,6 @@
                       "minimum": 0
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "bulkDeleteMedia",
-        "summary": "Bulk delete media rows",
-        "description": "Deletes multiple media rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "media"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
                 }
               }
             }
@@ -2849,6 +3617,468 @@
         }
       }
     },
+    "/tables/media/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreateMedia",
+        "summary": "Bulk create media rows",
+        "description": "Creates multiple media rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectMedia",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectMedia"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdateMedia",
+        "summary": "Bulk update media rows",
+        "description": "Updates multiple media rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectMedia",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectMedia"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchMedia",
+        "summary": "Bulk patch media rows",
+        "description": "Patches multiple media rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectMedia"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeleteMedia",
+        "summary": "Bulk delete media rows",
+        "description": "Deletes multiple media rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      }
+    },
     "/tables/post/rows": {
       "post": {
         "operationId": "listPost",
@@ -3010,58 +4240,6 @@
                       "minimum": 0
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "bulkDeletePost",
-        "summary": "Bulk delete post rows",
-        "description": "Deletes multiple post rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "post"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
                 }
               }
             }
@@ -3620,6 +4798,468 @@
         }
       }
     },
+    "/tables/post/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreatePost",
+        "summary": "Bulk create post rows",
+        "description": "Creates multiple post rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "post"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectPost",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectPost"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdatePost",
+        "summary": "Bulk update post rows",
+        "description": "Updates multiple post rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "post"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectPost",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectPost"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchPost",
+        "summary": "Bulk patch post rows",
+        "description": "Patches multiple post rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "post"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectPost"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeletePost",
+        "summary": "Bulk delete post rows",
+        "description": "Deletes multiple post rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "post"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      }
+    },
     "/tables/settings/rows": {
       "post": {
         "operationId": "listSettings",
@@ -3781,58 +5421,6 @@
                       "minimum": 0
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "bulkDeleteSettings",
-        "summary": "Bulk delete settings rows",
-        "description": "Deletes multiple settings rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "settings"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
                 }
               }
             }
@@ -4391,6 +5979,468 @@
         }
       }
     },
+    "/tables/settings/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreateSettings",
+        "summary": "Bulk create settings rows",
+        "description": "Creates multiple settings rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectSettings",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectSettings"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdateSettings",
+        "summary": "Bulk update settings rows",
+        "description": "Updates multiple settings rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectSettings",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectSettings"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchSettings",
+        "summary": "Bulk patch settings rows",
+        "description": "Patches multiple settings rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectSettings"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeleteSettings",
+        "summary": "Bulk delete settings rows",
+        "description": "Deletes multiple settings rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      }
+    },
     "/tables/tag/rows": {
       "post": {
         "operationId": "listTag",
@@ -4552,58 +6602,6 @@
                       "minimum": 0
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "bulkDeleteTag",
-        "summary": "Bulk delete tag rows",
-        "description": "Deletes multiple tag rows by their IDs. Maximum 1000 rows per request.",
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "tags": [
-          "tag"
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "Array of row IDs to delete",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "rowIds"
-                ],
-                "properties": {
-                  "rowIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 1000,
-                    "description": "Array of row IDs to delete (max 1000)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deletion successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean"
                 }
               }
             }
@@ -5158,6 +7156,468 @@
           },
           "404": {
             "description": "Not found"
+          }
+        }
+      }
+    },
+    "/tables/tag/rows/bulk": {
+      "post": {
+        "operationId": "bulkCreateTag",
+        "summary": "Bulk create tag rows",
+        "description": "Creates multiple tag rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "tag"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectTag",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectTag"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "put": {
+        "operationId": "bulkUpdateTag",
+        "summary": "Bulk update tag rows",
+        "description": "Updates multiple tag rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "tag"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to process (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "data"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Unique row identifier"
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TestProjectTag",
+                          "description": "Row data"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectTag"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "bulkPatchTag",
+        "summary": "Bulk patch tag rows",
+        "description": "Patches multiple tag rows. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "tag"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of rows with patch operations",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rows"
+                ],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "description": "Array of rows to patch (max 1000)",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "rowId",
+                        "patches"
+                      ],
+                      "properties": {
+                        "rowId": {
+                          "type": "string",
+                          "description": "Row identifier"
+                        },
+                        "patches": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TestProjectPatchOperation"
+                          },
+                          "description": "Array of patch operations to apply"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patched rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "table",
+                    "rows"
+                  ],
+                  "properties": {
+                    "table": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousVersionTableId": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "versionId",
+                          "createdId",
+                          "createdAt",
+                          "updatedAt",
+                          "publishedAt",
+                          "readonly",
+                          "data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Row ID"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "description": "Current version ID"
+                          },
+                          "createdId": {
+                            "type": "string",
+                            "description": "Original creation ID"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Creation timestamp"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Last update timestamp"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication timestamp"
+                          },
+                          "readonly": {
+                            "type": "boolean",
+                            "description": "Whether the row is read-only"
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/TestProjectTag"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "bulkDeleteTag",
+        "summary": "Bulk delete tag rows",
+        "description": "Deletes multiple tag rows by their IDs. Maximum 1000 rows per request.",
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "tags": [
+          "tag"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Array of row IDs to delete",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rowIds"
+                ],
+                "properties": {
+                  "rowIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 1000,
+                    "description": "Array of row IDs to delete (max 1000)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deletion successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
           }
         }
       }
