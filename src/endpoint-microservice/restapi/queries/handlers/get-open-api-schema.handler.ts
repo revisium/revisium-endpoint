@@ -7,11 +7,12 @@ import { JsonSchema } from '@revisium/schema-toolkit/types';
 import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.consts';
 import { OpenApiSchema } from 'src/endpoint-microservice/shared/types/open-api-schema';
 import {
+  createBulkRowsPath,
   createFileUploadPath,
   createForeignKeyPath,
+  createQueryRowsPath,
   createSingleRowPath,
   createTableInfoMap,
-  createTableRowsPath,
   getFilterAndSortSchemas,
   TablePathInfo,
 } from './open-api-schema.utils';
@@ -69,10 +70,9 @@ export class GetOpenApiSchemaHandler
         continue;
       }
 
-      openApiJson.paths[`/tables/${rawTableId}/rows`] = createTableRowsPath(
+      openApiJson.paths[`/tables/${rawTableId}/rows`] = createQueryRowsPath(
         info,
         projectName,
-        isDraftRevision,
       );
 
       openApiJson.paths[`/tables/${rawTableId}/row/{rowId}`] =
@@ -81,6 +81,8 @@ export class GetOpenApiSchemaHandler
       if (isDraftRevision) {
         openApiJson.paths[`/tables/${rawTableId}/row/{rowId}/files/{fileId}`] =
           createFileUploadPath(info);
+        openApiJson.paths[`/tables/${rawTableId}/rows/bulk`] =
+          createBulkRowsPath(info, projectName);
       }
 
       const foreignKeys = await this.getForeignKeys(revisionId, rawTableId);

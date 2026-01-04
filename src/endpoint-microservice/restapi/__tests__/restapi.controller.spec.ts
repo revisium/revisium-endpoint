@@ -97,10 +97,10 @@ describe('restapi controller', () => {
       });
     });
 
-    describe('PUT /tables/:tableId/rows (bulkCreateRows)', () => {
+    describe('POST /tables/:tableId/rows/bulk (bulkCreateRows)', () => {
       it('should bulk create rows', async () => {
         const response = await request(app.getHttpServer())
-          .put(getRowsUrl(USER_TABLE_ID))
+          .post(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [
@@ -108,7 +108,7 @@ describe('restapi controller', () => {
               { rowId: 'new-2', data: { firstName: 'Test2' } },
             ],
           })
-          .expect(200);
+          .expect(201);
 
         expect(response.body.table).toBeDefined();
         expect(response.body.rows).toHaveLength(2);
@@ -118,12 +118,12 @@ describe('restapi controller', () => {
 
       it('should call createRows on Core API', async () => {
         await request(app.getHttpServer())
-          .put(getRowsUrl(USER_TABLE_ID))
+          .post(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [{ rowId: 'test-row', data: { firstName: 'Test' } }],
           })
-          .expect(200);
+          .expect(201);
 
         expect(mockProxyCoreApiService.api.createRows).toHaveBeenCalledWith(
           expect.any(String),
@@ -134,10 +134,10 @@ describe('restapi controller', () => {
       });
     });
 
-    describe('POST /tables/:tableId/update-rows (bulkUpdateRows)', () => {
+    describe('PUT /tables/:tableId/rows/bulk (bulkUpdateRows)', () => {
       it('should bulk update rows', async () => {
         const response = await request(app.getHttpServer())
-          .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+          .put(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [
@@ -155,7 +155,7 @@ describe('restapi controller', () => {
 
       it('should call updateRows on Core API', async () => {
         await request(app.getHttpServer())
-          .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+          .put(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [{ rowId: 'user-1', data: { firstName: 'Updated' } }],
@@ -171,10 +171,10 @@ describe('restapi controller', () => {
       });
     });
 
-    describe('PATCH /tables/:tableId/rows (bulkPatchRows)', () => {
+    describe('PATCH /tables/:tableId/rows/bulk (bulkPatchRows)', () => {
       it('should bulk patch rows', async () => {
         const response = await request(app.getHttpServer())
-          .patch(getRowsUrl(USER_TABLE_ID))
+          .patch(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [
@@ -199,7 +199,7 @@ describe('restapi controller', () => {
         ];
 
         await request(app.getHttpServer())
-          .patch(getRowsUrl(USER_TABLE_ID))
+          .patch(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
           .set('Authorization', 'Bearer test-token')
           .send({
             rows: [{ rowId: 'user-1', patches }],
@@ -212,6 +212,28 @@ describe('restapi controller', () => {
           { rows: [{ rowId: 'user-1', patches }] },
           expect.any(Object),
         );
+      });
+    });
+
+    describe('DELETE /tables/:tableId/rows/bulk (bulkDeleteRows)', () => {
+      it('should bulk delete rows by IDs', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
+          .set('Authorization', 'Bearer test-token')
+          .send({ rowIds: ['user-1', 'user-2'] });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toBe(true);
+      });
+
+      it('should delete rows from uppercase table name', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`${getTableUrl(CONF_TABLE_ID)}/rows/bulk`)
+          .set('Authorization', 'Bearer test-token')
+          .send({ rowIds: ['1', '2', '3'] })
+          .expect(200);
+
+        expect(response.body).toBe(true);
       });
     });
   });
@@ -385,7 +407,7 @@ describe('restapi controller', () => {
       });
 
       await request(app.getHttpServer())
-        .put(getRowsUrl(USER_TABLE_ID))
+        .post(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
         .set('Authorization', 'Bearer test-token')
         .send({ rows: [{ rowId: 'test', data: {} }] })
         .expect(400);
@@ -398,7 +420,7 @@ describe('restapi controller', () => {
       });
 
       await request(app.getHttpServer())
-        .post(`${getTableUrl(USER_TABLE_ID)}/update-rows`)
+        .put(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
         .set('Authorization', 'Bearer test-token')
         .send({ rows: [{ rowId: 'nonexistent', data: {} }] })
         .expect(404);
@@ -411,10 +433,23 @@ describe('restapi controller', () => {
       });
 
       await request(app.getHttpServer())
-        .patch(getRowsUrl(USER_TABLE_ID))
+        .patch(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
         .set('Authorization', 'Bearer test-token')
         .send({ rows: [{ rowId: 'user-1', patches: [] }] })
         .expect(400);
+    });
+
+    it('should return error when Core API deleteRows fails', async () => {
+      mockProxyCoreApiService.api.deleteRows.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Delete failed', statusCode: 500 },
+      });
+
+      await request(app.getHttpServer())
+        .delete(`${getTableUrl(USER_TABLE_ID)}/rows/bulk`)
+        .set('Authorization', 'Bearer test-token')
+        .send({ rowIds: ['user-1'] })
+        .expect(500);
     });
   });
 
@@ -587,28 +622,6 @@ describe('restapi controller', () => {
         .expect(200);
 
       expect(response.body).toBeDefined();
-    });
-  });
-
-  describe('DELETE /endpoint/restapi/:org/:project/:branch/:postfix/tables/:tableId/rows', () => {
-    it('should bulk delete rows by IDs', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(getRowsUrl(USER_TABLE_ID))
-        .set('Authorization', 'Bearer test-token')
-        .send({ rowIds: ['user-1', 'user-2'] });
-
-      expect(response.status).toBe(200);
-      expect(response.body).toBe(true);
-    });
-
-    it('should delete rows from uppercase table name', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(getRowsUrl(CONF_TABLE_ID))
-        .set('Authorization', 'Bearer test-token')
-        .send({ rowIds: ['1', '2', '3'] })
-        .expect(200);
-
-      expect(response.body).toBe(true);
     });
   });
 
