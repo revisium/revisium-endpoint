@@ -1,3 +1,5 @@
+<div align="center">
+
 # @revisium/endpoint
 
 Dynamic API generator for [Revisium](https://github.com/revisium/revisium) — unopinionated data platform for hierarchical structures.
@@ -14,6 +16,8 @@ Dynamic API generator for [Revisium](https://github.com/revisium/revisium) — u
 Part of the [Revisium](https://github.com/revisium/revisium) ecosystem.
 Available on [npm](https://www.npmjs.com/package/@revisium/endpoint) | [Docker Hub](https://hub.docker.com/r/revisium/revisium-endpoint).
 
+</div>
+
 ## Overview
 
 Endpoint generates GraphQL and REST APIs automatically from your Revisium schemas. Each revision gets its own API endpoint with schema derived from table definitions.
@@ -21,6 +25,8 @@ Endpoint generates GraphQL and REST APIs automatically from your Revisium schema
 Requires [@revisium/core](https://github.com/revisium/revisium-core) as the backend data source.
 
 ## Architecture
+
+<div align="center">
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
@@ -43,6 +49,7 @@ Requires [@revisium/core](https://github.com/revisium/revisium-core) as the back
 │   (Shared DB)   │   (Multi-pod notifications)           │
 └─────────────────┴───────────────────────────────────────┘
 ```
+</div>
 
 ### Generated APIs
 
