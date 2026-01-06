@@ -76,6 +76,8 @@
     "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.5",
     "@nestjs/testing": "^11.1.1",
+    "@swc/core": "^1.15.8",
+    "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
@@ -104,33 +106,5 @@
   "overrides": {
     "hono": "^4.10.3",
     "valibot": "^1.2.0"
-  },
-  "jest": {
-    "modulePaths": [
-      "<rootDir>"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "./",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s",
-      "!<rootDir>/src/endpoint-microservice/core-api/generated/**",
-      "!<rootDir>/src/**/__tests__/**",
-      "!<rootDir>/src/**/index.ts",
-      "!<rootDir>/src/**/*.module.ts"
-    ],
-    "coverageReporters": [
-      "text-summary",
-      "lcov"
-    ],
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node"
   }
 }
