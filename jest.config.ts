@@ -5,6 +5,9 @@ const config: Config = {
 
   modulePaths: ['<rootDir>'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+  },
 
   testRegex: '.*\\.spec\\.ts$',
 
@@ -29,6 +32,7 @@ const config: Config = {
     '!<rootDir>/src/**/__tests__/**',
     '!<rootDir>/src/**/index.ts',
     '!<rootDir>/src/**/*.module.ts',
+    '!<rootDir>/jest.config.ts',
   ],
 
   coverageReporters: ['text-summary', 'lcov'],
