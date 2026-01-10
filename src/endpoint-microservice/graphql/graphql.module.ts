@@ -30,6 +30,7 @@ import { MetricsModule } from 'src/endpoint-microservice/metrics/metrics.module'
     ...GRAPHQL_QUERIES,
   ],
   controllers: [GraphqlEndpointController],
+  exports: [GraphqlEndpointService],
 })
 export class GraphqlModule implements OnApplicationShutdown {
   constructor(

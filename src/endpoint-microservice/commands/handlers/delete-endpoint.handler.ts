@@ -1,32 +1,28 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
-import { BaseEndpointHandler } from 'src/endpoint-microservice/commands/handlers/base-endpoint.handler';
+import { Logger } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeleteEndpointCommand } from 'src/endpoint-microservice/commands/impl';
-import { DeleteGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql';
-import { DeleteRestapiEndpointCommand } from 'src/endpoint-microservice/restapi';
+import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
+import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 
 @CommandHandler(DeleteEndpointCommand)
 export class DeleteEndpointHandler
-  extends BaseEndpointHandler
   implements ICommandHandler<DeleteEndpointCommand>
 {
+  private readonly logger = new Logger(DeleteEndpointHandler.name);
+
   constructor(
-    protected readonly prisma: PrismaService,
-    private readonly commandBus: CommandBus,
-  ) {
-    super(prisma);
-  }
+    private readonly graphqlEndpointService: GraphqlEndpointService,
+    private readonly restapiEndpointService: RestapiEndpointService,
+  ) {}
 
   public async execute({ endpointId }: DeleteEndpointCommand): Promise<void> {
-    const type = await this.getEndpointType(endpointId);
-
-    if (type === 'GRAPHQL') {
-      await this.commandBus.execute(
-        new DeleteGraphqlEndpointCommand(endpointId),
-      );
-    } else if (type === 'REST_API') {
-      await this.commandBus.execute(
-        new DeleteRestapiEndpointCommand(endpointId),
+    if (this.graphqlEndpointService.existEndpoint(endpointId)) {
+      await this.graphqlEndpointService.stopEndpoint(endpointId);
+    } else if (this.restapiEndpointService.existEndpoint(endpointId)) {
+      await this.restapiEndpointService.stopEndpoint(endpointId);
+    } else {
+      this.logger.warn(
+        `Endpoint ${endpointId} not found in in-memory services`,
       );
     }
   }

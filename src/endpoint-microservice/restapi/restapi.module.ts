@@ -28,5 +28,6 @@ import { SwaggerEndpointController } from 'src/endpoint-microservice/restapi/swa
     RowController,
     SwaggerEndpointController,
   ],
+  exports: [RestapiEndpointService],
 })
 export class RestapiModule {}
