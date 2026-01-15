@@ -10,7 +10,7 @@ export class DeprecatedRestapiMiddleware implements NestMiddleware {
       `Deprecated: ${req.method} ${req.path} - use /rest instead of /restapi`,
     );
     res.setHeader('Deprecation', 'true');
-    res.setHeader('Sunset', '2026-01-01');
+    res.setHeader('Sunset', '2027-01-01');
     next();
   }
 }

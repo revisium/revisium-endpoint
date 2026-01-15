@@ -357,7 +357,7 @@ describe('restapi controller', () => {
 
       expect(response.body.id).toBeDefined();
       expect(response.headers['deprecation']).toBe('true');
-      expect(response.headers['sunset']).toBe('2026-01-01');
+      expect(response.headers['sunset']).toBe('2027-01-01');
     });
 
     it('should work on legacy table endpoint with deprecation headers', async () => {
@@ -368,7 +368,7 @@ describe('restapi controller', () => {
 
       expect(response.body.id).toBe(USER_TABLE_ID);
       expect(response.headers['deprecation']).toBe('true');
-      expect(response.headers['sunset']).toBe('2026-01-01');
+      expect(response.headers['sunset']).toBe('2027-01-01');
     });
 
     it('should work on legacy row endpoint with deprecation headers', async () => {
@@ -379,7 +379,7 @@ describe('restapi controller', () => {
 
       expect(response.body.id).toBe(user1.id);
       expect(response.headers['deprecation']).toBe('true');
-      expect(response.headers['sunset']).toBe('2026-01-01');
+      expect(response.headers['sunset']).toBe('2027-01-01');
     });
 
     it('should NOT have deprecation headers on new /rest endpoint', async () => {
