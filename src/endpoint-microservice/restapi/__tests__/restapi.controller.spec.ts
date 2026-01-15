@@ -314,9 +314,7 @@ describe('restapi controller', () => {
   describe('Endpoint not found scenarios', () => {
     it('should return 404 when endpoint not started', async () => {
       await request(app.getHttpServer())
-        .get(
-          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head',
-        )
+        .get('/endpoint/rest/unknown-org/unknown-project/unknown-branch/head')
         .set('Authorization', 'Bearer test-token')
         .expect(404);
     });
@@ -324,7 +322,7 @@ describe('restapi controller', () => {
     it('should return 404 for rows endpoint when endpoint not started', async () => {
       await request(app.getHttpServer())
         .post(
-          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users/rows',
+          '/endpoint/rest/unknown-org/unknown-project/unknown-branch/head/tables/users/rows',
         )
         .set('Authorization', 'Bearer test-token')
         .send({ first: 10 })
@@ -334,7 +332,7 @@ describe('restapi controller', () => {
     it('should return 404 for table endpoint when endpoint not started', async () => {
       await request(app.getHttpServer())
         .get(
-          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users',
+          '/endpoint/rest/unknown-org/unknown-project/unknown-branch/head/tables/users',
         )
         .set('Authorization', 'Bearer test-token')
         .expect(404);
@@ -343,10 +341,56 @@ describe('restapi controller', () => {
     it('should return 404 for row endpoint when endpoint not started', async () => {
       await request(app.getHttpServer())
         .get(
-          '/endpoint/restapi/unknown-org/unknown-project/unknown-branch/head/tables/users/row/user-1',
+          '/endpoint/rest/unknown-org/unknown-project/unknown-branch/head/tables/users/row/user-1',
         )
         .set('Authorization', 'Bearer test-token')
         .expect(404);
+    });
+  });
+
+  describe('Legacy /restapi routes (deprecated)', () => {
+    it('should work on legacy revision endpoint with deprecation headers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getLegacyRevisionUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBeDefined();
+      expect(response.headers['deprecation']).toBe('true');
+      expect(response.headers['sunset']).toBe('2027-01-01');
+    });
+
+    it('should work on legacy table endpoint with deprecation headers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getLegacyTableUrl(USER_TABLE_ID))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBe(USER_TABLE_ID);
+      expect(response.headers['deprecation']).toBe('true');
+      expect(response.headers['sunset']).toBe('2027-01-01');
+    });
+
+    it('should work on legacy row endpoint with deprecation headers', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getLegacyRowUrl(USER_TABLE_ID, user1.id))
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBe(user1.id);
+      expect(response.headers['deprecation']).toBe('true');
+      expect(response.headers['sunset']).toBe('2027-01-01');
+    });
+
+    it('should NOT have deprecation headers on new /rest endpoint', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getRevisionUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.id).toBeDefined();
+      expect(response.headers['deprecation']).toBeUndefined();
+      expect(response.headers['sunset']).toBeUndefined();
     });
   });
 
@@ -687,18 +731,30 @@ describe('restapi controller', () => {
   });
 
   function getRevisionUrl() {
-    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head`;
+    return `/endpoint/rest/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head`;
   }
 
   function getTableUrl(tableId: string) {
-    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}`;
+    return `/endpoint/rest/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}`;
   }
 
   function getRowsUrl(tableId: string) {
-    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/rows`;
+    return `/endpoint/rest/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/rows`;
   }
 
   function getRowUrl(tableId: string, rowId: string) {
+    return `/endpoint/rest/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/row/${rowId}`;
+  }
+
+  function getLegacyRevisionUrl() {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head`;
+  }
+
+  function getLegacyTableUrl(tableId: string) {
+    return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}`;
+  }
+
+  function getLegacyRowUrl(tableId: string, rowId: string) {
     return `/endpoint/restapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/row/${rowId}`;
   }
 

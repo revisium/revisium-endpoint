@@ -451,7 +451,7 @@ export class RestapiEndpointService {
     >(new GetOpenApiSchemaQuery({ revisionId, projectName }));
 
     openApiJson.info.title = `Revisium organizationId: "${organizationId}", project: "${projectName}", branch: "${branchName}/${postfix}"`;
-    const url = `/endpoint/restapi/${organizationId}/${projectName}/${branchName}/${postfix}`;
+    const url = `/endpoint/rest/${organizationId}/${projectName}/${branchName}/${postfix}`;
     openApiJson.servers ??= [];
     openApiJson.servers.push({ url });
 

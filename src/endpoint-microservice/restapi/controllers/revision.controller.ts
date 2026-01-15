@@ -7,9 +7,7 @@ import { BaseRestapiController } from './base-restapi.controller';
 
 @UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
-@Controller(
-  '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix',
-)
+@Controller('/endpoint/rest/:organizationId/:projectName/:branchName/:postfix')
 export class RevisionController extends BaseRestapiController {
   constructor(restapiEndpointService: RestapiEndpointService) {
     super(restapiEndpointService);

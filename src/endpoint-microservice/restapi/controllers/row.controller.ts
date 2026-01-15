@@ -27,7 +27,7 @@ import { BaseRestapiController } from './base-restapi.controller';
 @UseInterceptors(RestMetricsInterceptor)
 @ApiExcludeController()
 @Controller(
-  '/endpoint/restapi/:organizationId/:projectName/:branchName/:postfix/tables/:tableId/row/:rowId',
+  '/endpoint/rest/:organizationId/:projectName/:branchName/:postfix/tables/:tableId/row/:rowId',
 )
 export class RowController extends BaseRestapiController {
   constructor(restapiEndpointService: RestapiEndpointService) {
