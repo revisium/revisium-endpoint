@@ -249,11 +249,11 @@ type ProjectUser {
 
 type ProjectUserAddress {
   city: String!
-  nestedAddress: ProjectUserAddressNestedaddress!
+  nestedAddress: ProjectUserAddressNestedAddress!
   zipCode: Float!
 }
 
-type ProjectUserAddressNestedaddress {
+type ProjectUserAddressNestedAddress {
   zipCode: String!
 }
 
@@ -286,11 +286,11 @@ type ProjectUserFlat {
 
 type ProjectUserFlatAddress {
   city: String!
-  nestedAddress: ProjectUserFlatAddressNestedaddress!
+  nestedAddress: ProjectUserFlatAddressNestedAddress!
   zipCode: Float!
 }
 
-type ProjectUserFlatAddressNestedaddress {
+type ProjectUserFlatAddressNestedAddress {
   zipCode: String!
 }
 

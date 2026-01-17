@@ -42,6 +42,7 @@ export type QueryModelField = (
   name: string;
   args: ArgsType | undefined;
   resolver: (...args: any[]) => any;
+  deprecationReason?: string;
 };
 
 export class QueryModel extends BaseFieldModel<QueryModelField> {}

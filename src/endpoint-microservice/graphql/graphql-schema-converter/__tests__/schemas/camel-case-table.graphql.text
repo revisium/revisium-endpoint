@@ -33,14 +33,14 @@ enum ProjectFilterStringMode {
   insensitive
 }
 
-input ProjectGetPostsInput {
+input ProjectGetMyTablesInput {
   after: String
   first: Int
-  orderBy: [ProjectGetPostsOrderByInput!]
-  where: ProjectPostsWhereInput
+  orderBy: [ProjectGetMyTablesOrderByInput!]
+  where: ProjectMyTablesWhereInput
 }
 
-enum ProjectGetPostsOrderByField {
+enum ProjectGetMyTablesOrderByField {
   createdAt
   data
   id
@@ -48,22 +48,22 @@ enum ProjectGetPostsOrderByField {
   updatedAt
 }
 
-input ProjectGetPostsOrderByInput {
+input ProjectGetMyTablesOrderByInput {
   aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
-  field: ProjectGetPostsOrderByField!
+  field: ProjectGetMyTablesOrderByField!
   path: String
   type: ProjectOrderFieldType
 }
 
-input ProjectGetUsersInput {
+input ProjectGetMytablesInput {
   after: String
   first: Int
-  orderBy: [ProjectGetUsersOrderByInput!]
-  where: ProjectUsersWhereInput
+  orderBy: [ProjectGetMytablesOrderByInput!]
+  where: ProjectMytablesWhereInput
 }
 
-enum ProjectGetUsersOrderByField {
+enum ProjectGetMytablesOrderByField {
   createdAt
   data
   id
@@ -71,10 +71,10 @@ enum ProjectGetUsersOrderByField {
   updatedAt
 }
 
-input ProjectGetUsersOrderByInput {
+input ProjectGetMytablesOrderByInput {
   aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
-  field: ProjectGetUsersOrderByField!
+  field: ProjectGetMytablesOrderByField!
   path: String
   type: ProjectOrderFieldType
 }
@@ -98,6 +98,75 @@ input ProjectJsonFilter {
   string_starts_with: String
 }
 
+type ProjectMyTable {
+  name: String!
+}
+
+type ProjectMyTableConnection {
+  edges: [ProjectMyTableEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectMyTableEdge {
+  cursor: String!
+  node: ProjectMyTableNode!
+}
+
+type ProjectMyTableFlat {
+  name: String!
+}
+
+type ProjectMyTableFlatConnection {
+  edges: [ProjectMyTableFlatEdge!]!
+  pageInfo: ProjectPageInfo!
+  totalCount: Int!
+}
+
+type ProjectMyTableFlatEdge {
+  cursor: String!
+  node: ProjectMyTableFlat!
+}
+
+type ProjectMyTableNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectMyTable!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+input ProjectMyTablesWhereInput {
+  AND: [ProjectMyTablesWhereInput!]
+  NOT: [ProjectMyTablesWhereInput!]
+  OR: [ProjectMyTablesWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
+input ProjectMytablesWhereInput {
+  AND: [ProjectMytablesWhereInput!]
+  NOT: [ProjectMytablesWhereInput!]
+  OR: [ProjectMytablesWhereInput!]
+  createdAt: ProjectDateTimeFilter
+  createdId: ProjectStringFilter
+  data: ProjectJsonFilter
+  id: ProjectStringFilter
+  publishedAt: ProjectDateTimeFilter
+  readonly: ProjectBoolFilter
+  updatedAt: ProjectDateTimeFilter
+  versionId: ProjectStringFilter
+}
+
 enum ProjectOrderFieldAggregation {
   avg
   first
@@ -119,46 +188,6 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
-}
-
-type ProjectPost {
-  name: String!
-}
-
-type ProjectPostConnection {
-  edges: [ProjectPostEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectPostEdge {
-  cursor: String!
-  node: ProjectPostNode!
-}
-
-type ProjectPostNode {
-  createdAt: DateTime!
-  createdId: String!
-  data: ProjectPost!
-  id: String!
-  json: JSON!
-  publishedAt: DateTime!
-  updatedAt: DateTime!
-  versionId: String!
-}
-
-input ProjectPostsWhereInput {
-  AND: [ProjectPostsWhereInput!]
-  NOT: [ProjectPostsWhereInput!]
-  OR: [ProjectPostsWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
 }
 
 enum ProjectSearchLanguage {
@@ -220,85 +249,22 @@ input ProjectStringFilter {
   startsWith: String
 }
 
-type ProjectUser {
-  address: ProjectUserAddress!
-  adult: Boolean!
-  age: Float!
-  array: [ProjectUserArrayItemsItemsItems!]!
-  firstName: String!
-  imageIds: [String!]!
-  lastName: String!
-  post: ProjectPostNode!
-  posts: [ProjectUserPostsItems!]!
-}
-
-type ProjectUserAddress {
-  city: String!
-  nestedAddress: ProjectUserAddressNestedAddress!
-  zipCode: Float!
-}
-
-type ProjectUserAddressNestedAddress {
-  zipCode: String!
-}
-
-type ProjectUserArrayItemsItemsItems {
-  nested: String!
-}
-
-type ProjectUserConnection {
-  edges: [ProjectUserEdge!]!
-  pageInfo: ProjectPageInfo!
-  totalCount: Int!
-}
-
-type ProjectUserEdge {
-  cursor: String!
-  node: ProjectUserNode!
-}
-
-type ProjectUserNode {
-  createdAt: DateTime!
-  createdId: String!
-  data: ProjectUser!
-  id: String!
-  json: JSON!
-  publishedAt: DateTime!
-  updatedAt: DateTime!
-  versionId: String!
-}
-
-type ProjectUserPostsItems {
-  id: String!
-  title: String!
-}
-
-input ProjectUsersWhereInput {
-  AND: [ProjectUsersWhereInput!]
-  NOT: [ProjectUsersWhereInput!]
-  OR: [ProjectUsersWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
-}
-
 type Query {
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
-  post(id: String!): ProjectPostNode!
-  posts(data: ProjectGetPostsInput): ProjectPostConnection!
-  user(id: String!): ProjectUserNode!
-  users(data: ProjectGetUsersInput): ProjectUserConnection!
+  myTable(id: String!): ProjectMyTableNode!
+  myTableFlat(id: String!): ProjectMyTableFlat!
+  myTables(data: ProjectGetMyTablesInput): ProjectMyTableConnection!
+  myTablesFlat(data: ProjectGetMyTablesInput): ProjectMyTableFlatConnection!
+  mytable(id: String!): ProjectMyTableNode! @deprecated(reason: "Use \"myTable\" instead")
+  mytableFlat(id: String!): ProjectMyTableFlat! @deprecated(reason: "Use \"myTableFlat\" instead")
+  mytables(data: ProjectGetMytablesInput): ProjectMyTableConnection! @deprecated(reason: "Use \"myTables\" instead")
+  mytablesFlat(data: ProjectGetMytablesInput): ProjectMyTableFlatConnection! @deprecated(reason: "Use \"myTablesFlat\" instead")
 }
 
 scalar _Any
 
-union _Entity = ProjectPostNode | ProjectUserNode
+union _Entity = ProjectMyTableNode
 
 type _Service {
   """

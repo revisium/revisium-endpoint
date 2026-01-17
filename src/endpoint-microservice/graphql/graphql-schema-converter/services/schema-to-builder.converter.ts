@@ -78,6 +78,7 @@ export class SchemaToBuilderConverter {
               }
             : undefined,
           resolve: field.resolver,
+          deprecationReason: field.deprecationReason,
         };
 
         if (field.type === FieldType.string) {

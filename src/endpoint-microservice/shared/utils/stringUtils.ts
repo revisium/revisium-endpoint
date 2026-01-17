@@ -1,5 +1,24 @@
+export const isAllUpperCase = (str: string): boolean =>
+  str.length > 0 && str === str.toUpperCase() && str !== str.toLowerCase();
+
+export const lowerFirst = (str: string): string =>
+  str.length === 0 ? str : str.charAt(0).toLowerCase() + str.slice(1);
+
+export const upperFirst = (str: string): string =>
+  str.length === 0 ? str : str.charAt(0).toUpperCase() + str.slice(1);
+
+export const toCamelCaseFieldName = (str: string): string => {
+  if (str.length === 0) {
+    return str;
+  }
+  if (isAllUpperCase(str)) {
+    return str.toLowerCase();
+  }
+  return lowerFirst(str);
+};
+
 export const capitalize = (str: string) =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  str.charAt(0).toUpperCase() + str.slice(1);
 
 export const pluralize = (str: string): string => {
   if (str.endsWith('s')) {
