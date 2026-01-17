@@ -71,7 +71,7 @@ Schema changes in Revisium are automatically reflected in generated APIs — no 
 
 ## Configuration
 
-See [Configuration Guide](docs/configuration.md) for environment variables.
+See [ENV.md](./ENV.md) for all environment variables.
 
 ## Related Packages
 
