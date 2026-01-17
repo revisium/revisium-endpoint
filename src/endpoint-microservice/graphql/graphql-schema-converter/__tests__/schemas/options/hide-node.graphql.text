@@ -223,11 +223,11 @@ type ProjectUserFlat {
 
 type ProjectUserFlatAddress {
   city: String!
-  nestedAddress: ProjectUserFlatAddressNestedaddress!
+  nestedAddress: ProjectUserFlatAddressNestedAddress!
   zipCode: Float!
 }
 
-type ProjectUserFlatAddressNestedaddress {
+type ProjectUserFlatAddressNestedAddress {
   zipCode: String!
 }
 

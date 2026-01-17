@@ -14,5 +14,7 @@ export type CreatingTableOptionsType = {
 export interface ValidTableType {
   fieldName: { singular: string; plural: string };
   typeNames: { singular: string; plural: string };
+  legacyFieldName?: { singular: string; plural: string };
+  legacyInputNames?: { plural: string };
   options: CreatingTableOptionsType;
 }

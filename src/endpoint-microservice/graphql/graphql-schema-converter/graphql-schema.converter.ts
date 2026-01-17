@@ -126,19 +126,47 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
       const flatSingularKey = `${validTable.fieldName.singular}${flatPostfix}`;
       const flatPluralKey = `${validTable.fieldName.plural}${flatPostfix}`;
 
+      const legacySingularKey = validTable.legacyFieldName
+        ? `${validTable.legacyFieldName.singular}${nodePostfix}`
+        : undefined;
+      const legacyPluralKey = validTable.legacyFieldName
+        ? `${validTable.legacyFieldName.plural}${nodePostfix}`
+        : undefined;
+      const legacyFlatSingularKey = validTable.legacyFieldName
+        ? `${validTable.legacyFieldName.singular}${flatPostfix}`
+        : undefined;
+      const legacyFlatPluralKey = validTable.legacyFieldName
+        ? `${validTable.legacyFieldName.plural}${flatPostfix}`
+        : undefined;
+      const legacyPluralSafetyTableId = validTable.legacyInputNames?.plural;
+
       if (!this.contextService.hideNodeTypes) {
-        this.queriesService.createItemField(singularKey, validTable.options);
-        this.queriesService.createListField(pluralKey, validTable.options);
+        this.queriesService.createItemField(
+          singularKey,
+          validTable.options,
+          legacySingularKey ? { newName: legacySingularKey } : undefined,
+        );
+        this.queriesService.createListField(
+          pluralKey,
+          validTable.options,
+          legacyPluralKey ? { newName: legacyPluralKey } : undefined,
+          legacyPluralSafetyTableId,
+        );
       }
 
       if (!this.contextService.hideFlatTypes) {
         this.queriesService.createItemFlatField(
           flatSingularKey,
           validTable.options,
+          legacyFlatSingularKey
+            ? { newName: legacyFlatSingularKey }
+            : undefined,
         );
         this.queriesService.createListFlatField(
           flatPluralKey,
           validTable.options,
+          legacyFlatPluralKey ? { newName: legacyFlatPluralKey } : undefined,
+          legacyPluralSafetyTableId,
         );
       }
     });

@@ -69,6 +69,23 @@ describe('GraphQL Schema Converter', () => {
     await check(schema, 'simple.graphql.text');
   });
 
+  it('camelCase table name with deprecated alias', async () => {
+    const table: ConverterTable = {
+      id: 'MyTable',
+      versionId: '1',
+      schema: getObjectSchema({
+        name: getStringSchema(),
+      }),
+    };
+
+    const schema = await converter.convert(
+      getContext({
+        tables: [table],
+      }),
+    );
+    await check(schema, 'camel-case-table.graphql.text');
+  });
+
   it('few tables', async () => {
     const user: ConverterTable = {
       id: 'user',
@@ -355,7 +372,7 @@ describe('GraphQL Schema Converter', () => {
 
     it('similar field', async () => {
       const user: ConverterTable = {
-        id: 'uSer',
+        id: 'user',
         versionId: '1',
         schema: getObjectSchema({
           naMe: getObjectSchema({

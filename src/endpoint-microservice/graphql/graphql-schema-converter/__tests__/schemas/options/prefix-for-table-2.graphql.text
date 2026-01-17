@@ -113,11 +113,11 @@ type CustomUser {
 
 type CustomUserAddress {
   city: String!
-  nestedAddress: CustomUserAddressNestedaddress!
+  nestedAddress: CustomUserAddressNestedAddress!
   zipCode: Float!
 }
 
-type CustomUserAddressNestedaddress {
+type CustomUserAddressNestedAddress {
   zipCode: String!
 }
 
@@ -150,11 +150,11 @@ type CustomUserFlat {
 
 type CustomUserFlatAddress {
   city: String!
-  nestedAddress: CustomUserFlatAddressNestedaddress!
+  nestedAddress: CustomUserFlatAddressNestedAddress!
   zipCode: Float!
 }
 
-type CustomUserFlatAddressNestedaddress {
+type CustomUserFlatAddressNestedAddress {
   zipCode: String!
 }
 

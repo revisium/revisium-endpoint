@@ -33,14 +33,14 @@ enum ProjectFilterStringMode {
   insensitive
 }
 
-input ProjectGetInvalid_table_name____usersInput {
+input ProjectGetINVALID_TABLE_NAME____usersInput {
   after: String
   first: Int
-  orderBy: [ProjectGetInvalid_table_name____usersOrderByInput!]
-  where: ProjectInvalid_table_name____usersWhereInput
+  orderBy: [ProjectGetINVALID_TABLE_NAME____usersOrderByInput!]
+  where: ProjectINVALID_TABLE_NAME____usersWhereInput
 }
 
-enum ProjectGetInvalid_table_name____usersOrderByField {
+enum ProjectGetINVALID_TABLE_NAME____usersOrderByField {
   createdAt
   data
   id
@@ -48,48 +48,48 @@ enum ProjectGetInvalid_table_name____usersOrderByField {
   updatedAt
 }
 
-input ProjectGetInvalid_table_name____usersOrderByInput {
+input ProjectGetINVALID_TABLE_NAME____usersOrderByInput {
   aggregation: ProjectOrderFieldAggregation
   direction: ProjectSortOrder!
-  field: ProjectGetInvalid_table_name____usersOrderByField!
+  field: ProjectGetINVALID_TABLE_NAME____usersOrderByField!
   path: String
   type: ProjectOrderFieldType
 }
 
-type ProjectInvalid_table_name____user {
+type ProjectINVALID_TABLE_NAME____user {
   name: String!
 }
 
-type ProjectInvalid_table_name____userConnection {
-  edges: [ProjectInvalid_table_name____userEdge!]!
+type ProjectINVALID_TABLE_NAME____userConnection {
+  edges: [ProjectINVALID_TABLE_NAME____userEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectInvalid_table_name____userEdge {
+type ProjectINVALID_TABLE_NAME____userEdge {
   cursor: String!
-  node: ProjectInvalid_table_name____userNode!
+  node: ProjectINVALID_TABLE_NAME____userNode!
 }
 
-type ProjectInvalid_table_name____userFlat {
+type ProjectINVALID_TABLE_NAME____userFlat {
   name: String!
 }
 
-type ProjectInvalid_table_name____userFlatConnection {
-  edges: [ProjectInvalid_table_name____userFlatEdge!]!
+type ProjectINVALID_TABLE_NAME____userFlatConnection {
+  edges: [ProjectINVALID_TABLE_NAME____userFlatEdge!]!
   pageInfo: ProjectPageInfo!
   totalCount: Int!
 }
 
-type ProjectInvalid_table_name____userFlatEdge {
+type ProjectINVALID_TABLE_NAME____userFlatEdge {
   cursor: String!
-  node: ProjectInvalid_table_name____userFlat!
+  node: ProjectINVALID_TABLE_NAME____userFlat!
 }
 
-type ProjectInvalid_table_name____userNode {
+type ProjectINVALID_TABLE_NAME____userNode {
   createdAt: DateTime!
   createdId: String!
-  data: ProjectInvalid_table_name____user!
+  data: ProjectINVALID_TABLE_NAME____user!
   id: String!
   json: JSON!
   publishedAt: DateTime!
@@ -97,10 +97,10 @@ type ProjectInvalid_table_name____userNode {
   versionId: String!
 }
 
-input ProjectInvalid_table_name____usersWhereInput {
-  AND: [ProjectInvalid_table_name____usersWhereInput!]
-  NOT: [ProjectInvalid_table_name____usersWhereInput!]
-  OR: [ProjectInvalid_table_name____usersWhereInput!]
+input ProjectINVALID_TABLE_NAME____usersWhereInput {
+  AND: [ProjectINVALID_TABLE_NAME____usersWhereInput!]
+  NOT: [ProjectINVALID_TABLE_NAME____usersWhereInput!]
+  OR: [ProjectINVALID_TABLE_NAME____usersWhereInput!]
   createdAt: ProjectDateTimeFilter
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
@@ -213,17 +213,17 @@ input ProjectStringFilter {
 }
 
 type Query {
-  INVALID_TABLE_NAME____user(id: String!): ProjectInvalid_table_name____userNode!
-  INVALID_TABLE_NAME____userFlat(id: String!): ProjectInvalid_table_name____userFlat!
-  INVALID_TABLE_NAME____users(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____userConnection!
-  INVALID_TABLE_NAME____usersFlat(data: ProjectGetInvalid_table_name____usersInput): ProjectInvalid_table_name____userFlatConnection!
+  INVALID_TABLE_NAME____user(id: String!): ProjectINVALID_TABLE_NAME____userNode!
+  INVALID_TABLE_NAME____userFlat(id: String!): ProjectINVALID_TABLE_NAME____userFlat!
+  INVALID_TABLE_NAME____users(data: ProjectGetINVALID_TABLE_NAME____usersInput): ProjectINVALID_TABLE_NAME____userConnection!
+  INVALID_TABLE_NAME____usersFlat(data: ProjectGetINVALID_TABLE_NAME____usersInput): ProjectINVALID_TABLE_NAME____userFlatConnection!
   _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
 }
 
 scalar _Any
 
-union _Entity = ProjectInvalid_table_name____userNode
+union _Entity = ProjectINVALID_TABLE_NAME____userNode
 
 type _Service {
   """

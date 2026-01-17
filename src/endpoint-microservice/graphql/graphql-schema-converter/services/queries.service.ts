@@ -9,6 +9,10 @@ import {
 } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/schema';
 import { CreatingTableOptionsType } from 'src/endpoint-microservice/graphql/graphql-schema-converter/types';
 
+interface DeprecatedAliasOptions {
+  newName: string;
+}
+
 @Injectable()
 export class QueriesService {
   constructor(
@@ -21,6 +25,7 @@ export class QueriesService {
   public createItemFlatField(
     flatSingularKey: string,
     options: CreatingTableOptionsType,
+    deprecatedAlias?: DeprecatedAliasOptions,
   ) {
     const flatRoot = this.cacheService.getFlatRoot(options.table.id);
 
@@ -34,11 +39,26 @@ export class QueriesService {
       },
       resolver: this.resolver.getItemFlatResolver(options.table),
     });
+
+    if (deprecatedAlias) {
+      this.contextService.schema.query.addField({
+        ...flatRoot,
+        name: deprecatedAlias.newName,
+        args: {
+          type: FieldType.string,
+          name: 'id',
+          required: true,
+        },
+        resolver: this.resolver.getItemFlatResolver(options.table),
+        deprecationReason: `Use "${flatSingularKey}" instead`,
+      });
+    }
   }
 
   public createItemField(
     singularKey: string,
     options: CreatingTableOptionsType,
+    deprecatedAlias?: DeprecatedAliasOptions,
   ) {
     const root = this.cacheService.getRoot(options.table.id);
 
@@ -53,19 +73,61 @@ export class QueriesService {
       },
       resolver: this.resolver.getItemResolver(options.table),
     });
+
+    if (deprecatedAlias) {
+      this.contextService.schema.query.addField({
+        type: FieldType.ref,
+        name: deprecatedAlias.newName,
+        value: root.name,
+        args: {
+          type: FieldType.string,
+          name: 'id',
+          required: true,
+        },
+        resolver: this.resolver.getItemResolver(options.table),
+        deprecationReason: `Use "${singularKey}" instead`,
+      });
+    }
   }
 
-  public createListField(pluralKey: string, options: CreatingTableOptionsType) {
+  public createListField(
+    pluralKey: string,
+    options: CreatingTableOptionsType,
+    deprecatedAlias?: DeprecatedAliasOptions,
+    legacyPluralSafetyTableId?: string,
+  ) {
     this.createListConnection(pluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
+
+    if (deprecatedAlias && legacyPluralSafetyTableId) {
+      this.createListArgs(legacyPluralSafetyTableId);
+      this.createDeprecatedListConnection(
+        deprecatedAlias.newName,
+        options,
+        pluralKey,
+        legacyPluralSafetyTableId,
+      );
+    }
   }
 
   public createListFlatField(
     flatPluralKey: string,
     options: CreatingTableOptionsType,
+    deprecatedAlias?: DeprecatedAliasOptions,
+    legacyPluralSafetyTableId?: string,
   ) {
     this.getFlatConnection(flatPluralKey, options);
     this.createListArgs(options.pluralSafetyTableId);
+
+    if (deprecatedAlias && legacyPluralSafetyTableId) {
+      this.createListArgs(legacyPluralSafetyTableId);
+      this.createDeprecatedFlatConnection(
+        deprecatedAlias.newName,
+        options,
+        flatPluralKey,
+        legacyPluralSafetyTableId,
+      );
+    }
   }
 
   private getFlatConnection(
@@ -321,6 +383,60 @@ export class QueriesService {
         value: whereName,
       },
     ]);
+  }
+
+  private createDeprecatedListConnection(
+    deprecatedPluralKey: string,
+    options: CreatingTableOptionsType,
+    newPluralKey: string,
+    legacyPluralSafetyTableId: string,
+  ) {
+    const connectionName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'connection',
+    );
+
+    this.contextService.schema.query.addField({
+      type: FieldType.ref,
+      name: deprecatedPluralKey,
+      value: connectionName,
+      args: {
+        type: FieldType.ref,
+        name: 'data',
+        value: this.namingService.getGetInputTypeName(
+          legacyPluralSafetyTableId,
+        ),
+      },
+      resolver: this.resolver.getListResolver(options.table),
+      deprecationReason: `Use "${newPluralKey}" instead`,
+    });
+  }
+
+  private createDeprecatedFlatConnection(
+    deprecatedFlatPluralKey: string,
+    options: CreatingTableOptionsType,
+    newFlatPluralKey: string,
+    legacyPluralSafetyTableId: string,
+  ) {
+    const connectionName = this.namingService.getTypeName(
+      options.safetyTableId,
+      'flatConnection',
+    );
+
+    this.contextService.schema.query.addField({
+      type: FieldType.ref,
+      name: deprecatedFlatPluralKey,
+      value: connectionName,
+      args: {
+        type: FieldType.ref,
+        name: 'data',
+        value: this.namingService.getGetInputTypeName(
+          legacyPluralSafetyTableId,
+        ),
+      },
+      resolver: this.resolver.getListFlatResolver(options.table),
+      deprecationReason: `Use "${newFlatPluralKey}" instead`,
+    });
   }
 
   private get context() {
