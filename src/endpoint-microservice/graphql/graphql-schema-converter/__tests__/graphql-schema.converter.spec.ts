@@ -761,19 +761,10 @@ describe('GraphQL Schema Converter', () => {
   }
 
   async function check(schema: GraphQLSchema, schemaPath: string) {
-    const fullPath = join(__dirname, 'schemas', schemaPath);
-    let file: string;
-
-    try {
-      file = await fs.readFile(fullPath, 'utf8');
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-        await fs.writeFile(fullPath, printSchema(schema), 'utf8');
-        console.log(`Snapshot created: ${fullPath}`);
-        return;
-      }
-      throw err;
-    }
+    const file = await fs.readFile(
+      join(__dirname, 'schemas', schemaPath),
+      'utf8',
+    );
 
     const normalizeLineEndings = (str: string) =>
       str.replace(/\r\n|\r/g, '\n').trim();
