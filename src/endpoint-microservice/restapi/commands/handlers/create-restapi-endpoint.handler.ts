@@ -4,9 +4,7 @@ import { CreateRestapiEndpointCommand } from 'src/endpoint-microservice/restapi/
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 
 @CommandHandler(CreateRestapiEndpointCommand)
-export class CreateRestapiEndpointHandler
-  implements ICommandHandler<CreateRestapiEndpointCommand>
-{
+export class CreateRestapiEndpointHandler implements ICommandHandler<CreateRestapiEndpointCommand> {
   private readonly logger = new Logger(CreateRestapiEndpointHandler.name);
 
   public constructor(private readonly service: RestapiEndpointService) {}

@@ -5,9 +5,7 @@ import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphq
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 
 @CommandHandler(DeleteEndpointCommand)
-export class DeleteEndpointHandler
-  implements ICommandHandler<DeleteEndpointCommand>
-{
+export class DeleteEndpointHandler implements ICommandHandler<DeleteEndpointCommand> {
   private readonly logger = new Logger(DeleteEndpointHandler.name);
 
   constructor(
