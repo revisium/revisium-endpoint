@@ -13,7 +13,8 @@ export abstract class BaseRestapiController {
     req: Request,
     res: Response,
   ): EndpointMiddleware | null {
-    const { organizationId, projectName, branchName, postfix } = req.params;
+    const { organizationId, projectName, branchName, postfix } =
+      req.params as Record<string, string>;
 
     const middleware = this.restapiEndpointService.getEndpointMiddleware(
       organizationId,
