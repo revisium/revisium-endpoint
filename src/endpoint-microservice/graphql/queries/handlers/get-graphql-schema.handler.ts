@@ -11,9 +11,7 @@ import { SystemTables } from 'src/endpoint-microservice/shared/system-tables.con
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
 @QueryHandler(GetGraphqlSchemaQuery)
-export class GetGraphqlSchemaHandler
-  implements IQueryHandler<GetGraphqlSchemaQuery>
-{
+export class GetGraphqlSchemaHandler implements IQueryHandler<GetGraphqlSchemaQuery> {
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
     private readonly converter: GraphQLSchemaConverter,

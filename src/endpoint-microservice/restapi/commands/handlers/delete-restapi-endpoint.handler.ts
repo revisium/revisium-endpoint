@@ -3,9 +3,7 @@ import { DeleteRestapiEndpointCommand } from 'src/endpoint-microservice/restapi/
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
 
 @CommandHandler(DeleteRestapiEndpointCommand)
-export class DeleteRestapiEndpointHandler
-  implements ICommandHandler<DeleteRestapiEndpointCommand>
-{
+export class DeleteRestapiEndpointHandler implements ICommandHandler<DeleteRestapiEndpointCommand> {
   public constructor(private readonly service: RestapiEndpointService) {}
 
   public async execute({

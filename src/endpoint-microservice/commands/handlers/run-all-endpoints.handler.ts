@@ -5,9 +5,7 @@ import { CreateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql'
 import { CreateRestapiEndpointCommand } from 'src/endpoint-microservice/restapi';
 
 @CommandHandler(RunAllEndpointsCommand)
-export class RunAllEndpointsHandler
-  implements ICommandHandler<RunAllEndpointsCommand>
-{
+export class RunAllEndpointsHandler implements ICommandHandler<RunAllEndpointsCommand> {
   constructor(
     private readonly prisma: PrismaService,
     private readonly commandBus: CommandBus,

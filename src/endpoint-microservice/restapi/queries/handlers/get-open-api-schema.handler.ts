@@ -20,9 +20,7 @@ import {
 const HARDCODED_LIMIT_FOR_TABLES = 1000;
 
 @QueryHandler(GetOpenApiSchemaQuery)
-export class GetOpenApiSchemaHandler
-  implements IQueryHandler<GetOpenApiSchemaQuery>
-{
+export class GetOpenApiSchemaHandler implements IQueryHandler<GetOpenApiSchemaQuery> {
   public constructor(
     private readonly internalCoreApi: InternalCoreApiService,
   ) {}

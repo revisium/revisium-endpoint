@@ -4,9 +4,7 @@ import { UpdateGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 
 @CommandHandler(UpdateGraphqlEndpointCommand)
-export class UpdateGraphqlEndpointHandler
-  implements ICommandHandler<UpdateGraphqlEndpointCommand>
-{
+export class UpdateGraphqlEndpointHandler implements ICommandHandler<UpdateGraphqlEndpointCommand> {
   private readonly logger = new Logger(UpdateGraphqlEndpointHandler.name);
 
   public constructor(private readonly service: GraphqlEndpointService) {}

@@ -3,9 +3,7 @@ import { DeleteGraphqlEndpointCommand } from 'src/endpoint-microservice/graphql/
 import { GraphqlEndpointService } from 'src/endpoint-microservice/graphql/graphql-endpoint.service';
 
 @CommandHandler(DeleteGraphqlEndpointCommand)
-export class DeleteGraphqlEndpointHandler
-  implements ICommandHandler<DeleteGraphqlEndpointCommand>
-{
+export class DeleteGraphqlEndpointHandler implements ICommandHandler<DeleteGraphqlEndpointCommand> {
   public constructor(private readonly service: GraphqlEndpointService) {}
 
   public async execute({
