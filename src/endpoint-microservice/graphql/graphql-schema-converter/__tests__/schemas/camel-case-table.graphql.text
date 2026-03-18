@@ -56,29 +56,6 @@ input ProjectGetMyTablesOrderByInput {
   type: ProjectOrderFieldType
 }
 
-input ProjectGetMytablesInput {
-  after: String
-  first: Int
-  orderBy: [ProjectGetMytablesOrderByInput!]
-  where: ProjectMytablesWhereInput
-}
-
-enum ProjectGetMytablesOrderByField {
-  createdAt
-  data
-  id
-  publishedAt
-  updatedAt
-}
-
-input ProjectGetMytablesOrderByInput {
-  aggregation: ProjectOrderFieldAggregation
-  direction: ProjectSortOrder!
-  field: ProjectGetMytablesOrderByField!
-  path: String
-  type: ProjectOrderFieldType
-}
-
 input ProjectJsonFilter {
   array_contains: [JSON!]
   array_ends_with: JSON
@@ -143,20 +120,6 @@ input ProjectMyTablesWhereInput {
   AND: [ProjectMyTablesWhereInput!]
   NOT: [ProjectMyTablesWhereInput!]
   OR: [ProjectMyTablesWhereInput!]
-  createdAt: ProjectDateTimeFilter
-  createdId: ProjectStringFilter
-  data: ProjectJsonFilter
-  id: ProjectStringFilter
-  publishedAt: ProjectDateTimeFilter
-  readonly: ProjectBoolFilter
-  updatedAt: ProjectDateTimeFilter
-  versionId: ProjectStringFilter
-}
-
-input ProjectMytablesWhereInput {
-  AND: [ProjectMytablesWhereInput!]
-  NOT: [ProjectMytablesWhereInput!]
-  OR: [ProjectMytablesWhereInput!]
   createdAt: ProjectDateTimeFilter
   createdId: ProjectStringFilter
   data: ProjectJsonFilter
@@ -256,10 +219,6 @@ type Query {
   myTableFlat(id: String!): ProjectMyTableFlat!
   myTables(data: ProjectGetMyTablesInput): ProjectMyTableConnection!
   myTablesFlat(data: ProjectGetMyTablesInput): ProjectMyTableFlatConnection!
-  mytable(id: String!): ProjectMyTableNode! @deprecated(reason: "Use \"myTable\" instead")
-  mytableFlat(id: String!): ProjectMyTableFlat! @deprecated(reason: "Use \"myTableFlat\" instead")
-  mytables(data: ProjectGetMytablesInput): ProjectMyTableConnection! @deprecated(reason: "Use \"myTables\" instead")
-  mytablesFlat(data: ProjectGetMytablesInput): ProjectMyTableFlatConnection! @deprecated(reason: "Use \"myTablesFlat\" instead")
 }
 
 scalar _Any

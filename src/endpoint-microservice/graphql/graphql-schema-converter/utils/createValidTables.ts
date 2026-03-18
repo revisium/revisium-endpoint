@@ -15,8 +15,10 @@ export const createValidTables = (
   const validTableIds = validTables.map((table) => table.id);
 
   return validTables.reduce<Record<string, ValidTableType>>((acc, table) => {
-    const { fieldName, typeNames, legacyFieldName, legacyInputNames } =
-      generateFieldAndTypeNames(table.id, validTableIds);
+    const { fieldName, typeNames } = generateFieldAndTypeNames(
+      table.id,
+      validTableIds,
+    );
 
     const options: CreatingTableOptionsType = {
       table,
@@ -27,8 +29,6 @@ export const createValidTables = (
     acc[table.id] = {
       fieldName,
       typeNames,
-      legacyFieldName,
-      legacyInputNames,
       options,
     };
     return acc;

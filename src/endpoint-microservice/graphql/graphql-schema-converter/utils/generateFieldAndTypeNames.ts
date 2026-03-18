@@ -9,8 +9,6 @@ import {
 export interface FieldAndTypeNames {
   fieldName: { singular: string; plural: string };
   typeNames: { singular: string; plural: string };
-  legacyFieldName?: { singular: string; plural: string };
-  legacyInputNames?: { plural: string };
 }
 
 export const generateFieldAndTypeNames = (
@@ -23,17 +21,13 @@ export const generateFieldAndTypeNames = (
     ? getSafetyName(tableId, 'INVALID_TABLE_NAME')
     : getSafetyName(toCamelCaseFieldName(tableId), 'INVALID_TABLE_NAME');
 
-  const legacySafeName = hasDuplicate
-    ? null
-    : getSafetyName(tableId.toLowerCase(), 'INVALID_TABLE_NAME');
-
   const singularFieldName = safeName;
   const pluralFieldName = pluralize(safeName);
 
   const singularTypeName = hasDuplicate ? safeName : upperFirst(safeName);
   const pluralTypeName = pluralize(singularTypeName);
 
-  const result: FieldAndTypeNames = {
+  return {
     fieldName: {
       singular: singularFieldName,
       plural: pluralFieldName,
@@ -43,16 +37,4 @@ export const generateFieldAndTypeNames = (
       plural: pluralTypeName,
     },
   };
-
-  if (legacySafeName && legacySafeName !== safeName) {
-    result.legacyFieldName = {
-      singular: legacySafeName,
-      plural: pluralize(legacySafeName),
-    };
-    result.legacyInputNames = {
-      plural: upperFirst(pluralize(legacySafeName)),
-    };
-  }
-
-  return result;
 };
