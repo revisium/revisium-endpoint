@@ -3,6 +3,7 @@ import { JsonSchema } from '@revisium/schema-toolkit/types';
 export type Options = {
   hideNodeTypes?: boolean;
   hideFlatTypes?: boolean;
+  hideMutations?: boolean;
   flatPostfix?: string;
   nodePostfix?: string;
   prefixForTables?: string;

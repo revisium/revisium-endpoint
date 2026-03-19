@@ -167,6 +167,7 @@ export class ScalarModel {
 
 export class Schema {
   public readonly query = new QueryModel();
+  public readonly mutation = new QueryModel();
 
   public readonly types = new Map<string, TypeModel>();
   public readonly inputs = new Map<string, InputModel>();

@@ -47,4 +47,12 @@ export class ContextService {
   public get nodePostfix() {
     return this.context.options?.nodePostfix;
   }
+
+  public get hideMutations() {
+    return this.context.options?.hideMutations;
+  }
+
+  public get isDraft() {
+    return this.context.isDraft;
+  }
 }

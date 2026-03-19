@@ -74,16 +74,8 @@ describe('GraphQL Endpoint E2E', () => {
     const TEST_DB_URL =
       'postgresql://revisium:password@localhost:5437/revisium-endpoint-test?schema=public';
 
-    if (
-      process.env.DATABASE_URL &&
-      !process.env.DATABASE_URL.includes('revisium-endpoint-test')
-    ) {
-      throw new Error(
-        `DATABASE_URL does not point to test database. Got: ${process.env.DATABASE_URL}`,
-      );
-    }
-
-    process.env.DATABASE_URL = process.env.DATABASE_URL || TEST_DB_URL;
+    // Force test DATABASE_URL (overrides any ambient .env value)
+    process.env.DATABASE_URL = TEST_DB_URL;
     process.env.REVISIUM_NO_AUTH = 'true';
     process.env.NODE_ENV = 'test';
     process.env.CORE_API_URL = `http://127.0.0.1:${process.env.PORT || 8082}`;
@@ -188,9 +180,21 @@ describe('GraphQL Endpoint E2E', () => {
       { type: 'GRAPHQL' },
     );
 
-    // Register endpoint in endpoint module via CommandBus
+    // Create draft endpoint for mutations
+    const newDraft = await apiGet(
+      `/api/organization/${ORGANIZATION_ID}/projects/${PROJECT_NAME}/branches/${BRANCH_NAME}/draft-revision`,
+    );
+    const draftEndpointRes = await apiPost(
+      `/api/revision/${newDraft.id}/endpoints`,
+      { type: 'GRAPHQL' },
+    );
+
+    // Register both endpoints in endpoint module via CommandBus
     const commandBus = app.get(CommandBus);
     await commandBus.execute(new CreateGraphqlEndpointCommand(endpointRes.id));
+    await commandBus.execute(
+      new CreateGraphqlEndpointCommand(draftEndpointRes.id),
+    );
   }, 60000);
 
   afterAll(async () => {
@@ -546,6 +550,138 @@ describe('GraphQL Endpoint E2E', () => {
 
       expect(data.posts.totalCount).toBe(1);
       expect(data.posts.edges[0].node.data.title).toBe('Hello World');
+    });
+  });
+
+  describe('Mutations (draft endpoint)', () => {
+    it('should have mutation type on draft endpoint', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          {
+            __schema {
+              mutationType {
+                name
+                fields {
+                  name
+                }
+              }
+            }
+          }
+        `,
+      );
+
+      expect(data.__schema.mutationType).toBeDefined();
+      expect(data.__schema.mutationType.name).toBe('Mutation');
+
+      const fieldNames = data.__schema.mutationType.fields.map(
+        (f: { name: string }) => f.name,
+      );
+      expect(fieldNames).toContain('createUser');
+      expect(fieldNames).toContain('updateUser');
+      expect(fieldNames).toContain('deleteUser');
+      expect(fieldNames).toContain('createPost');
+      expect(fieldNames).toContain('updatePost');
+      expect(fieldNames).toContain('deletePost');
+    });
+
+    it('should NOT have mutation type on head endpoint', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('head'),
+        `
+          {
+            __schema {
+              mutationType {
+                name
+              }
+            }
+          }
+        `,
+      );
+
+      expect(data.__schema.mutationType).toBeNull();
+    });
+
+    it('should create a row via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation CreateUser($data: ${prefix}CreateUserInput!) {
+            createUser(data: $data) {
+              id
+              data {
+                name
+                email
+                age
+              }
+            }
+          }
+        `,
+        {
+          data: {
+            id: 'user-3',
+            data: { name: 'Charlie', email: 'charlie@example.com', age: 35 },
+          },
+        },
+      );
+
+      expect(data.createUser).toBeDefined();
+      expect(data.createUser.id).toBe('user-3');
+      expect(data.createUser.data.name).toBe('Charlie');
+      expect(data.createUser.data.email).toBe('charlie@example.com');
+      expect(data.createUser.data.age).toBe(35);
+    });
+
+    it('should update a row via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation UpdateUser($data: ${prefix}UpdateUserInput!) {
+            updateUser(data: $data) {
+              id
+              data {
+                name
+                email
+                age
+              }
+            }
+          }
+        `,
+        {
+          data: {
+            id: 'user-3',
+            data: {
+              name: 'Charlie Updated',
+              email: 'charlie2@example.com',
+              age: 36,
+            },
+          },
+        },
+      );
+
+      expect(data.updateUser).toBeDefined();
+      expect(data.updateUser.id).toBe('user-3');
+      expect(data.updateUser.data.name).toBe('Charlie Updated');
+      expect(data.updateUser.data.age).toBe(36);
+    });
+
+    it('should delete a row via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation DeleteUser($id: String!) {
+            deleteUser(id: $id) {
+              id
+              success
+            }
+          }
+        `,
+        { id: 'user-3' },
+      );
+
+      expect(data.deleteUser).toBeDefined();
+      expect(data.deleteUser.id).toBe('user-3');
+      expect(data.deleteUser.success).toBe(true);
     });
   });
 });

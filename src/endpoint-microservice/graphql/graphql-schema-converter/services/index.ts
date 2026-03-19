@@ -2,6 +2,7 @@ import { CacheService } from 'src/endpoint-microservice/graphql/graphql-schema-c
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
+import { MutationsService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/mutations.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import { ResolverService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/resolver.service';
 import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/common-schema.service';
@@ -14,6 +15,7 @@ export const GRAPHQL_SCHEMA_CONVERTER_SERVICES = [
   CacheService,
   ModelService,
   NamingService,
+  MutationsService,
   QueriesService,
   CommonSchemaService,
   NodeTypeBuilderService,
