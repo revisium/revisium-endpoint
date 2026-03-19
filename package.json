@@ -32,7 +32,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:e2e:up": "docker compose -f docker-compose-e2e.yml -p test-revisium-endpoint up --wait -d",
+    "test:e2e:down": "docker compose -f docker-compose-e2e.yml -p test-revisium-endpoint down -v",
     "tsc": "tsc -p tsconfig.json",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:patch": "npm version patch --no-git-tag-version"
@@ -74,6 +76,7 @@
     "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.5",
     "@nestjs/testing": "^11.1.1",
+    "@revisium/core": "^2.9.2",
     "@swc/core": "^1.15.8",
     "@swc/jest": "^0.2.39",
     "@types/bcrypt": "^5.0.2",
