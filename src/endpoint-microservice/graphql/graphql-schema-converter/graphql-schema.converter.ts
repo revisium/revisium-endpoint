@@ -6,6 +6,7 @@ import { CommonSchemaService } from 'src/endpoint-microservice/graphql/graphql-s
 import { ContextService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/context.service';
 import { ModelService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/model.service';
 import { NamingService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/naming.service';
+import { MutationsService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/mutations.service';
 import { QueriesService } from 'src/endpoint-microservice/graphql/graphql-schema-converter/services/queries.service';
 import {
   Schema,
@@ -45,6 +46,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     private readonly namingService: NamingService,
     private readonly asyncLocalStorage: AsyncLocalStorage<GraphQLSchemaConverterContext>,
     private readonly queriesService: QueriesService,
+    private readonly mutationsService: MutationsService,
     private readonly modelService: ModelService,
     private readonly commonSchemaService: CommonSchemaService,
   ) {}
@@ -106,6 +108,14 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     this.createValidTables(validTables);
     this.context.schema.resolveAllThunks();
     this.createQueries(validTables);
+
+    if (
+      this.contextService.isDraft &&
+      !this.contextService.hideMutations &&
+      !this.contextService.hideNodeTypes
+    ) {
+      this.createMutations(validTables);
+    }
   }
 
   private createValidTables(validTables: Record<string, ValidTableType>) {
@@ -114,6 +124,15 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     );
 
     this.modelService.create(options);
+  }
+
+  private createMutations(validTables: Record<string, ValidTableType>) {
+    Object.values(validTables).forEach((validTable) => {
+      this.mutationsService.createMutationFields(
+        validTable.fieldName.singular,
+        validTable.options,
+      );
+    });
   }
 
   private createQueries(validTables: Record<string, ValidTableType>) {

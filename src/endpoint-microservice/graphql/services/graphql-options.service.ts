@@ -36,6 +36,14 @@ export class GraphQLOptionsService {
       hasAnyOption = true;
     }
 
+    if (process.env.GRAPHQL_HIDE_MUTATIONS !== undefined) {
+      envOptions.hideMutations = this.parseBoolean(
+        process.env.GRAPHQL_HIDE_MUTATIONS,
+        'GRAPHQL_HIDE_MUTATIONS',
+      );
+      hasAnyOption = true;
+    }
+
     if (process.env.GRAPHQL_FLAT_POSTFIX !== undefined) {
       envOptions.flatPostfix = this.validateGraphQLIdentifier(
         process.env.GRAPHQL_FLAT_POSTFIX,

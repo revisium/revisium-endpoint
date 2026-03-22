@@ -205,6 +205,30 @@ export class NamingService {
   }
 
   /**
+   * Generate mutation input type names
+   */
+  public getCreateInputTypeName(tableName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Create${tableName}Input`;
+  }
+
+  public getUpdateInputTypeName(tableName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Update${tableName}Input`;
+  }
+
+  /**
+   * Generate mutation result type names
+   */
+  public getDeleteResultTypeName(): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}DeleteResult`;
+  }
+
+  /**
    * Generate where input type names
    */
   public getWhereInputTypeName(tableName: string): string {

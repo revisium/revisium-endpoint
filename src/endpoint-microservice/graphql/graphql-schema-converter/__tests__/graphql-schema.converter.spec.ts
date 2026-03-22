@@ -746,6 +746,128 @@ describe('GraphQL Schema Converter', () => {
     });
   });
 
+  describe('mutations', () => {
+    it('draft with mutations', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          isDraft: true,
+        }),
+      );
+
+      await check(schema, 'mutations/draft-simple.graphql.text');
+    });
+
+    it('head without mutations', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          isDraft: false,
+        }),
+      );
+
+      // Head schema is same as simple (no mutations)
+      await check(schema, 'simple.graphql.text');
+    });
+
+    it('draft multi-table', async () => {
+      const schema = await converter.convert(
+        getContext({
+          tables: [...getComplexSchema()],
+          isDraft: true,
+        }),
+      );
+
+      await check(schema, 'mutations/draft-multi-table.graphql.text');
+    });
+
+    it('draft with custom prefix', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          isDraft: true,
+          options: { prefixForTables: 'Api' },
+        }),
+      );
+
+      await check(schema, 'mutations/draft-prefix.graphql.text');
+    });
+
+    it('draft with hideNodeTypes - no mutations', async () => {
+      const schema = await converter.convert(
+        getContext({
+          tables: [...getComplexSchema()],
+          isDraft: true,
+          options: { hideNodeTypes: true },
+        }),
+      );
+
+      await check(schema, 'mutations/draft-hide-node.graphql.text');
+    });
+
+    it('draft with non-object root schema', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getStringSchema(),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          isDraft: true,
+        }),
+      );
+
+      await check(schema, 'mutations/draft-non-object-root.graphql.text');
+    });
+
+    it('draft with hideMutations', async () => {
+      const table: ConverterTable = {
+        id: 'user',
+        versionId: '1',
+        schema: getObjectSchema({
+          name: getStringSchema(),
+        }),
+      };
+
+      const schema = await converter.convert(
+        getContext({
+          tables: [table],
+          isDraft: true,
+          options: { hideMutations: true },
+        }),
+      );
+
+      // Same as simple (no mutations)
+      await check(schema, 'simple.graphql.text');
+    });
+  });
+
   function getContext(
     data: Partial<ConverterContextType>,
   ): ConverterContextType {

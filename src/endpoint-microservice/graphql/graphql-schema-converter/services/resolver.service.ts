@@ -93,6 +93,69 @@ export class ResolverService {
     };
   }
 
+  public getCreateRowResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: { id: string; data: Record<string, any> } },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.createRow(
+        revisionId,
+        table.id,
+        {
+          rowId: data.id,
+          data: data.data,
+        },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return response.row;
+    };
+  }
+
+  public getUpdateRowResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: { id: string; data: Record<string, any> } },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.updateRow(
+        revisionId,
+        table.id,
+        data.id,
+        { data: data.data },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return response.row;
+    };
+  }
+
+  public getDeleteRowResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
+      const { error } = await this.proxyCoreApi.api.deleteRow(
+        revisionId,
+        table.id,
+        id,
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return { id, success: true };
+    };
+  }
+
   public getListResolver(table: ConverterTable) {
     return this.getListBaseResolver(table, false);
   }

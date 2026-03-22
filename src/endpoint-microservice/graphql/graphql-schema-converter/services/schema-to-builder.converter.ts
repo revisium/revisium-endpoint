@@ -56,6 +56,7 @@ export class SchemaToBuilderConverter {
     this.addInputs();
     this.addTypes();
     this.addQuery();
+    this.addMutation();
   }
 
   private addQuery() {
@@ -107,6 +108,49 @@ export class SchemaToBuilderConverter {
             type: t.listRef(this.getTypeRef(field.value).ref),
             ...defaultParams,
           });
+        }
+      }
+
+      return result;
+    });
+  }
+
+  private addMutation() {
+    if (this.schema.mutation.fields.size === 0) return;
+
+    this.builder.mutationType({});
+
+    this.builder.mutationFields((t) => {
+      const result: any = {};
+
+      for (const field of this.schema.mutation.fields.values()) {
+        const defaultParams = {
+          args: field.args
+            ? {
+                [field.args.name]: t.arg({
+                  required: field.args.required,
+                  type:
+                    field.args.type === FieldType.string
+                      ? 'String'
+                      : this.getInputRef(field.args.value).ref,
+                }),
+              }
+            : undefined,
+          resolve: field.resolver,
+          deprecationReason: field.deprecationReason,
+        };
+
+        if (field.type === FieldType.ref) {
+          result[field.name] = t.field({
+            type: this.getTypeRef(field.value).ref,
+            ...defaultParams,
+          });
+        } else if (field.type === FieldType.string) {
+          result[field.name] = t.string(defaultParams);
+        } else if (field.type === FieldType.boolean) {
+          result[field.name] = t.boolean(defaultParams);
+        } else if (field.type === FieldType.int) {
+          result[field.name] = t.int(defaultParams);
         }
       }
 

@@ -65,6 +65,7 @@ cp .env.example .env
 |----------|---------|-------------|
 | `GRAPHQL_HIDE_NODE_TYPES` | `false` | Hide node types in generated GraphQL schema |
 | `GRAPHQL_HIDE_FLAT_TYPES` | `false` | Hide flat types in generated GraphQL schema |
+| `GRAPHQL_HIDE_MUTATIONS` | `false` | Hide mutations from draft revision GraphQL schema |
 | `GRAPHQL_FLAT_POSTFIX` | `Flat` | Postfix for flat type names |
 | `GRAPHQL_NODE_POSTFIX` | `` | Postfix for node type names |
 | `GRAPHQL_PREFIX_FOR_TABLES` | `` | Prefix for table type names |
