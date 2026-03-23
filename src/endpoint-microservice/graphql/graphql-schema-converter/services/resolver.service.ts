@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql/error';
 import { ClsService } from 'nestjs-cls';
 import {
   GetTableRowsDto,
+  PatchRow,
   RequestParams,
 } from 'src/endpoint-microservice/core-api/generated/api';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
@@ -149,7 +150,7 @@ export class ResolverService {
       }: {
         data: {
           id: string;
-          patches: { op: string; path: string; value: any }[];
+          patches: PatchRow[];
         };
       },
       ctx: ContextType,
@@ -238,7 +239,7 @@ export class ResolverService {
         data: {
           rows: {
             id: string;
-            patches: { op: string; path: string; value: any }[];
+            patches: PatchRow[];
           }[];
         };
       },

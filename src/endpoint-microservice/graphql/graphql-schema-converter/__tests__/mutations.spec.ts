@@ -293,7 +293,7 @@ describe('GraphQL Mutations', () => {
       variables: {
         data: {
           id: 'user-1',
-          patches: [{ op: 'replace', path: '/name', value: 'Patched' }],
+          patches: [{ op: 'replace', path: 'name', value: 'Patched' }],
         },
       },
       app,
@@ -306,7 +306,7 @@ describe('GraphQL Mutations', () => {
       REVISION_ID,
       USER_TABLE_ID,
       'user-1',
-      { patches: [{ op: 'replace', path: '/name', value: 'Patched' }] },
+      { patches: [{ op: 'replace', path: 'name', value: 'Patched' }] },
       { headers: { authorization: 'Bearer test-token' } },
     );
   });
@@ -425,11 +425,11 @@ describe('GraphQL Mutations', () => {
           rows: [
             {
               id: 'user-1',
-              patches: [{ op: 'replace', path: '/name', value: 'Patched1' }],
+              patches: [{ op: 'replace', path: 'name', value: 'Patched1' }],
             },
             {
               id: 'user-2',
-              patches: [{ op: 'replace', path: '/name', value: 'Patched2' }],
+              patches: [{ op: 'replace', path: 'name', value: 'Patched2' }],
             },
           ],
         },
@@ -447,11 +447,11 @@ describe('GraphQL Mutations', () => {
         rows: [
           {
             rowId: 'user-1',
-            patches: [{ op: 'replace', path: '/name', value: 'Patched1' }],
+            patches: [{ op: 'replace', path: 'name', value: 'Patched1' }],
           },
           {
             rowId: 'user-2',
-            patches: [{ op: 'replace', path: '/name', value: 'Patched2' }],
+            patches: [{ op: 'replace', path: 'name', value: 'Patched2' }],
           },
         ],
       },

@@ -696,7 +696,7 @@ describe('GraphQL Endpoint E2E', () => {
           data: {
             id: 'user-3',
             patches: [
-              { op: 'replace', path: '/name', value: 'Charlie Patched' },
+              { op: 'replace', path: 'name', value: 'Charlie Patched' },
             ],
           },
         },
@@ -813,13 +813,13 @@ describe('GraphQL Endpoint E2E', () => {
               {
                 id: 'user-bulk-1',
                 patches: [
-                  { op: 'replace', path: '/name', value: 'Bulk1 Patched' },
+                  { op: 'replace', path: 'name', value: 'Bulk1 Patched' },
                 ],
               },
               {
                 id: 'user-bulk-2',
                 patches: [
-                  { op: 'replace', path: '/name', value: 'Bulk2 Patched' },
+                  { op: 'replace', path: 'name', value: 'Bulk2 Patched' },
                 ],
               },
             ],
