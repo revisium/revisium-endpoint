@@ -817,7 +817,7 @@ describe('GraphQL Schema Converter', () => {
       await check(schema, 'mutations/draft-prefix.graphql.text');
     });
 
-    it('draft with hideNodeTypes - no mutations', async () => {
+    it('draft with hideNodeTypes', async () => {
       const schema = await converter.convert(
         getContext({
           tables: [...getComplexSchema()],

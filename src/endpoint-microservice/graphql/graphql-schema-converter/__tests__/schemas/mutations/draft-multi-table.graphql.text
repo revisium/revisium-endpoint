@@ -10,11 +10,21 @@ scalar JSON
 
 type Mutation {
   createPost(data: ProjectCreatePostInput!): ProjectPostNode!
+  createPosts(data: ProjectCreatePostsInput!): ProjectBulkMutationResult!
   createUser(data: ProjectCreateUserInput!): ProjectUserNode!
+  createUsers(data: ProjectCreateUsersInput!): ProjectBulkMutationResult!
   deletePost(id: String!): ProjectDeleteResult!
+  deletePosts(data: ProjectDeletePostsInput!): ProjectBulkMutationResult!
   deleteUser(id: String!): ProjectDeleteResult!
+  deleteUsers(data: ProjectDeleteUsersInput!): ProjectBulkMutationResult!
+  patchPost(data: ProjectPatchPostInput!): ProjectPostNode!
+  patchPosts(data: ProjectPatchPostsInput!): ProjectBulkMutationResult!
+  patchUser(data: ProjectPatchUserInput!): ProjectUserNode!
+  patchUsers(data: ProjectPatchUsersInput!): ProjectBulkMutationResult!
   updatePost(data: ProjectUpdatePostInput!): ProjectPostNode!
+  updatePosts(data: ProjectUpdatePostsInput!): ProjectBulkMutationResult!
   updateUser(data: ProjectUpdateUserInput!): ProjectUserNode!
+  updateUsers(data: ProjectUpdateUsersInput!): ProjectBulkMutationResult!
 }
 
 input ProjectBoolFilter {
@@ -22,12 +32,35 @@ input ProjectBoolFilter {
   not: Boolean
 }
 
+type ProjectBulkMutationResult {
+  count: Int!
+  success: Boolean!
+}
+
 input ProjectCreatePostInput {
   data: JSON!
   id: String!
 }
 
+input ProjectCreatePostsInput {
+  rows: [ProjectCreatePostsRowInput!]!
+}
+
+input ProjectCreatePostsRowInput {
+  data: JSON!
+  id: String!
+}
+
 input ProjectCreateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectCreateUsersInput {
+  rows: [ProjectCreateUsersRowInput!]!
+}
+
+input ProjectCreateUsersRowInput {
   data: JSON!
   id: String!
 }
@@ -42,9 +75,17 @@ input ProjectDateTimeFilter {
   notIn: [String!]
 }
 
+input ProjectDeletePostsInput {
+  rowIds: [String!]!
+}
+
 type ProjectDeleteResult {
   id: String!
   success: Boolean!
+}
+
+input ProjectDeleteUsersInput {
+  rowIds: [String!]!
 }
 
 enum ProjectFilterJsonMode {
@@ -143,6 +184,44 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProjectPatchOp {
+  replace
+}
+
+input ProjectPatchOperation {
+  op: ProjectPatchOp!
+  path: String!
+  value: JSON!
+}
+
+input ProjectPatchPostInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchPostsInput {
+  rows: [ProjectPatchPostsRowInput!]!
+}
+
+input ProjectPatchPostsRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchUserInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchUsersInput {
+  rows: [ProjectPatchUsersRowInput!]!
+}
+
+input ProjectPatchUsersRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
 }
 
 type ProjectPost {
@@ -264,7 +343,25 @@ input ProjectUpdatePostInput {
   id: String!
 }
 
+input ProjectUpdatePostsInput {
+  rows: [ProjectUpdatePostsRowInput!]!
+}
+
+input ProjectUpdatePostsRowInput {
+  data: JSON!
+  id: String!
+}
+
 input ProjectUpdateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectUpdateUsersInput {
+  rows: [ProjectUpdateUsersRowInput!]!
+}
+
+input ProjectUpdateUsersRowInput {
   data: JSON!
   id: String!
 }

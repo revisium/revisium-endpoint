@@ -115,7 +115,27 @@ const createMockProxyCoreApiService = () => ({
       data: { row: { ...user1, data: { name: 'Updated', age: 31 } } },
       error: null,
     }),
+    patchRow: jest.fn().mockResolvedValue({
+      data: { row: { ...user1, data: { name: 'Patched', age: 30 } } },
+      error: null,
+    }),
     deleteRow: jest.fn().mockResolvedValue({
+      data: {},
+      error: null,
+    }),
+    createRows: jest.fn().mockResolvedValue({
+      data: { rows: [user1, { ...user1, id: 'user-2' }] },
+      error: null,
+    }),
+    updateRows: jest.fn().mockResolvedValue({
+      data: { rows: [user1, { ...user1, id: 'user-2' }] },
+      error: null,
+    }),
+    patchRows: jest.fn().mockResolvedValue({
+      data: { rows: [user1, { ...user1, id: 'user-2' }] },
+      error: null,
+    }),
+    deleteRows: jest.fn().mockResolvedValue({
       data: {},
       error: null,
     }),
@@ -162,7 +182,7 @@ describe('GraphQL Mutations', () => {
     return `/endpoint/graphql/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/draft`;
   }
 
-  it('should have mutation type in schema', async () => {
+  it('should have all mutation fields in schema', async () => {
     const result = await graphqlQuery(getUrl(), {
       query: gql`
         {
@@ -186,9 +206,16 @@ describe('GraphQL Mutations', () => {
     const fieldNames = result.__schema.mutationType.fields.map(
       (f: { name: string }) => f.name,
     );
+    // Singular
     expect(fieldNames).toContain('createUser');
     expect(fieldNames).toContain('updateUser');
+    expect(fieldNames).toContain('patchUser');
     expect(fieldNames).toContain('deleteUser');
+    // Bulk
+    expect(fieldNames).toContain('createUsers');
+    expect(fieldNames).toContain('updateUsers');
+    expect(fieldNames).toContain('patchUsers');
+    expect(fieldNames).toContain('deleteUsers');
   });
 
   it('should execute createUser mutation', async () => {
@@ -250,6 +277,40 @@ describe('GraphQL Mutations', () => {
     );
   });
 
+  it('should execute patchUser mutation', async () => {
+    const result = await graphqlQuery(getUrl(), {
+      query: gql`
+        mutation PatchUser($data: BlogPatchUserInput!) {
+          patchUser(data: $data) {
+            id
+            data {
+              name
+              age
+            }
+          }
+        }
+      `,
+      variables: {
+        data: {
+          id: 'user-1',
+          patches: [{ op: 'replace', path: 'name', value: 'Patched' }],
+        },
+      },
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.patchUser).toBeDefined();
+    expect(result.patchUser.id).toBe('user-1');
+    expect(mockProxyCoreApiService.api.patchRow).toHaveBeenCalledWith(
+      REVISION_ID,
+      USER_TABLE_ID,
+      'user-1',
+      { patches: [{ op: 'replace', path: 'name', value: 'Patched' }] },
+      { headers: { authorization: 'Bearer test-token' } },
+    );
+  });
+
   it('should execute deleteUser mutation', async () => {
     const result = await graphqlQuery(getUrl(), {
       query: gql`
@@ -271,6 +332,156 @@ describe('GraphQL Mutations', () => {
       REVISION_ID,
       USER_TABLE_ID,
       'user-1',
+      { headers: { authorization: 'Bearer test-token' } },
+    );
+  });
+
+  it('should execute createUsers bulk mutation', async () => {
+    const result = await graphqlQuery(getUrl(), {
+      query: gql`
+        mutation CreateUsers($data: BlogCreateUsersInput!) {
+          createUsers(data: $data) {
+            success
+            count
+          }
+        }
+      `,
+      variables: {
+        data: {
+          rows: [
+            { id: 'user-1', data: { name: 'Alice', age: 30 } },
+            { id: 'user-2', data: { name: 'Bob', age: 25 } },
+          ],
+        },
+      },
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.createUsers.success).toBe(true);
+    expect(result.createUsers.count).toBe(2);
+    expect(mockProxyCoreApiService.api.createRows).toHaveBeenCalledWith(
+      REVISION_ID,
+      USER_TABLE_ID,
+      {
+        rows: [
+          { rowId: 'user-1', data: { name: 'Alice', age: 30 } },
+          { rowId: 'user-2', data: { name: 'Bob', age: 25 } },
+        ],
+      },
+      { headers: { authorization: 'Bearer test-token' } },
+    );
+  });
+
+  it('should execute updateUsers bulk mutation', async () => {
+    const result = await graphqlQuery(getUrl(), {
+      query: gql`
+        mutation UpdateUsers($data: BlogUpdateUsersInput!) {
+          updateUsers(data: $data) {
+            success
+            count
+          }
+        }
+      `,
+      variables: {
+        data: {
+          rows: [
+            { id: 'user-1', data: { name: 'Alice Updated', age: 31 } },
+            { id: 'user-2', data: { name: 'Bob Updated', age: 26 } },
+          ],
+        },
+      },
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.updateUsers.success).toBe(true);
+    expect(result.updateUsers.count).toBe(2);
+    expect(mockProxyCoreApiService.api.updateRows).toHaveBeenCalledWith(
+      REVISION_ID,
+      USER_TABLE_ID,
+      {
+        rows: [
+          { rowId: 'user-1', data: { name: 'Alice Updated', age: 31 } },
+          { rowId: 'user-2', data: { name: 'Bob Updated', age: 26 } },
+        ],
+      },
+      { headers: { authorization: 'Bearer test-token' } },
+    );
+  });
+
+  it('should execute patchUsers bulk mutation', async () => {
+    const result = await graphqlQuery(getUrl(), {
+      query: gql`
+        mutation PatchUsers($data: BlogPatchUsersInput!) {
+          patchUsers(data: $data) {
+            success
+            count
+          }
+        }
+      `,
+      variables: {
+        data: {
+          rows: [
+            {
+              id: 'user-1',
+              patches: [{ op: 'replace', path: 'name', value: 'Patched1' }],
+            },
+            {
+              id: 'user-2',
+              patches: [{ op: 'replace', path: 'name', value: 'Patched2' }],
+            },
+          ],
+        },
+      },
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.patchUsers.success).toBe(true);
+    expect(result.patchUsers.count).toBe(2);
+    expect(mockProxyCoreApiService.api.patchRows).toHaveBeenCalledWith(
+      REVISION_ID,
+      USER_TABLE_ID,
+      {
+        rows: [
+          {
+            rowId: 'user-1',
+            patches: [{ op: 'replace', path: 'name', value: 'Patched1' }],
+          },
+          {
+            rowId: 'user-2',
+            patches: [{ op: 'replace', path: 'name', value: 'Patched2' }],
+          },
+        ],
+      },
+      { headers: { authorization: 'Bearer test-token' } },
+    );
+  });
+
+  it('should execute deleteUsers bulk mutation', async () => {
+    const result = await graphqlQuery(getUrl(), {
+      query: gql`
+        mutation DeleteUsers($data: BlogDeleteUsersInput!) {
+          deleteUsers(data: $data) {
+            success
+            count
+          }
+        }
+      `,
+      variables: {
+        data: { rowIds: ['user-1', 'user-2'] },
+      },
+      app,
+      token: 'test-token',
+    });
+
+    expect(result.deleteUsers.success).toBe(true);
+    expect(result.deleteUsers.count).toBe(2);
+    expect(mockProxyCoreApiService.api.deleteRows).toHaveBeenCalledWith(
+      REVISION_ID,
+      USER_TABLE_ID,
+      { rowIds: ['user-1', 'user-2'] },
       { headers: { authorization: 'Bearer test-token' } },
     );
   });

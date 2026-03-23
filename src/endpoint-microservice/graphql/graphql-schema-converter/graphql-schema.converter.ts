@@ -109,11 +109,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     this.context.schema.resolveAllThunks();
     this.createQueries(validTables);
 
-    if (
-      this.contextService.isDraft &&
-      !this.contextService.hideMutations &&
-      !this.contextService.hideNodeTypes
-    ) {
+    if (this.contextService.isDraft && !this.contextService.hideMutations) {
       this.createMutations(validTables);
     }
   }
@@ -130,6 +126,7 @@ export class GraphQLSchemaConverter implements Converter<GraphQLSchema> {
     Object.values(validTables).forEach((validTable) => {
       this.mutationsService.createMutationFields(
         validTable.fieldName.singular,
+        validTable.fieldName.plural,
         validTable.options,
       );
     });

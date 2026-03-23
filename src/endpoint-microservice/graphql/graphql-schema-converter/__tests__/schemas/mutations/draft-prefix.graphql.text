@@ -3,9 +3,17 @@ input ApiCreateUserInput {
   id: String!
 }
 
-type ApiDeleteResult {
+input ApiCreateUsersInput {
+  rows: [ApiCreateUsersRowInput!]!
+}
+
+input ApiCreateUsersRowInput {
+  data: JSON!
   id: String!
-  success: Boolean!
+}
+
+input ApiDeleteUsersInput {
+  rowIds: [String!]!
 }
 
 input ApiGetUsersInput {
@@ -31,7 +39,30 @@ input ApiGetUsersOrderByInput {
   type: ProjectOrderFieldType
 }
 
+input ApiPatchUserInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ApiPatchUsersInput {
+  rows: [ApiPatchUsersRowInput!]!
+}
+
+input ApiPatchUsersRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
 input ApiUpdateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ApiUpdateUsersInput {
+  rows: [ApiUpdateUsersRowInput!]!
+}
+
+input ApiUpdateUsersRowInput {
   data: JSON!
   id: String!
 }
@@ -103,13 +134,23 @@ scalar JSON
 
 type Mutation {
   createUser(data: ApiCreateUserInput!): ApiUserNode!
-  deleteUser(id: String!): ApiDeleteResult!
+  createUsers(data: ApiCreateUsersInput!): ProjectBulkMutationResult!
+  deleteUser(id: String!): ProjectDeleteResult!
+  deleteUsers(data: ApiDeleteUsersInput!): ProjectBulkMutationResult!
+  patchUser(data: ApiPatchUserInput!): ApiUserNode!
+  patchUsers(data: ApiPatchUsersInput!): ProjectBulkMutationResult!
   updateUser(data: ApiUpdateUserInput!): ApiUserNode!
+  updateUsers(data: ApiUpdateUsersInput!): ProjectBulkMutationResult!
 }
 
 input ProjectBoolFilter {
   equals: Boolean
   not: Boolean
+}
+
+type ProjectBulkMutationResult {
+  count: Int!
+  success: Boolean!
 }
 
 input ProjectDateTimeFilter {
@@ -120,6 +161,11 @@ input ProjectDateTimeFilter {
   lt: String
   lte: String
   notIn: [String!]
+}
+
+type ProjectDeleteResult {
+  id: String!
+  success: Boolean!
 }
 
 enum ProjectFilterJsonMode {
@@ -172,6 +218,16 @@ type ProjectPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProjectPatchOp {
+  replace
+}
+
+input ProjectPatchOperation {
+  op: ProjectPatchOp!
+  path: String!
+  value: JSON!
 }
 
 enum ProjectSearchLanguage {

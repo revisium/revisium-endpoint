@@ -577,12 +577,24 @@ describe('GraphQL Endpoint E2E', () => {
       const fieldNames = data.__schema.mutationType.fields.map(
         (f: { name: string }) => f.name,
       );
+      // Singular
       expect(fieldNames).toContain('createUser');
       expect(fieldNames).toContain('updateUser');
+      expect(fieldNames).toContain('patchUser');
       expect(fieldNames).toContain('deleteUser');
       expect(fieldNames).toContain('createPost');
       expect(fieldNames).toContain('updatePost');
+      expect(fieldNames).toContain('patchPost');
       expect(fieldNames).toContain('deletePost');
+      // Bulk
+      expect(fieldNames).toContain('createUsers');
+      expect(fieldNames).toContain('updateUsers');
+      expect(fieldNames).toContain('patchUsers');
+      expect(fieldNames).toContain('deleteUsers');
+      expect(fieldNames).toContain('createPosts');
+      expect(fieldNames).toContain('updatePosts');
+      expect(fieldNames).toContain('patchPosts');
+      expect(fieldNames).toContain('deletePosts');
     });
 
     it('should NOT have mutation type on head endpoint', async () => {
@@ -665,6 +677,36 @@ describe('GraphQL Endpoint E2E', () => {
       expect(data.updateUser.data.age).toBe(36);
     });
 
+    it('should patch a row via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation PatchUser($data: ${prefix}PatchUserInput!) {
+            patchUser(data: $data) {
+              id
+              data {
+                name
+                email
+                age
+              }
+            }
+          }
+        `,
+        {
+          data: {
+            id: 'user-3',
+            patches: [
+              { op: 'replace', path: 'name', value: 'Charlie Patched' },
+            ],
+          },
+        },
+      );
+
+      expect(data.patchUser).toBeDefined();
+      expect(data.patchUser.id).toBe('user-3');
+      expect(data.patchUser.data.name).toBe('Charlie Patched');
+    });
+
     it('should delete a row via mutation', async () => {
       const data = await graphqlQuery(
         getGraphqlUrl('draft'),
@@ -682,6 +724,131 @@ describe('GraphQL Endpoint E2E', () => {
       expect(data.deleteUser).toBeDefined();
       expect(data.deleteUser.id).toBe('user-3');
       expect(data.deleteUser.success).toBe(true);
+    });
+
+    it('should bulk create rows via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation CreateUsers($data: ${prefix}CreateUsersInput!) {
+            createUsers(data: $data) {
+              success
+              count
+            }
+          }
+        `,
+        {
+          data: {
+            rows: [
+              {
+                id: 'user-bulk-1',
+                data: { name: 'Bulk1', email: 'bulk1@test.com', age: 20 },
+              },
+              {
+                id: 'user-bulk-2',
+                data: { name: 'Bulk2', email: 'bulk2@test.com', age: 21 },
+              },
+            ],
+          },
+        },
+      );
+
+      expect(data.createUsers.success).toBe(true);
+      expect(data.createUsers.count).toBe(2);
+    });
+
+    it('should bulk update rows via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation UpdateUsers($data: ${prefix}UpdateUsersInput!) {
+            updateUsers(data: $data) {
+              success
+              count
+            }
+          }
+        `,
+        {
+          data: {
+            rows: [
+              {
+                id: 'user-bulk-1',
+                data: {
+                  name: 'Bulk1 Updated',
+                  email: 'bulk1@test.com',
+                  age: 22,
+                },
+              },
+              {
+                id: 'user-bulk-2',
+                data: {
+                  name: 'Bulk2 Updated',
+                  email: 'bulk2@test.com',
+                  age: 23,
+                },
+              },
+            ],
+          },
+        },
+      );
+
+      expect(data.updateUsers.success).toBe(true);
+      expect(data.updateUsers.count).toBe(2);
+    });
+
+    it('should bulk patch rows via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation PatchUsers($data: ${prefix}PatchUsersInput!) {
+            patchUsers(data: $data) {
+              success
+              count
+            }
+          }
+        `,
+        {
+          data: {
+            rows: [
+              {
+                id: 'user-bulk-1',
+                patches: [
+                  { op: 'replace', path: 'name', value: 'Bulk1 Patched' },
+                ],
+              },
+              {
+                id: 'user-bulk-2',
+                patches: [
+                  { op: 'replace', path: 'name', value: 'Bulk2 Patched' },
+                ],
+              },
+            ],
+          },
+        },
+      );
+
+      expect(data.patchUsers.success).toBe(true);
+      expect(data.patchUsers.count).toBe(2);
+    });
+
+    it('should bulk delete rows via mutation', async () => {
+      const data = await graphqlQuery(
+        getGraphqlUrl('draft'),
+        `
+          mutation DeleteUsers($data: ${prefix}DeleteUsersInput!) {
+            deleteUsers(data: $data) {
+              success
+              count
+            }
+          }
+        `,
+        {
+          data: { rowIds: ['user-bulk-1', 'user-bulk-2'] },
+        },
+      );
+
+      expect(data.deleteUsers.success).toBe(true);
+      expect(data.deleteUsers.count).toBe(2);
     });
   });
 });
