@@ -139,6 +139,35 @@ export class ResolverService {
     };
   }
 
+  public getPatchRowResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      {
+        data,
+      }: {
+        data: {
+          id: string;
+          patches: { op: string; path: string; value: any }[];
+        };
+      },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.patchRow(
+        revisionId,
+        table.id,
+        data.id,
+        { patches: data.patches },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return response.row;
+    };
+  }
+
   public getDeleteRowResolver(table: ConverterTable) {
     const revisionId = this.context.revisionId;
 
@@ -153,6 +182,101 @@ export class ResolverService {
       if (error) throw this.toGraphQLError(error);
 
       return { id, success: true };
+    };
+  }
+
+  public getCreateRowsResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: { rows: { id: string; data: Record<string, any> }[] } },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.createRows(
+        revisionId,
+        table.id,
+        { rows: data.rows.map((r) => ({ rowId: r.id, data: r.data })) },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return { success: true, count: response.rows.length };
+    };
+  }
+
+  public getUpdateRowsResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: { rows: { id: string; data: Record<string, any> }[] } },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.updateRows(
+        revisionId,
+        table.id,
+        { rows: data.rows.map((r) => ({ rowId: r.id, data: r.data })) },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return { success: true, count: response.rows.length };
+    };
+  }
+
+  public getPatchRowsResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      {
+        data,
+      }: {
+        data: {
+          rows: {
+            id: string;
+            patches: { op: string; path: string; value: any }[];
+          }[];
+        };
+      },
+      ctx: ContextType,
+    ) => {
+      const { data: response, error } = await this.proxyCoreApi.api.patchRows(
+        revisionId,
+        table.id,
+        {
+          rows: data.rows.map((r) => ({ rowId: r.id, patches: r.patches })),
+        },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return { success: true, count: response.rows.length };
+    };
+  }
+
+  public getDeleteRowsResolver(table: ConverterTable) {
+    const revisionId = this.context.revisionId;
+
+    return async (
+      _: unknown,
+      { data }: { data: { rowIds: string[] } },
+      ctx: ContextType,
+    ) => {
+      const { error } = await this.proxyCoreApi.api.deleteRows(
+        revisionId,
+        table.id,
+        { rowIds: data.rowIds },
+        { headers: ctx.headers },
+      );
+
+      if (error) throw this.toGraphQLError(error);
+
+      return { success: true, count: data.rowIds.length };
     };
   }
 

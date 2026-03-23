@@ -205,7 +205,7 @@ export class NamingService {
   }
 
   /**
-   * Generate mutation input type names
+   * Generate mutation input type names (singular)
    */
   public getCreateInputTypeName(tableName: string): string {
     const formattedProject =
@@ -219,13 +219,82 @@ export class NamingService {
     return `${formattedProject}Update${tableName}Input`;
   }
 
+  public getPatchInputTypeName(tableName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Patch${tableName}Input`;
+  }
+
   /**
-   * Generate mutation result type names
+   * Generate mutation input type names (bulk)
+   */
+  public getBulkCreateInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Create${pluralName}Input`;
+  }
+
+  public getBulkCreateRowInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Create${pluralName}RowInput`;
+  }
+
+  public getBulkUpdateInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Update${pluralName}Input`;
+  }
+
+  public getBulkUpdateRowInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Update${pluralName}RowInput`;
+  }
+
+  public getBulkPatchInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Patch${pluralName}Input`;
+  }
+
+  public getBulkPatchRowInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Patch${pluralName}RowInput`;
+  }
+
+  public getBulkDeleteInputTypeName(pluralName: string): string {
+    const formattedProject =
+      this.contextService.prefixForTables ?? this.getProjectName();
+    return `${formattedProject}Delete${pluralName}Input`;
+  }
+
+  /**
+   * Generate shared mutation type names (use prefixForCommon)
    */
   public getDeleteResultTypeName(): string {
     const formattedProject =
-      this.contextService.prefixForTables ?? this.getProjectName();
+      this.contextService.prefixForCommon ?? this.getProjectName();
     return `${formattedProject}DeleteResult`;
+  }
+
+  public getBulkMutationResultTypeName(): string {
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
+    return `${formattedProject}BulkMutationResult`;
+  }
+
+  public getPatchOperationTypeName(): string {
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
+    return `${formattedProject}PatchOperation`;
+  }
+
+  public getPatchOpEnumName(): string {
+    const formattedProject =
+      this.contextService.prefixForCommon ?? this.getProjectName();
+    return `${formattedProject}PatchOp`;
   }
 
   /**

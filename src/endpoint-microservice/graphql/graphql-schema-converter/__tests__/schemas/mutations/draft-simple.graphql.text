@@ -10,8 +10,13 @@ scalar JSON
 
 type Mutation {
   createUser(data: ProjectCreateUserInput!): ProjectUserNode!
+  createUsers(data: ProjectCreateUsersInput!): ProjectBulkMutationResult!
   deleteUser(id: String!): ProjectDeleteResult!
+  deleteUsers(data: ProjectDeleteUsersInput!): ProjectBulkMutationResult!
+  patchUser(data: ProjectPatchUserInput!): ProjectUserNode!
+  patchUsers(data: ProjectPatchUsersInput!): ProjectBulkMutationResult!
   updateUser(data: ProjectUpdateUserInput!): ProjectUserNode!
+  updateUsers(data: ProjectUpdateUsersInput!): ProjectBulkMutationResult!
 }
 
 input ProjectBoolFilter {
@@ -19,7 +24,21 @@ input ProjectBoolFilter {
   not: Boolean
 }
 
+type ProjectBulkMutationResult {
+  count: Int!
+  success: Boolean!
+}
+
 input ProjectCreateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectCreateUsersInput {
+  rows: [ProjectCreateUsersRowInput!]!
+}
+
+input ProjectCreateUsersRowInput {
   data: JSON!
   id: String!
 }
@@ -37,6 +56,10 @@ input ProjectDateTimeFilter {
 type ProjectDeleteResult {
   id: String!
   success: Boolean!
+}
+
+input ProjectDeleteUsersInput {
+  rowIds: [String!]!
 }
 
 enum ProjectFilterJsonMode {
@@ -114,6 +137,30 @@ type ProjectPageInfo {
   startCursor: String
 }
 
+enum ProjectPatchOp {
+  replace
+}
+
+input ProjectPatchOperation {
+  op: ProjectPatchOp!
+  path: String!
+  value: JSON!
+}
+
+input ProjectPatchUserInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchUsersInput {
+  rows: [ProjectPatchUsersRowInput!]!
+}
+
+input ProjectPatchUsersRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
 enum ProjectSearchLanguage {
   arabic
   armenian
@@ -174,6 +221,15 @@ input ProjectStringFilter {
 }
 
 input ProjectUpdateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectUpdateUsersInput {
+  rows: [ProjectUpdateUsersRowInput!]!
+}
+
+input ProjectUpdateUsersRowInput {
   data: JSON!
   id: String!
 }

@@ -126,10 +126,12 @@ export class ModelService {
   }
 
   private createRootTypes(option: CreatingTableOptionsType): void {
+    const needsNodeType =
+      !this.contextService.hideNodeTypes ||
+      (this.contextService.isDraft && !this.contextService.hideMutations);
+
     this.cacheService.add(option.table.id, {
-      nodeType: this.contextService.hideNodeTypes
-        ? undefined
-        : this.getNodeType(option),
+      nodeType: needsNodeType ? this.getNodeType(option) : undefined,
       dataFlatRoot: this.contextService.hideFlatTypes
         ? undefined
         : this.getFlatType(option, ''),

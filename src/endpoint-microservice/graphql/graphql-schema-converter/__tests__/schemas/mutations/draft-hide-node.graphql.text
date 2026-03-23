@@ -8,9 +8,61 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://
 """
 scalar JSON
 
+type Mutation {
+  createPost(data: ProjectCreatePostInput!): ProjectPostNode!
+  createPosts(data: ProjectCreatePostsInput!): ProjectBulkMutationResult!
+  createUser(data: ProjectCreateUserInput!): ProjectUserNode!
+  createUsers(data: ProjectCreateUsersInput!): ProjectBulkMutationResult!
+  deletePost(id: String!): ProjectDeleteResult!
+  deletePosts(data: ProjectDeletePostsInput!): ProjectBulkMutationResult!
+  deleteUser(id: String!): ProjectDeleteResult!
+  deleteUsers(data: ProjectDeleteUsersInput!): ProjectBulkMutationResult!
+  patchPost(data: ProjectPatchPostInput!): ProjectPostNode!
+  patchPosts(data: ProjectPatchPostsInput!): ProjectBulkMutationResult!
+  patchUser(data: ProjectPatchUserInput!): ProjectUserNode!
+  patchUsers(data: ProjectPatchUsersInput!): ProjectBulkMutationResult!
+  updatePost(data: ProjectUpdatePostInput!): ProjectPostNode!
+  updatePosts(data: ProjectUpdatePostsInput!): ProjectBulkMutationResult!
+  updateUser(data: ProjectUpdateUserInput!): ProjectUserNode!
+  updateUsers(data: ProjectUpdateUsersInput!): ProjectBulkMutationResult!
+}
+
 input ProjectBoolFilter {
   equals: Boolean
   not: Boolean
+}
+
+type ProjectBulkMutationResult {
+  count: Int!
+  success: Boolean!
+}
+
+input ProjectCreatePostInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectCreatePostsInput {
+  rows: [ProjectCreatePostsRowInput!]!
+}
+
+input ProjectCreatePostsRowInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectCreateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectCreateUsersInput {
+  rows: [ProjectCreateUsersRowInput!]!
+}
+
+input ProjectCreateUsersRowInput {
+  data: JSON!
+  id: String!
 }
 
 input ProjectDateTimeFilter {
@@ -21,6 +73,19 @@ input ProjectDateTimeFilter {
   lt: String
   lte: String
   notIn: [String!]
+}
+
+input ProjectDeletePostsInput {
+  rowIds: [String!]!
+}
+
+type ProjectDeleteResult {
+  id: String!
+  success: Boolean!
+}
+
+input ProjectDeleteUsersInput {
+  rowIds: [String!]!
 }
 
 enum ProjectFilterJsonMode {
@@ -121,6 +186,48 @@ type ProjectPageInfo {
   startCursor: String
 }
 
+enum ProjectPatchOp {
+  replace
+}
+
+input ProjectPatchOperation {
+  op: ProjectPatchOp!
+  path: String!
+  value: JSON!
+}
+
+input ProjectPatchPostInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchPostsInput {
+  rows: [ProjectPatchPostsRowInput!]!
+}
+
+input ProjectPatchPostsRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchUserInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+input ProjectPatchUsersInput {
+  rows: [ProjectPatchUsersRowInput!]!
+}
+
+input ProjectPatchUsersRowInput {
+  id: String!
+  patches: [ProjectPatchOperation!]!
+}
+
+type ProjectPost {
+  name: String!
+}
+
 type ProjectPostFlat {
   name: String!
 }
@@ -134,6 +241,17 @@ type ProjectPostFlatConnection {
 type ProjectPostFlatEdge {
   cursor: String!
   node: ProjectPostFlat!
+}
+
+type ProjectPostNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectPost!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
 }
 
 input ProjectPostsWhereInput {
@@ -209,6 +327,60 @@ input ProjectStringFilter {
   startsWith: String
 }
 
+input ProjectUpdatePostInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectUpdatePostsInput {
+  rows: [ProjectUpdatePostsRowInput!]!
+}
+
+input ProjectUpdatePostsRowInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectUpdateUserInput {
+  data: JSON!
+  id: String!
+}
+
+input ProjectUpdateUsersInput {
+  rows: [ProjectUpdateUsersRowInput!]!
+}
+
+input ProjectUpdateUsersRowInput {
+  data: JSON!
+  id: String!
+}
+
+type ProjectUser {
+  address: ProjectUserAddress!
+  adult: Boolean!
+  age: Float!
+  array: [ProjectUserArrayItemsItemsItems!]!
+  firstName: String!
+  imageIds: [String!]!
+  lastName: String!
+  post: ProjectPostNode!
+  posts: [ProjectUserPostsItems!]!
+}
+
+type ProjectUserAddress {
+  city: String!
+  nestedAddress: ProjectUserAddressNestedAddress!
+  zipCode: Float!
+}
+
+type ProjectUserAddressNestedAddress {
+  zipCode: String!
+}
+
+type ProjectUserArrayItemsItemsItems {
+  nested: String!
+}
+
 type ProjectUserFlat {
   address: ProjectUserFlatAddress!
   adult: Boolean!
@@ -251,6 +423,22 @@ type ProjectUserFlatPostsItems {
   title: String!
 }
 
+type ProjectUserNode {
+  createdAt: DateTime!
+  createdId: String!
+  data: ProjectUser!
+  id: String!
+  json: JSON!
+  publishedAt: DateTime!
+  updatedAt: DateTime!
+  versionId: String!
+}
+
+type ProjectUserPostsItems {
+  id: String!
+  title: String!
+}
+
 input ProjectUsersWhereInput {
   AND: [ProjectUsersWhereInput!]
   NOT: [ProjectUsersWhereInput!]
@@ -266,12 +454,17 @@ input ProjectUsersWhereInput {
 }
 
 type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
   _service: _Service!
   postFlat(id: String!): ProjectPostFlat!
   postsFlat(data: ProjectGetPostsInput): ProjectPostFlatConnection!
   userFlat(id: String!): ProjectUserFlat!
   usersFlat(data: ProjectGetUsersInput): ProjectUserFlatConnection!
 }
+
+scalar _Any
+
+union _Entity = ProjectPostNode | ProjectUserNode
 
 type _Service {
   """
