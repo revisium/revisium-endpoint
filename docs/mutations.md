@@ -49,7 +49,7 @@ Where `{Singular}` and `{Plural}` are the UpperFirst versions of `fieldName.sing
 
 ### Type Names
 
-Input and result types use `prefixForTables` (same as query input types):
+Table-specific input types use `prefixForTables`; shared types use `prefixForCommon` (see note below):
 
 | Type | Pattern | Example |
 |------|---------|---------|
