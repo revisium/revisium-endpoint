@@ -4,7 +4,7 @@ revisium-endpoint authenticates with revisium-core to fetch revision data for AP
 
 ## Monolith mode (standalone / self-hosted Docker)
 
-No configuration needed. An internal API key is auto-generated on startup. Core and endpoint run in the same process and share the key automatically.
+No configuration needed. The core service (`revisium-core`) auto-generates an internal API key on startup and sets it in `process.env.INTERNAL_API_KEY`. Since core and endpoint run in the same process, the endpoint picks up the key automatically — no manual configuration required.
 
 ## Microservice mode
 
