@@ -1,4 +1,4 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { nanoid } from 'nanoid';
 import {
@@ -16,7 +16,10 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class InternalCoreApiService extends Api<unknown> {
+  private readonly logger = new Logger(InternalCoreApiService.name);
+
   private token: string | undefined = undefined;
+  private internalApiKey: string | undefined;
 
   constructor(
     private readonly configService: ConfigService,
@@ -34,6 +37,17 @@ export class InternalCoreApiService extends Api<unknown> {
   }
 
   public async initApi() {
+    this.internalApiKey = this.configService.get<string>('INTERNAL_API_KEY');
+
+    if (this.internalApiKey) {
+      this.logger.log('Using internal API key for core authentication');
+      return;
+    }
+
+    this.logger.warn(
+      'Using deprecated password auth for endpoint→core communication. Set INTERNAL_API_KEY to upgrade.',
+    );
+
     const isMonolith = this.options.mode === 'monolith';
 
     const loginDto = isMonolith
@@ -55,8 +69,15 @@ export class InternalCoreApiService extends Api<unknown> {
   ): RequestParams {
     const params = super.mergeRequestParams(params1, params2);
     params.headers ??= {};
-    (params.headers as Record<string, string>)['Authorization'] =
-      `Bearer ${this.token}`;
+
+    if (this.internalApiKey) {
+      (params.headers as Record<string, string>)['X-Internal-Api-Key'] =
+        this.internalApiKey;
+    } else {
+      (params.headers as Record<string, string>)['Authorization'] =
+        `Bearer ${this.token}`;
+    }
+
     return params;
   }
 
