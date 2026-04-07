@@ -32,8 +32,9 @@ cp .env.example .env
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CORE_API_URL` | `http://0.0.0.0:{PORT}` | URL to revisium-core API |
-| `CORE_API_URL_USERNAME` | - | Username for core API authentication |
-| `CORE_API_URL_PASSWORD` | - | Password for core API authentication |
+| `INTERNAL_API_KEY_ENDPOINT` | - | Internal API key for authenticating with revisium-core. Must match the value set in core. In monolith mode, auto-set by core |
+| `CORE_API_URL_USERNAME` | - | *(Deprecated)* Username for core API password authentication |
+| `CORE_API_URL_PASSWORD` | - | *(Deprecated)* Password for core API password authentication |
 
 ---
 

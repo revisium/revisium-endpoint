@@ -23,13 +23,13 @@ const createMockConfigService = (
 };
 
 describe('InternalCoreApiService', () => {
-  describe('with INTERNAL_API_KEY set', () => {
+  describe('with INTERNAL_API_KEY_ENDPOINT set', () => {
     let service: InternalCoreApiService;
     let logSpy: jest.SpyInstance;
 
     beforeEach(() => {
       const configService = createMockConfigService({
-        INTERNAL_API_KEY: 'rev_test1234567890abcdef',
+        INTERNAL_API_KEY_ENDPOINT: 'rev_test1234567890abcdef',
       });
       const prisma = createMockPrismaService();
       const options: AppOptions = { mode: 'monolith' };
@@ -60,7 +60,7 @@ describe('InternalCoreApiService', () => {
     });
   });
 
-  describe('without INTERNAL_API_KEY (password fallback)', () => {
+  describe('without INTERNAL_API_KEY_ENDPOINT (password fallback)', () => {
     let service: InternalCoreApiService;
     let warnSpy: jest.SpyInstance;
 
@@ -84,7 +84,7 @@ describe('InternalCoreApiService', () => {
       }
 
       expect(warnSpy).toHaveBeenCalledWith(
-        'Using deprecated password auth for endpoint→core communication. Set INTERNAL_API_KEY to upgrade.',
+        'Using deprecated password auth for endpoint→core communication. Set INTERNAL_API_KEY_ENDPOINT to upgrade.',
       );
     });
 
@@ -117,6 +117,101 @@ describe('InternalCoreApiService', () => {
       await expect(service.initApi()).rejects.toThrow(
         'Invalid CORE_API_URL_USERNAME',
       );
+    });
+
+    it('should throw when CORE_API_URL_PASSWORD is missing', async () => {
+      const configService = createMockConfigService({
+        CORE_API_URL_USERNAME: 'endpoint',
+      });
+      const prisma = createMockPrismaService();
+      const options: AppOptions = { mode: 'microservice' };
+
+      const service = new InternalCoreApiService(
+        configService,
+        prisma,
+        options,
+      );
+
+      await expect(service.initApi()).rejects.toThrow(
+        'Invalid CORE_API_URL_PASSWORD',
+      );
+    });
+  });
+
+  describe('password fallback login flow', () => {
+    it('should set token on successful login in microservice mode', async () => {
+      const configService = createMockConfigService({
+        CORE_API_URL_USERNAME: 'endpoint',
+        CORE_API_URL_PASSWORD: 'secret',
+      });
+      const prisma = createMockPrismaService();
+      const options: AppOptions = { mode: 'microservice' };
+
+      const service = new InternalCoreApiService(
+        configService,
+        prisma,
+        options,
+      );
+
+      jest.spyOn((service as any).api, 'login').mockResolvedValue({
+        data: { accessToken: 'mock-jwt-token' },
+        error: null,
+      });
+
+      await service.initApi();
+
+      expect((service as any).token).toBe('mock-jwt-token');
+    });
+
+    it('should throw on login error', async () => {
+      const configService = createMockConfigService({
+        CORE_API_URL_USERNAME: 'endpoint',
+        CORE_API_URL_PASSWORD: 'wrong',
+      });
+      const prisma = createMockPrismaService();
+      const options: AppOptions = { mode: 'microservice' };
+
+      const service = new InternalCoreApiService(
+        configService,
+        prisma,
+        options,
+      );
+
+      jest.spyOn((service as any).api, 'login').mockResolvedValue({
+        data: null,
+        error: { statusCode: 401, message: 'Unauthorized' },
+      });
+
+      await expect(service.initApi()).rejects.toThrow();
+    });
+
+    it('should generate random password and update DB in monolith mode', async () => {
+      const configService = createMockConfigService();
+      const prisma = createMockPrismaService();
+      const options: AppOptions = { mode: 'monolith' };
+
+      const service = new InternalCoreApiService(
+        configService,
+        prisma,
+        options,
+      );
+
+      jest.spyOn((service as any).api, 'login').mockResolvedValue({
+        data: { accessToken: 'monolith-token' },
+        error: null,
+      });
+
+      await service.initApi();
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'endpoint' },
+          data: expect.objectContaining({
+            password: expect.any(String),
+          }),
+        }),
+      );
+      expect((service as any).token).toBe('monolith-token');
     });
   });
 });

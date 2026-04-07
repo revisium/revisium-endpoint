@@ -37,7 +37,9 @@ export class InternalCoreApiService extends Api<unknown> {
   }
 
   public async initApi() {
-    this.internalApiKey = this.configService.get<string>('INTERNAL_API_KEY');
+    this.internalApiKey = this.configService.get<string>(
+      'INTERNAL_API_KEY_ENDPOINT',
+    );
 
     if (this.internalApiKey) {
       this.logger.log('Using internal API key for core authentication');
@@ -45,7 +47,7 @@ export class InternalCoreApiService extends Api<unknown> {
     }
 
     this.logger.warn(
-      'Using deprecated password auth for endpoint→core communication. Set INTERNAL_API_KEY to upgrade.',
+      'Using deprecated password auth for endpoint→core communication. Set INTERNAL_API_KEY_ENDPOINT to upgrade.',
     );
 
     const isMonolith = this.options.mode === 'monolith';
