@@ -2,6 +2,7 @@ import { ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { Request, Response, NextFunction } from 'express';
 import { AppModule } from 'src/app.module';
 import { DEFAULT_PORT } from 'src/endpoint-microservice/shared/default-port';
 
@@ -14,6 +15,11 @@ async function bootstrap() {
   });
 
   app.enableCors();
+
+  app.use((_req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
 
   const config = app.get(ConfigService);
 
