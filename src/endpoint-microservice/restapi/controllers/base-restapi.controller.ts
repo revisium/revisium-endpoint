@@ -32,6 +32,12 @@ export abstract class BaseRestapiController {
   }
 
   protected parseHeaders(req: Request): Record<string, string> {
-    return parseHeaders(req.headers);
+    const headers = parseHeaders(req.headers);
+
+    if (!headers['x-api-key'] && !headers.authorization && req.query.api_key) {
+      headers['x-api-key'] = req.query.api_key as string;
+    }
+
+    return headers;
   }
 }
