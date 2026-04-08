@@ -285,7 +285,7 @@ export const getPaginationParams = (): oas31.ParameterObject[] => [
 ];
 
 const UNAUTHORIZED_RESPONSE: oas31.ResponseObject = {
-  description: 'Unauthorized - invalid or missing token',
+  description: 'Unauthorized - invalid or missing access token or API key',
 };
 
 const NOT_FOUND_RESPONSE: oas31.ResponseObject = {
