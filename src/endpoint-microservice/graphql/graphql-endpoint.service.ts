@@ -182,9 +182,9 @@ export class GraphqlEndpointService {
         if (
           !headers['x-api-key'] &&
           !headers.authorization &&
-          req.query.api_key
+          typeof req.query.api_key === 'string'
         ) {
-          headers['x-api-key'] = req.query.api_key as string;
+          headers['x-api-key'] = req.query.api_key;
         }
 
         return { headers };
