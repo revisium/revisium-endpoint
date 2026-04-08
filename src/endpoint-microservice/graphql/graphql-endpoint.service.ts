@@ -176,9 +176,19 @@ export class GraphqlEndpointService {
 
   private createMiddleware(apollo: ApolloServer): RequestHandler {
     return expressMiddleware(apollo, {
-      context: async ({ req }) => ({
-        headers: parseHeaders(req.headers),
-      }),
+      context: async ({ req }) => {
+        const headers = parseHeaders(req.headers);
+
+        if (
+          !headers['x-api-key'] &&
+          !headers.authorization &&
+          typeof req.query.api_key === 'string'
+        ) {
+          headers['x-api-key'] = req.query.api_key;
+        }
+
+        return { headers };
+      },
     });
   }
 

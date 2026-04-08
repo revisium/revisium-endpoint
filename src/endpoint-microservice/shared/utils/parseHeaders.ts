@@ -9,5 +9,9 @@ export const parseHeaders = (
     headers.authorization = incomeHeaders.authorization;
   }
 
+  if (incomeHeaders['x-api-key']) {
+    headers['x-api-key'] = incomeHeaders['x-api-key'] as string;
+  }
+
   return headers;
 };
