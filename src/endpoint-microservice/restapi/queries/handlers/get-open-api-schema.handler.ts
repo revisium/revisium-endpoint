@@ -51,6 +51,12 @@ export class GetOpenApiSchemaHandler implements IQueryHandler<GetOpenApiSchemaQu
             bearerFormat: 'JWT',
             type: 'http',
           },
+          'api-key': {
+            type: 'apiKey',
+            in: 'header',
+            name: 'X-Api-Key',
+            description: 'API Key (rev_...) for programmatic access',
+          },
         },
         schemas: {
           ...getFilterAndSortSchemas(projectName),
