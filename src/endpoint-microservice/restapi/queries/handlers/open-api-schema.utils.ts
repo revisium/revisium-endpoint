@@ -436,7 +436,7 @@ export const createQueryRowsPath = (
       operationId: getOperationId('list', info.rawTableId),
       summary: `Query ${info.rawTableId} rows`,
       description: `Returns a paginated list of ${info.rawTableId} rows with filtering and sorting`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       requestBody: {
         required: true,
@@ -472,7 +472,7 @@ export const createSingleRowPath = (
       operationId: getOperationId('get', info.rawTableId),
       summary: `Get ${info.rawTableId} by ID`,
       description: `Returns a single ${info.rawTableId} row by its ID`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam()],
       responses: {
@@ -504,7 +504,7 @@ export const createSingleRowPath = (
       operationId: getOperationId('create', info.rawTableId),
       summary: `Create ${info.rawTableId}`,
       description: `Creates a new ${info.rawTableId} row with the specified ID`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam()],
       requestBody: dataRequestBody,
@@ -519,7 +519,7 @@ export const createSingleRowPath = (
       operationId: getOperationId('update', info.rawTableId),
       summary: `Update ${info.rawTableId}`,
       description: `Updates an existing ${info.rawTableId} row (full replacement)`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam()],
       requestBody: dataRequestBody,
@@ -534,7 +534,7 @@ export const createSingleRowPath = (
       operationId: getOperationId('patch', info.rawTableId),
       summary: `Patch ${info.rawTableId}`,
       description: `Partially updates a ${info.rawTableId} row using JSON Patch operations`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam()],
       requestBody: {
@@ -567,7 +567,7 @@ export const createSingleRowPath = (
       operationId: getOperationId('delete', info.rawTableId),
       summary: `Delete ${info.rawTableId}`,
       description: `Deletes a ${info.rawTableId} row by its ID`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam()],
       responses: {
@@ -592,7 +592,7 @@ export const createForeignKeyPath = (
       operationId: getForeignKeyOperationId(info.rawTableId, fkInfo.rawTableId),
       summary: `Get ${info.rawTableId} foreign keys by ${fkInfo.rawTableId}`,
       description: `Returns rows from ${fkInfo.rawTableId} that reference this ${info.rawTableId}`,
-      security: [{ 'access-token': [] }],
+      security: [{ 'access-token': [] }, { 'api-key': [] }],
       tags: [info.tag],
       parameters: [getRowIdPathParam(), ...getPaginationParams()],
       responses: {
@@ -614,7 +614,7 @@ export const createFileUploadPath = (
     operationId: `upload${capitalize(info.rawTableId)}File`,
     summary: `Upload file for ${info.rawTableId}`,
     description: `Uploads a file to a specific field in the ${info.rawTableId} row`,
-    security: [{ 'access-token': [] }],
+    security: [{ 'access-token': [] }, { 'api-key': [] }],
     tags: [info.tag],
     parameters: [
       getRowIdPathParam(),
@@ -772,7 +772,7 @@ const createBulkOperation = (
   operationId: getBulkOperationId(config.operation, info.rawTableId),
   summary: `Bulk ${config.operation} ${info.rawTableId} rows`,
   description: `${config.verb} multiple ${info.rawTableId} rows${config.descriptionSuffix ?? ''}. Maximum 1000 rows per request.`,
-  security: [{ 'access-token': [] }],
+  security: [{ 'access-token': [] }, { 'api-key': [] }],
   tags: [info.tag],
   requestBody: {
     required: true,
