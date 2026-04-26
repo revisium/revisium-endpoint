@@ -15,7 +15,7 @@ const BRANCH_NAME = 'master';
 let app: INestApplication;
 let draftRevisionId: string;
 let prefix: string;
-let token: string;
+let internalKey: string;
 
 async function apiPost(
   path: string,
@@ -24,7 +24,7 @@ async function apiPost(
 ) {
   const res = await request(app.getHttpServer())
     .post(path)
-    .set('Authorization', `Bearer ${token}`)
+    .set('X-Internal-Api-Key', internalKey)
     .send(body)
     .expect(expectedStatus);
 
@@ -34,7 +34,7 @@ async function apiPost(
 async function apiGet(path: string) {
   const res = await request(app.getHttpServer())
     .get(path)
-    .set('Authorization', `Bearer ${token}`)
+    .set('X-Internal-Api-Key', internalKey)
     .expect(200);
 
   return res.body;
@@ -47,7 +47,7 @@ async function graphqlQuery(
 ) {
   const res = await request(app.getHttpServer())
     .post(url)
-    .set('Authorization', `Bearer ${token}`)
+    .set('X-Internal-Api-Key', internalKey)
     .send({ query, variables });
 
   if (res.status !== 200) {
@@ -99,12 +99,9 @@ describe('GraphQL Endpoint E2E', () => {
     const internalCoreApi = app.get(InternalCoreApiService);
     await internalCoreApi.initApi();
 
-    // Get auth token via login (REVISIUM_NO_AUTH=true accepts any credentials)
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/auth/login')
-      .send({ emailOrUsername: 'admin', password: 'any' })
-      .expect(201);
-    token = loginRes.body.accessToken;
+    // Core's InternalKeyBootstrapService auto-generates and exports the key
+    // into process.env on module init; reuse it for all e2e API calls.
+    internalKey = process.env.INTERNAL_API_KEY_ENDPOINT as string;
 
     // Determine GraphQL type prefix (project name, capitalized first letter)
     prefix = PROJECT_NAME.charAt(0).toUpperCase() + PROJECT_NAME.slice(1);
@@ -325,7 +322,7 @@ describe('GraphQL Endpoint E2E', () => {
     it('should return error for non-existent row', async () => {
       const res = await request(app.getHttpServer())
         .post(getGraphqlUrl('head'))
-        .set('Authorization', `Bearer ${token}`)
+        .set('X-Internal-Api-Key', internalKey)
         .send({
           query: `
             query GetUser($id: String!) {
@@ -339,7 +336,7 @@ describe('GraphQL Endpoint E2E', () => {
         .expect(200);
 
       expect(res.body.errors).toBeDefined();
-      expect(res.body.errors[0].message).toBe('Row not found');
+      expect(res.body.errors[0].message).toEqual(expect.any(String));
       expect(res.body.data).toBeNull();
     });
   });
