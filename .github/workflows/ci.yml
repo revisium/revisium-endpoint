@@ -23,16 +23,13 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24.11.1
           cache: 'npm'
 
       - name: Create test .env
-        uses: canastro/copy-file-action@ae66602ce7d214dbd2e298c1db67a81388755a0a # canastro/copy-file-action@master
-        with:
-          source: '.env.example'
-          target: '.env'
+        run: cp .env.example .env
 
       - run: npm ci
 
@@ -46,12 +43,6 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4 # v7.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Upload results to Codecov
-        uses: codecov/codecov-action@3f20e214133d0983f9a10f3d63b0faf9241a3daa # v6.0.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: revisium/revisium-endpoint
 
   e2e:
     runs-on: ubuntu-latest
@@ -75,7 +66,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24.11.1
           cache: 'npm'
