@@ -36,7 +36,8 @@ describe('Internal API Key E2E', () => {
 
     // Core's InternalKeyBootstrapService auto-generates and exports the key
     // into process.env on module init.
-    bootstrappedKey = process.env.INTERNAL_API_KEY_ENDPOINT as unknown as string;
+    bootstrappedKey = process.env
+      .INTERNAL_API_KEY_ENDPOINT as unknown as string;
   }, 60000);
 
   afterAll(async () => {
