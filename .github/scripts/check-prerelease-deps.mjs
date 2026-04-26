@@ -1,23 +1,16 @@
 import fs from 'node:fs/promises';
 
 const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
-const sections = ['dependencies', 'peerDependencies', 'optionalDependencies', 'bundledDependencies', 'bundleDependencies'];
-const prereleasePattern = /-(alpha|beta|rc)\./;
+const sections = ['dependencies', 'peerDependencies', 'optionalDependencies'];
+const prereleaseVersionPattern = /(?:^|[^\w.-])v?\d+\.\d+\.\d+-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*/;
 const violations = [];
 
 for (const section of sections) {
   const deps = pkg[section];
   if (!deps) continue;
 
-  if (Array.isArray(deps)) {
-    for (const dep of deps) {
-      if (prereleasePattern.test(dep)) violations.push(`${section}: ${dep}`);
-    }
-    continue;
-  }
-
   for (const [name, version] of Object.entries(deps)) {
-    if (prereleasePattern.test(String(version))) {
+    if (prereleaseVersionPattern.test(String(version))) {
       violations.push(`${section}: ${name}@${version}`);
     }
   }
