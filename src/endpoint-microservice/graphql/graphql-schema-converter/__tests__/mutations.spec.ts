@@ -98,6 +98,10 @@ const createMockInternalCoreApiService = () => ({
 const createMockProxyCoreApiService = () => ({
   api: {
     endpointRelatives: jest.fn(),
+    revision: jest.fn().mockResolvedValue({
+      data: { id: 'revision-id', isDraft: true, isHead: true },
+      error: null,
+    }),
     rows: jest.fn().mockResolvedValue({
       data: {
         edges: [{ node: user1, cursor: 'c1' }],

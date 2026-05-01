@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GraphQLError } from 'graphql/error';
 import { ClsService } from 'nestjs-cls';
+import { toGraphQLError } from 'src/endpoint-microservice/core-api/core-api-error';
 import {
   GetTableRowsDto,
   PatchRow,
@@ -102,7 +102,11 @@ export class ResolverService {
       { data }: { data: { id: string; data: Record<string, any> } },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.createRow(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.createRow(
         revisionId,
         table.id,
         {
@@ -112,7 +116,7 @@ export class ResolverService {
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return response.row;
     };
@@ -126,7 +130,11 @@ export class ResolverService {
       { data }: { data: { id: string; data: Record<string, any> } },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.updateRow(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.updateRow(
         revisionId,
         table.id,
         data.id,
@@ -134,7 +142,7 @@ export class ResolverService {
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return response.row;
     };
@@ -155,7 +163,11 @@ export class ResolverService {
       },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.patchRow(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.patchRow(
         revisionId,
         table.id,
         data.id,
@@ -163,7 +175,7 @@ export class ResolverService {
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return response.row;
     };
@@ -173,14 +185,14 @@ export class ResolverService {
     const revisionId = this.context.revisionId;
 
     return async (_: unknown, { id }: { id: string }, ctx: ContextType) => {
-      const { error } = await this.proxyCoreApi.api.deleteRow(
+      const { error, status } = await this.proxyCoreApi.api.deleteRow(
         revisionId,
         table.id,
         id,
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return { id, success: true };
     };
@@ -194,14 +206,18 @@ export class ResolverService {
       { data }: { data: { rows: { id: string; data: Record<string, any> }[] } },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.createRows(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.createRows(
         revisionId,
         table.id,
         { rows: data.rows.map((r) => ({ rowId: r.id, data: r.data })) },
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return { success: true, count: response.rows.length };
     };
@@ -215,14 +231,18 @@ export class ResolverService {
       { data }: { data: { rows: { id: string; data: Record<string, any> }[] } },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.updateRows(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.updateRows(
         revisionId,
         table.id,
         { rows: data.rows.map((r) => ({ rowId: r.id, data: r.data })) },
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return { success: true, count: response.rows.length };
     };
@@ -245,7 +265,11 @@ export class ResolverService {
       },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.patchRows(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.patchRows(
         revisionId,
         table.id,
         {
@@ -254,7 +278,7 @@ export class ResolverService {
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return { success: true, count: response.rows.length };
     };
@@ -268,14 +292,14 @@ export class ResolverService {
       { data }: { data: { rowIds: string[] } },
       ctx: ContextType,
     ) => {
-      const { error } = await this.proxyCoreApi.api.deleteRows(
+      const { error, status } = await this.proxyCoreApi.api.deleteRows(
         revisionId,
         table.id,
         { rowIds: data.rowIds },
         { headers: ctx.headers },
       );
 
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       return { success: true, count: data.rowIds.length };
     };
@@ -297,7 +321,11 @@ export class ResolverService {
       { data }: { data: GetTableRowsDto },
       ctx: ContextType,
     ) => {
-      const { data: response, error } = await this.proxyCoreApi.api.rows(
+      const {
+        data: response,
+        error,
+        status,
+      } = await this.proxyCoreApi.api.rows(
         revisionId,
         table.id,
         {
@@ -308,7 +336,7 @@ export class ResolverService {
         },
         { headers: ctx.headers },
       );
-      if (error) throw this.toGraphQLError(error);
+      if (error) throw this.toGraphQLError(error, status);
 
       if (!isFlat) {
         return response;
@@ -364,17 +392,15 @@ export class ResolverService {
       cachedRows.set(cacheKey, promise);
     }
 
-    const { data: response, error } = await promise;
-    if (error) throw this.toGraphQLError(error);
+    const { data: response, error, status } = await promise;
+    if (error) throw this.toGraphQLError(error, status);
 
     return response;
   }
 
-  private toGraphQLError(err: any): GraphQLError {
+  private toGraphQLError(err: unknown, status?: number) {
     this.logger.error(err);
-    return new GraphQLError(err.message, {
-      extensions: { code: err.error, originalError: err },
-    });
+    return toGraphQLError(err, status);
   }
 
   private get context() {

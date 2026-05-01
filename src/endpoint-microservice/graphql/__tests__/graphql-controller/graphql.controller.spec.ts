@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
+import request from 'supertest';
 import { gql } from 'src/__tests__/utils/gql';
 import { graphqlQuery } from 'src/__tests__/utils/queryTest';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
@@ -187,6 +188,131 @@ describe('graphql controller', () => {
     });
 
     checkCachingRows(result.userFlat.posts);
+  });
+
+  describe('Auth error mapping for resolvers', () => {
+    it('should map upstream 403 + non-JSON body to FORBIDDEN', async () => {
+      mockProxyCoreApiService.api.row.mockResolvedValueOnce({
+        data: null,
+        error: new SyntaxError('Unexpected token < in JSON'),
+        status: 403,
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(getUrl())
+        .set('Authorization', 'Bearer test-token')
+        .send(getUserQuery(user1.id))
+        .expect(200);
+
+      const body = res.body as {
+        data: unknown;
+        errors: Array<{
+          message: string;
+          extensions: Record<string, unknown>;
+        }>;
+      };
+
+      expect(body.errors).toBeDefined();
+      expect(body.errors[0].extensions.code).toBe('FORBIDDEN');
+      expect(body.errors[0].extensions.statusCode).toBe(403);
+      expect(body.errors[0].extensions).not.toHaveProperty('originalError');
+      expect(body.errors[0].message).not.toMatch(/Unexpected token/);
+    });
+
+    it('should map upstream 401 + non-JSON body to UNAUTHENTICATED', async () => {
+      mockProxyCoreApiService.api.row.mockResolvedValueOnce({
+        data: null,
+        error: new SyntaxError('Unexpected token < in JSON'),
+        status: 401,
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(getUrl())
+        .set('Authorization', 'Bearer test-token')
+        .send(getUserQuery(user1.id))
+        .expect(200);
+
+      expect(res.body.errors[0].extensions.code).toBe('UNAUTHENTICATED');
+      expect(res.body.errors[0].extensions.statusCode).toBe(401);
+    });
+  });
+
+  describe('Auth preflight for schema/meta requests', () => {
+    it('should block POST { __typename } when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(getUrl())
+        .send({ query: '{ __typename }' })
+        .expect(403);
+
+      expect(res.body.data).toBeUndefined();
+      expect(res.body.statusCode).toBe(403);
+    });
+
+    it('should allow POST { __typename } when preflight passes', async () => {
+      const res = await request(app.getHttpServer())
+        .post(getUrl())
+        .set('Authorization', 'Bearer test-token')
+        .send({ query: '{ __typename }' })
+        .expect(200);
+
+      expect(res.body.data).toEqual({ __typename: 'Query' });
+    });
+
+    it('should block introspection when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer())
+        .post(getUrl())
+        .send({
+          query: '{ __schema { queryType { name } } }',
+        })
+        .expect(403);
+    });
+
+    it('should preserve upstream status when core returns HTML on preflight', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: new SyntaxError('Unexpected token < in JSON'),
+        status: 401,
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(getUrl())
+        .send({ query: '{ __typename }' })
+        .expect(401);
+
+      expect(res.body).toEqual({
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
+    });
+
+    it('should block GET explorer redirect when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer()).get(getUrl()).expect(403);
+    });
+
+    it('should redirect on GET when preflight passes', async () => {
+      await request(app.getHttpServer())
+        .get(getUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(302);
+    });
   });
 
   function checkCachingRowsForList(posts: any) {
