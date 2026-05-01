@@ -27,10 +27,28 @@ describe('parseHeaders', () => {
     expect(result['x-api-key']).toBe('rev_testkey123456789012');
   });
 
+  it('should use first value when auth headers are arrays', () => {
+    const result = parseHeaders({
+      authorization: ['Bearer first', 'Bearer second'],
+      'x-api-key': ['rev_first', 'rev_second'],
+    } as unknown as Parameters<typeof parseHeaders>[0]);
+
+    expect(result.authorization).toBe('Bearer first');
+    expect(result['x-api-key']).toBe('rev_first');
+  });
+
   it('should forward auth cookies used by core session auth', () => {
     const result = parseHeaders({
       cookie: 'theme=dark; rev_session=1; rev_at=jwt-token; other=value',
     });
+
+    expect(result.cookie).toBe('rev_session=1; rev_at=jwt-token');
+  });
+
+  it('should parse auth cookies from multiple cookie header values', () => {
+    const result = parseHeaders({
+      cookie: ['theme=dark; rev_session=1', 'rev_at=jwt-token; other=value'],
+    } as unknown as Parameters<typeof parseHeaders>[0]);
 
     expect(result.cookie).toBe('rev_session=1; rev_at=jwt-token');
   });

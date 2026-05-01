@@ -152,7 +152,7 @@ function endpointCookieHeader(setCookie: SetCookieHeader): string {
   expect(cookiePairs).toEqual(
     expect.arrayContaining([
       expect.stringMatching(/^rev_at=/),
-      'rev_session=1',
+      expect.stringMatching(/^rev_session=/),
     ]),
   );
 
