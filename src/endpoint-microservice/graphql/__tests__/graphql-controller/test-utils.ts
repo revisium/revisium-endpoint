@@ -274,6 +274,10 @@ export const createMockProxyCoreApiService = () => ({
     endpointRelatives: jest.fn().mockResolvedValue(createMockCoreApiResponse()),
     rows: createRowsMock(),
     row: createRowMock(),
+    revision: jest.fn().mockResolvedValue({
+      data: { id: REVISION_ID, isDraft: true, isHead: true },
+      error: null,
+    }),
   },
 });
 

@@ -8,7 +8,10 @@ import {
 import { QueryBus } from '@nestjs/cqrs';
 import { RequestHandler } from 'express';
 import { GraphQLSchema } from 'graphql/type';
+import { IncomingHttpHeaders } from 'node:http';
+import { toRestException } from 'src/endpoint-microservice/core-api/core-api-error';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
+import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { GetGraphqlSchemaQuery } from 'src/endpoint-microservice/graphql/queries/impl';
 import { GraphqlMetricsPlugin } from 'src/endpoint-microservice/metrics/graphql/graphql-metrics.plugin';
 import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
@@ -52,6 +55,7 @@ export class GraphqlEndpointService {
       apollo: ApolloServer;
       endpointId: string;
       table: string;
+      revisionId: string;
     }
   >();
 
@@ -61,7 +65,38 @@ export class GraphqlEndpointService {
     private readonly queryBus: QueryBus,
     private readonly graphqlMetricsPlugin: GraphqlMetricsPlugin,
     private readonly internalCoreApi: InternalCoreApiService,
+    private readonly proxyCoreApi: ProxyCoreApiService,
   ) {}
+
+  public async preflightAuth(
+    revisionId: string,
+    headers: Record<string, string>,
+  ): Promise<void> {
+    const { error, status } = await this.proxyCoreApi.api.revision(revisionId, {
+      headers,
+    });
+
+    if (error) {
+      throw toRestException(error, status);
+    }
+  }
+
+  public parseAuthHeaders(req: {
+    headers: IncomingHttpHeaders;
+    query: Record<string, unknown>;
+  }): Record<string, string> {
+    const headers = parseHeaders(req.headers);
+
+    if (
+      !headers['x-api-key'] &&
+      !headers.authorization &&
+      typeof req.query.api_key === 'string'
+    ) {
+      headers['x-api-key'] = req.query.api_key;
+    }
+
+    return headers;
+  }
 
   public getEndpoint(routeKey: RouteKey) {
     const url = this.buildUrl(routeKey);
@@ -120,6 +155,7 @@ export class GraphqlEndpointService {
       apollo,
       table,
       endpointId,
+      revisionId: revision.id,
     });
 
     this.startedEndpointIds.push(endpointId);
@@ -176,19 +212,12 @@ export class GraphqlEndpointService {
 
   private createMiddleware(apollo: ApolloServer): RequestHandler {
     return expressMiddleware(apollo, {
-      context: async ({ req }) => {
-        const headers = parseHeaders(req.headers);
-
-        if (
-          !headers['x-api-key'] &&
-          !headers.authorization &&
-          typeof req.query.api_key === 'string'
-        ) {
-          headers['x-api-key'] = req.query.api_key;
-        }
-
-        return { headers };
-      },
+      context: async ({ req }) => ({
+        headers: this.parseAuthHeaders({
+          headers: req.headers,
+          query: req.query as Record<string, unknown>,
+        }),
+      }),
     });
   }
 

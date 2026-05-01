@@ -25,7 +25,7 @@ export class GraphqlEndpointController {
   constructor(private readonly endpointService: GraphqlEndpointService) {}
 
   @Get()
-  get(
+  async get(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
@@ -44,6 +44,14 @@ export class GraphqlEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    await this.endpointService.preflightAuth(
+      endpoint.revisionId,
+      this.endpointService.parseAuthHeaders({
+        headers: req.headers,
+        query: req.query as Record<string, unknown>,
+      }),
+    );
+
     const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     const explorerUrl = this.buildExplorerUrl(fullUrl, endpoint.table);
 
@@ -51,7 +59,7 @@ export class GraphqlEndpointController {
   }
 
   @Post()
-  post(
+  async post(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
@@ -60,7 +68,7 @@ export class GraphqlEndpointController {
     @Res() res: Response,
     @Next() next: NextFunction,
   ) {
-    this.handleRequest({
+    await this.handleRequest({
       organizationId,
       projectName,
       branchName,
@@ -71,7 +79,7 @@ export class GraphqlEndpointController {
     });
   }
 
-  private handleRequest({
+  private async handleRequest({
     organizationId,
     projectName,
     branchName,
@@ -98,6 +106,14 @@ export class GraphqlEndpointController {
     if (!endpoint) {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
+
+    await this.endpointService.preflightAuth(
+      endpoint.revisionId,
+      this.endpointService.parseAuthHeaders({
+        headers: req.headers,
+        query: req.query as Record<string, unknown>,
+      }),
+    );
 
     endpoint.middleware(req, res, next);
   }
