@@ -407,6 +407,24 @@ describe('restapi controller', () => {
         .expect(404);
     });
 
+    it('should preserve Core API status when error body is not JSON', async () => {
+      mockProxyCoreApiService.api.row.mockResolvedValueOnce({
+        data: null,
+        error: new SyntaxError('Unexpected token < in JSON'),
+        status: 403,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(getRowUrl(USER_TABLE_ID, 'forbidden'))
+        .set('Authorization', 'Bearer test-token')
+        .expect(403);
+
+      expect(response.body).toEqual({
+        statusCode: 403,
+        message: 'Forbidden',
+      });
+    });
+
     it('should return error when Core API rows fails', async () => {
       mockProxyCoreApiService.api.rows.mockResolvedValueOnce({
         data: null,
@@ -468,6 +486,101 @@ describe('restapi controller', () => {
         .set('Authorization', 'Bearer test-token')
         .send({ rows: [{ rowId: 'nonexistent', data: {} }] })
         .expect(404);
+    });
+  });
+
+  describe('Auth preflight on local/not-implemented endpoints', () => {
+    it('GET /changes (revision) should return 403 when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`${getRevisionUrl()}/changes`)
+        .expect(403);
+
+      expect(response.body.statusCode).toBe(403);
+    });
+
+    it('GET /changes (revision) should preserve 401 when core returns HTML', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: new SyntaxError('Unexpected token < in JSON'),
+        status: 401,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`${getRevisionUrl()}/changes`)
+        .expect(401);
+
+      expect(response.body).toEqual({
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
+    });
+
+    it('GET /tables/:tableId/changes should return 403 when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer())
+        .get(`${getTableUrl(USER_TABLE_ID)}/changes`)
+        .expect(403);
+    });
+
+    it('GET /row/:rowId/changes should return 403 when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer())
+        .get(`${getRowUrl(USER_TABLE_ID, user1.id)}/changes`)
+        .expect(403);
+    });
+
+    it('GET /openapi.json should return 403 when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer()).get(getOpenApiUrl()).expect(403);
+    });
+
+    it('GET /openapi.json should return openapi spec when preflight passes', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getOpenApiUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.body.openapi || response.body.swagger).toBeDefined();
+    });
+
+    it('GET /swagger should return 403 when preflight fails', async () => {
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      await request(app.getHttpServer()).get(getSwaggerUrl()).expect(403);
+    });
+
+    it('GET /swagger should serve HTML when preflight passes', async () => {
+      const response = await request(app.getHttpServer())
+        .get(getSwaggerUrl())
+        .set('Authorization', 'Bearer test-token')
+        .expect(200);
+
+      expect(response.text).toContain('SwaggerUIBundle');
     });
 
     it('should return error when Core API patchRows fails', async () => {
@@ -744,6 +857,14 @@ describe('restapi controller', () => {
 
   function getRowUrl(tableId: string, rowId: string) {
     return `/endpoint/rest/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/tables/${tableId}/row/${rowId}`;
+  }
+
+  function getOpenApiUrl() {
+    return `/endpoint/openapi/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head/openapi.json`;
+  }
+
+  function getSwaggerUrl() {
+    return `/endpoint/swagger/${ORGANIZATION_ID}/${PROJECT_NAME}/${BRANCH_NAME}/head`;
   }
 
   function getLegacyRevisionUrl() {

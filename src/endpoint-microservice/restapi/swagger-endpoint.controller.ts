@@ -11,6 +11,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { RestMetricsInterceptor } from 'src/endpoint-microservice/metrics/rest/rest-metrics.interceptor';
 import { RestapiEndpointService } from 'src/endpoint-microservice/restapi/restapi-endpoint.service';
+import { parseHeaders } from 'src/endpoint-microservice/shared/utils/parseHeaders';
 
 const MAX_DOC_EXPANSION = 1;
 
@@ -23,7 +24,7 @@ export class SwaggerEndpointController {
   ) {}
 
   @Get('/endpoint/swagger/:organizationId/:projectName/:branchName/:postfix')
-  getSwagger(
+  async getSwagger(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
@@ -44,6 +45,11 @@ export class SwaggerEndpointController {
     if (!endpointMiddleware) {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
+
+    await this.restapiEndpointService.preflightAuth(
+      endpointMiddleware.revisionId,
+      this.parseAuthHeaders(req),
+    );
 
     const url = `/endpoint/openapi/${encodeURIComponent(organizationId)}/${encodeURIComponent(projectName)}/${encodeURIComponent(branchName)}/${encodeURIComponent(postfix)}/openapi.json`;
     res.send(`
@@ -81,7 +87,7 @@ export class SwaggerEndpointController {
   @Get(
     '/endpoint/openapi/:organizationId/:projectName/:branchName/:postfix/openapi.json',
   )
-  getOpenApiJson(
+  async getOpenApiJson(
     @Param('organizationId') organizationId: string,
     @Param('projectName') projectName: string,
     @Param('branchName') branchName: string,
@@ -103,6 +109,25 @@ export class SwaggerEndpointController {
       return res.status(HttpStatus.NOT_FOUND).send();
     }
 
+    await this.restapiEndpointService.preflightAuth(
+      endpointMiddleware.revisionId,
+      this.parseAuthHeaders(req),
+    );
+
     res.json(endpointMiddleware.openApiJson);
+  }
+
+  private parseAuthHeaders(req: Request): Record<string, string> {
+    const headers = parseHeaders(req.headers);
+
+    if (
+      !headers['x-api-key'] &&
+      !headers.authorization &&
+      typeof req.query.api_key === 'string'
+    ) {
+      headers['x-api-key'] = req.query.api_key;
+    }
+
+    return headers;
   }
 }

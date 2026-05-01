@@ -1,10 +1,6 @@
-import {
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
+import { toRestException } from 'src/endpoint-microservice/core-api/core-api-error';
 import { InternalCoreApiService } from 'src/endpoint-microservice/core-api/internal-core-api.service';
 import { ProxyCoreApiService } from 'src/endpoint-microservice/core-api/proxy-core-api.service';
 import { PrismaService } from 'src/endpoint-microservice/database/prisma.service';
@@ -107,65 +103,67 @@ export class RestapiEndpointService {
       }),
 
       getRevision: async (headers) => {
-        const { data, error } = await this.proxyCoreApi.api.revision(
+        const { data, error, status } = await this.proxyCoreApi.api.revision(
           revision.id,
           { headers },
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
-      getRevisionChanges: async () => {
+      getRevisionChanges: async (headers) => {
+        await this.preflightAuth(revision.id, headers);
         return { message: 'Not implemented' };
       },
       getTables: async (headers) => {
-        const { data, error } = await this.proxyCoreApi.api.tables(
+        const { data, error, status } = await this.proxyCoreApi.api.tables(
           { revisionId: revision.id, first: 1000 },
           { headers },
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
 
       getTable: async (headers, tableId) => {
-        const { data, error } = await this.proxyCoreApi.api.table(
+        const { data, error, status } = await this.proxyCoreApi.api.table(
           revision.id,
           tableId,
           { headers },
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       getTableSchema: async (headers, tableId) => {
-        const { data, error } = await this.proxyCoreApi.api.tableSchema(
+        const { data, error, status } = await this.proxyCoreApi.api.tableSchema(
           revision.id,
           tableId,
           { headers },
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
-      getTableChanges: async () => {
+      getTableChanges: async (headers) => {
+        await this.preflightAuth(revision.id, headers);
         return { message: 'Not implemented' };
       },
 
       getRows: async (headers, tableId, options) => {
-        const { data, error } = await this.proxyCoreApi.api.rows(
+        const { data, error, status } = await this.proxyCoreApi.api.rows(
           revision.id,
           tableId,
           options,
@@ -173,13 +171,13 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       bulkCreateRows: async (headers, tableId, rows) => {
-        const { data, error } = await this.proxyCoreApi.api.createRows(
+        const { data, error, status } = await this.proxyCoreApi.api.createRows(
           revision.id,
           tableId,
           { rows: rows.map((r) => ({ rowId: r.rowId, data: r.data })) },
@@ -187,13 +185,13 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       bulkUpdateRows: async (headers, tableId, rows) => {
-        const { data, error } = await this.proxyCoreApi.api.updateRows(
+        const { data, error, status } = await this.proxyCoreApi.api.updateRows(
           revision.id,
           tableId,
           { rows: rows.map((r) => ({ rowId: r.rowId, data: r.data })) },
@@ -201,13 +199,13 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       bulkPatchRows: async (headers, tableId, rows) => {
-        const { data, error } = await this.proxyCoreApi.api.patchRows(
+        const { data, error, status } = await this.proxyCoreApi.api.patchRows(
           revision.id,
           tableId,
           { rows: rows.map((r) => ({ rowId: r.rowId, patches: r.patches })) },
@@ -215,13 +213,13 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       deleteRows: async (headers, tableId, rowIds) => {
-        const { error } = await this.proxyCoreApi.api.deleteRows(
+        const { error, status } = await this.proxyCoreApi.api.deleteRows(
           revision.id,
           tableId,
           { rowIds },
@@ -229,14 +227,14 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return true;
       },
 
       getRow: async (headers, tableId, rowId) => {
-        const { data, error } = await this.proxyCoreApi.api.row(
+        const { data, error, status } = await this.proxyCoreApi.api.row(
           revision.id,
           tableId,
           rowId,
@@ -244,43 +242,49 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
       },
       createRow: async (headers, tableId, rowId, data) => {
-        const { data: responseData, error } =
-          await this.proxyCoreApi.api.createRow(
-            revision.id,
-            tableId,
-            {
-              rowId,
-              data,
-            },
-            { headers },
-          );
+        const {
+          data: responseData,
+          error,
+          status,
+        } = await this.proxyCoreApi.api.createRow(
+          revision.id,
+          tableId,
+          {
+            rowId,
+            data,
+          },
+          { headers },
+        );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return responseData.row;
       },
       updateRow: async (headers, tableId, rowId, data) => {
-        const { data: responseData, error } =
-          await this.proxyCoreApi.api.updateRow(
-            revision.id,
-            tableId,
-            rowId,
-            {
-              data,
-            },
-            { headers },
-          );
+        const {
+          data: responseData,
+          error,
+          status,
+        } = await this.proxyCoreApi.api.updateRow(
+          revision.id,
+          tableId,
+          rowId,
+          {
+            data,
+          },
+          { headers },
+        );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         if (!responseData.row) {
@@ -290,17 +294,20 @@ export class RestapiEndpointService {
         return responseData.row;
       },
       patchRow: async (headers, tableId, rowId, patches) => {
-        const { data: responseData, error } =
-          await this.proxyCoreApi.api.patchRow(
-            revision.id,
-            tableId,
-            rowId,
-            { patches },
-            { headers },
-          );
+        const {
+          data: responseData,
+          error,
+          status,
+        } = await this.proxyCoreApi.api.patchRow(
+          revision.id,
+          tableId,
+          rowId,
+          { patches },
+          { headers },
+        );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         if (!responseData.row) {
@@ -310,7 +317,7 @@ export class RestapiEndpointService {
         return responseData.row;
       },
       deleteRow: async (headers, tableId, rowId) => {
-        const { error } = await this.proxyCoreApi.api.deleteRow(
+        const { error, status } = await this.proxyCoreApi.api.deleteRow(
           revision.id,
           tableId,
           rowId,
@@ -318,12 +325,13 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return true;
       },
-      getRowChanges: async () => {
+      getRowChanges: async (headers) => {
+        await this.preflightAuth(revision.id, headers);
         return { message: 'Not implemented' };
       },
       getRowForeignKeysBy: async (
@@ -334,20 +342,21 @@ export class RestapiEndpointService {
         first,
         after,
       ) => {
-        const { data, error } = await this.proxyCoreApi.api.rowForeignKeysBy(
-          {
-            revisionId: revision.id,
-            tableId,
-            rowId,
-            foreignKeyByTableId,
-            first,
-            after,
-          },
-          { headers },
-        );
+        const { data, error, status } =
+          await this.proxyCoreApi.api.rowForeignKeysBy(
+            {
+              revisionId: revision.id,
+              tableId,
+              rowId,
+              foreignKeyByTableId,
+              first,
+              after,
+            },
+            { headers },
+          );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
@@ -360,7 +369,7 @@ export class RestapiEndpointService {
             type: file.mimetype,
           },
         );
-        const { data, error } = await this.proxyCoreApi.api.uploadFile(
+        const { data, error, status } = await this.proxyCoreApi.api.uploadFile(
           revision.id,
           tableId,
           rowId,
@@ -370,7 +379,7 @@ export class RestapiEndpointService {
         );
 
         if (error) {
-          throw new HttpException(error, error.statusCode);
+          this.throwCoreApiError(error, status);
         }
 
         return data;
@@ -423,17 +432,34 @@ export class RestapiEndpointService {
   }
 
   private async getTableIds(revisionId: string): Promise<string[]> {
-    const { data, error } = await this.internalCoreApi.api.rows(
+    const { data, error, status } = await this.internalCoreApi.api.rows(
       revisionId,
       SystemTables.Schema,
       { first: 1000 },
     );
 
     if (error) {
-      throw new HttpException(error, error.statusCode);
+      this.throwCoreApiError(error, status);
     }
 
     return data.edges.map((edge) => edge.node.id);
+  }
+
+  private throwCoreApiError(error: unknown, upstreamStatus?: number): never {
+    throw toRestException(error, upstreamStatus);
+  }
+
+  public async preflightAuth(
+    revisionId: string,
+    headers: Record<string, string>,
+  ): Promise<void> {
+    const { error, status } = await this.proxyCoreApi.api.revision(revisionId, {
+      headers,
+    });
+
+    if (error) {
+      this.throwCoreApiError(error, status);
+    }
   }
 
   private async generateOpenApiJson({
