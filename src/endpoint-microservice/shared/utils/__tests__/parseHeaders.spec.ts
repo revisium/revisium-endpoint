@@ -53,6 +53,17 @@ describe('parseHeaders', () => {
     expect(result.cookie).toBe('rev_session=1; rev_at=jwt-token');
   });
 
+  it('should keep first auth cookie values when duplicates are present', () => {
+    const result = parseHeaders({
+      cookie: [
+        'theme=dark; rev_session=first-session; rev_at=first-token',
+        'rev_session=second-session; rev_at=second-token',
+      ],
+    } as unknown as Parameters<typeof parseHeaders>[0]);
+
+    expect(result.cookie).toBe('rev_session=first-session; rev_at=first-token');
+  });
+
   it('should forward auth cookies together with explicit auth headers', () => {
     const result = parseHeaders({
       authorization: 'Bearer token123',
