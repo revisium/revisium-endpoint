@@ -106,6 +106,20 @@ describe('REST endpoint auth (issue #5 reproduction matrix)', () => {
       expect(res.body.id).toBe(user1.id);
     });
 
+    it('forwards auth cookies to core', async () => {
+      await request(app.getHttpServer())
+        .get(rowUrl)
+        .set('Cookie', 'theme=dark; rev_session=1; rev_at=jwt-token')
+        .expect(200);
+
+      expect(mockProxyCoreApiService.api.row).toHaveBeenCalledWith(
+        expect.any(String),
+        USER_TABLE_ID,
+        user1.id,
+        { headers: { cookie: 'rev_session=1; rev_at=jwt-token' } },
+      );
+    });
+
     it('forwards ?api_key= query param to core when no header set', async () => {
       await request(app.getHttpServer())
         .get(`${rowUrl}?api_key=rev_valid_key`)
@@ -202,6 +216,19 @@ describe('REST endpoint auth (issue #5 reproduction matrix)', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
       expect(res.text).toContain('SwaggerUIBundle');
+    });
+
+    it('serves SwaggerUI HTML with valid auth cookies', async () => {
+      const res = await request(app.getHttpServer())
+        .get(swaggerUrl)
+        .set('Cookie', 'theme=dark; rev_session=1; rev_at=jwt-token')
+        .expect(200);
+
+      expect(res.text).toContain('SwaggerUIBundle');
+      expect(mockProxyCoreApiService.api.revision).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: { cookie: 'rev_session=1; rev_at=jwt-token' } },
+      );
     });
   });
 });

@@ -111,6 +111,20 @@ describe('GraphQL endpoint auth (issue #5 reproduction matrix)', () => {
       expect(res.body.data).toEqual({ __typename: 'Query' });
     });
 
+    it('returns 200 with __typename when valid auth cookies are present', async () => {
+      const res = await request(app.getHttpServer())
+        .post(url)
+        .set('Cookie', 'theme=dark; rev_session=1; rev_at=jwt-token')
+        .send({ query: '{ __typename }' })
+        .expect(200);
+
+      expect(res.body.data).toEqual({ __typename: 'Query' });
+      expect(mockProxyCoreApiService.api.revision).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: { cookie: 'rev_session=1; rev_at=jwt-token' } },
+      );
+    });
+
     it('forwards ?api_key= query param to preflight when no header set', async () => {
       mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
         data: null,
@@ -199,6 +213,18 @@ describe('GraphQL endpoint auth (issue #5 reproduction matrix)', () => {
         .get(url)
         .set('Authorization', 'Bearer valid-token')
         .expect(302);
+    });
+
+    it('redirects to Apollo explorer with valid auth cookies', async () => {
+      await request(app.getHttpServer())
+        .get(url)
+        .set('Cookie', 'theme=dark; rev_session=1; rev_at=jwt-token')
+        .expect(302);
+
+      expect(mockProxyCoreApiService.api.revision).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: { cookie: 'rev_session=1; rev_at=jwt-token' } },
+      );
     });
   });
 
