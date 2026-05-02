@@ -336,7 +336,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectAuthor"
+                    "$ref": "#/components/schemas/TestProjectAuthorInput"
                   }
                 }
               }
@@ -446,7 +446,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectAuthor"
+                    "$ref": "#/components/schemas/TestProjectAuthorInput"
                   }
                 }
               }
@@ -815,7 +815,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectAuthor",
+                          "$ref": "#/components/schemas/TestProjectAuthorInput",
                           "description": "Row data"
                         }
                       }
@@ -953,7 +953,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectAuthor",
+                          "$ref": "#/components/schemas/TestProjectAuthorInput",
                           "description": "Row data"
                         }
                       }
@@ -1721,7 +1721,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectCategory"
+                    "$ref": "#/components/schemas/TestProjectCategoryInput"
                   }
                 }
               }
@@ -1831,7 +1831,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectCategory"
+                    "$ref": "#/components/schemas/TestProjectCategoryInput"
                   }
                 }
               }
@@ -2200,7 +2200,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectCategory",
+                          "$ref": "#/components/schemas/TestProjectCategoryInput",
                           "description": "Row data"
                         }
                       }
@@ -2338,7 +2338,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectCategory",
+                          "$ref": "#/components/schemas/TestProjectCategoryInput",
                           "description": "Row data"
                         }
                       }
@@ -3277,7 +3277,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectMedia"
+                    "$ref": "#/components/schemas/TestProjectMediaInput"
                   }
                 }
               }
@@ -3387,7 +3387,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectMedia"
+                    "$ref": "#/components/schemas/TestProjectMediaInput"
                   }
                 }
               }
@@ -3756,7 +3756,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectMedia",
+                          "$ref": "#/components/schemas/TestProjectMediaInput",
                           "description": "Row data"
                         }
                       }
@@ -3894,7 +3894,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectMedia",
+                          "$ref": "#/components/schemas/TestProjectMediaInput",
                           "description": "Row data"
                         }
                       }
@@ -4491,7 +4491,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectPost"
+                    "$ref": "#/components/schemas/TestProjectPostInput"
                   }
                 }
               }
@@ -4601,7 +4601,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectPost"
+                    "$ref": "#/components/schemas/TestProjectPostInput"
                   }
                 }
               }
@@ -4970,7 +4970,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectPost",
+                          "$ref": "#/components/schemas/TestProjectPostInput",
                           "description": "Row data"
                         }
                       }
@@ -5108,7 +5108,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectPost",
+                          "$ref": "#/components/schemas/TestProjectPostInput",
                           "description": "Row data"
                         }
                       }
@@ -5705,7 +5705,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectSettings"
+                    "$ref": "#/components/schemas/TestProjectSettingsInput"
                   }
                 }
               }
@@ -5815,7 +5815,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectSettings"
+                    "$ref": "#/components/schemas/TestProjectSettingsInput"
                   }
                 }
               }
@@ -6184,7 +6184,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectSettings",
+                          "$ref": "#/components/schemas/TestProjectSettingsInput",
                           "description": "Row data"
                         }
                       }
@@ -6322,7 +6322,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectSettings",
+                          "$ref": "#/components/schemas/TestProjectSettingsInput",
                           "description": "Row data"
                         }
                       }
@@ -6919,7 +6919,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectTag"
+                    "$ref": "#/components/schemas/TestProjectTagInput"
                   }
                 }
               }
@@ -7029,7 +7029,7 @@
                 ],
                 "properties": {
                   "data": {
-                    "$ref": "#/components/schemas/TestProjectTag"
+                    "$ref": "#/components/schemas/TestProjectTagInput"
                   }
                 }
               }
@@ -7398,7 +7398,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectTag",
+                          "$ref": "#/components/schemas/TestProjectTagInput",
                           "description": "Row data"
                         }
                       }
@@ -7536,7 +7536,7 @@
                           "description": "Unique row identifier"
                         },
                         "data": {
-                          "$ref": "#/components/schemas/TestProjectTag",
+                          "$ref": "#/components/schemas/TestProjectTagInput",
                           "description": "Row data"
                         }
                       }
@@ -8505,7 +8505,160 @@
           }
         }
       },
+      "TestProjectAuthorInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "age",
+          "avatar",
+          "bio",
+          "email",
+          "isVerified",
+          "name",
+          "socialLinks"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "email": {
+            "type": "string",
+            "default": ""
+          },
+          "bio": {
+            "type": "string",
+            "default": ""
+          },
+          "age": {
+            "type": "number",
+            "default": 0
+          },
+          "isVerified": {
+            "type": "boolean",
+            "default": false
+          },
+          "avatar": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "extension",
+              "fileId",
+              "fileName",
+              "hash",
+              "height",
+              "mimeType",
+              "size",
+              "status",
+              "url",
+              "width"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": ""
+              },
+              "fileId": {
+                "type": "string",
+                "default": ""
+              },
+              "url": {
+                "type": "string",
+                "default": ""
+              },
+              "fileName": {
+                "type": "string",
+                "default": ""
+              },
+              "hash": {
+                "type": "string",
+                "default": ""
+              },
+              "extension": {
+                "type": "string",
+                "default": ""
+              },
+              "mimeType": {
+                "type": "string",
+                "default": ""
+              },
+              "size": {
+                "type": "number",
+                "default": 0
+              },
+              "width": {
+                "type": "number",
+                "default": 0
+              },
+              "height": {
+                "type": "number",
+                "default": 0
+              }
+            }
+          },
+          "socialLinks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "platform",
+                "url"
+              ],
+              "properties": {
+                "platform": {
+                  "type": "string",
+                  "default": ""
+                },
+                "url": {
+                  "type": "string",
+                  "default": ""
+                }
+              }
+            }
+          }
+        }
+      },
       "TestProjectCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "isActive",
+          "name",
+          "order",
+          "parent",
+          "slug"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "slug": {
+            "type": "string",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "default": ""
+          },
+          "parent": {
+            "type": "string",
+            "default": "",
+            "foreignKey": "category"
+          },
+          "order": {
+            "type": "number",
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "TestProjectCategoryInput": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -8619,6 +8772,107 @@
                 "type": "number",
                 "default": 0,
                 "readOnly": true
+              }
+            }
+          },
+          "alt": {
+            "type": "string",
+            "default": ""
+          },
+          "caption": {
+            "type": "string",
+            "default": ""
+          },
+          "type": {
+            "type": "string",
+            "default": ""
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "height",
+              "width"
+            ],
+            "properties": {
+              "width": {
+                "type": "number",
+                "default": 0
+              },
+              "height": {
+                "type": "number",
+                "default": 0
+              }
+            }
+          }
+        }
+      },
+      "TestProjectMediaInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alt",
+          "caption",
+          "dimensions",
+          "file",
+          "type"
+        ],
+        "properties": {
+          "file": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "extension",
+              "fileId",
+              "fileName",
+              "hash",
+              "height",
+              "mimeType",
+              "size",
+              "status",
+              "url",
+              "width"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": ""
+              },
+              "fileId": {
+                "type": "string",
+                "default": ""
+              },
+              "url": {
+                "type": "string",
+                "default": ""
+              },
+              "fileName": {
+                "type": "string",
+                "default": ""
+              },
+              "hash": {
+                "type": "string",
+                "default": ""
+              },
+              "extension": {
+                "type": "string",
+                "default": ""
+              },
+              "mimeType": {
+                "type": "string",
+                "default": ""
+              },
+              "size": {
+                "type": "number",
+                "default": 0
+              },
+              "width": {
+                "type": "number",
+                "default": 0
+              },
+              "height": {
+                "type": "number",
+                "default": 0
               }
             }
           },
@@ -8952,6 +9206,286 @@
           }
         }
       },
+      "TestProjectPostInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "author",
+          "category",
+          "comments",
+          "content",
+          "excerpt",
+          "featuredImage",
+          "gallery",
+          "isPublished",
+          "metadata",
+          "publishedAt",
+          "slug",
+          "tags",
+          "title",
+          "viewCount"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "default": ""
+          },
+          "slug": {
+            "type": "string",
+            "default": ""
+          },
+          "content": {
+            "type": "string",
+            "default": ""
+          },
+          "excerpt": {
+            "type": "string",
+            "default": ""
+          },
+          "author": {
+            "type": "string",
+            "default": "",
+            "foreignKey": "author"
+          },
+          "category": {
+            "type": "string",
+            "default": "",
+            "foreignKey": "category"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "default": "",
+              "foreignKey": "tag"
+            }
+          },
+          "featuredImage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "extension",
+              "fileId",
+              "fileName",
+              "hash",
+              "height",
+              "mimeType",
+              "size",
+              "status",
+              "url",
+              "width"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": ""
+              },
+              "fileId": {
+                "type": "string",
+                "default": ""
+              },
+              "url": {
+                "type": "string",
+                "default": ""
+              },
+              "fileName": {
+                "type": "string",
+                "default": ""
+              },
+              "hash": {
+                "type": "string",
+                "default": ""
+              },
+              "extension": {
+                "type": "string",
+                "default": ""
+              },
+              "mimeType": {
+                "type": "string",
+                "default": ""
+              },
+              "size": {
+                "type": "number",
+                "default": 0
+              },
+              "width": {
+                "type": "number",
+                "default": 0
+              },
+              "height": {
+                "type": "number",
+                "default": 0
+              }
+            }
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "extension",
+                "fileId",
+                "fileName",
+                "hash",
+                "height",
+                "mimeType",
+                "size",
+                "status",
+                "url",
+                "width"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "default": ""
+                },
+                "fileId": {
+                  "type": "string",
+                  "default": ""
+                },
+                "url": {
+                  "type": "string",
+                  "default": ""
+                },
+                "fileName": {
+                  "type": "string",
+                  "default": ""
+                },
+                "hash": {
+                  "type": "string",
+                  "default": ""
+                },
+                "extension": {
+                  "type": "string",
+                  "default": ""
+                },
+                "mimeType": {
+                  "type": "string",
+                  "default": ""
+                },
+                "size": {
+                  "type": "number",
+                  "default": 0
+                },
+                "width": {
+                  "type": "number",
+                  "default": 0
+                },
+                "height": {
+                  "type": "number",
+                  "default": 0
+                }
+              }
+            }
+          },
+          "publishedAt": {
+            "type": "string",
+            "default": ""
+          },
+          "viewCount": {
+            "type": "number",
+            "default": 0
+          },
+          "isPublished": {
+            "type": "boolean",
+            "default": false
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "customFields",
+              "keywords",
+              "seoDescription",
+              "seoTitle"
+            ],
+            "properties": {
+              "seoTitle": {
+                "type": "string",
+                "default": ""
+              },
+              "seoDescription": {
+                "type": "string",
+                "default": ""
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "default": ""
+                }
+              },
+              "customFields": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "field1",
+                  "field2"
+                ],
+                "properties": {
+                  "field1": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "field2": {
+                    "type": "number",
+                    "default": 0
+                  }
+                }
+              }
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "authorName",
+                "content",
+                "createdAt",
+                "replies"
+              ],
+              "properties": {
+                "authorName": {
+                  "type": "string",
+                  "default": ""
+                },
+                "content": {
+                  "type": "string",
+                  "default": ""
+                },
+                "createdAt": {
+                  "type": "string",
+                  "default": ""
+                },
+                "replies": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "authorName",
+                      "content"
+                    ],
+                    "properties": {
+                      "authorName": {
+                        "type": "string",
+                        "default": ""
+                      },
+                      "content": {
+                        "type": "string",
+                        "default": ""
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "TestProjectSettings": {
         "type": "object",
         "additionalProperties": false,
@@ -9105,7 +9639,169 @@
           }
         }
       },
+      "TestProjectSettingsInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "features",
+          "limits",
+          "logo",
+          "siteName",
+          "siteUrl",
+          "socialMedia"
+        ],
+        "properties": {
+          "siteName": {
+            "type": "string",
+            "default": ""
+          },
+          "siteUrl": {
+            "type": "string",
+            "default": ""
+          },
+          "logo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "extension",
+              "fileId",
+              "fileName",
+              "hash",
+              "height",
+              "mimeType",
+              "size",
+              "status",
+              "url",
+              "width"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": ""
+              },
+              "fileId": {
+                "type": "string",
+                "default": ""
+              },
+              "url": {
+                "type": "string",
+                "default": ""
+              },
+              "fileName": {
+                "type": "string",
+                "default": ""
+              },
+              "hash": {
+                "type": "string",
+                "default": ""
+              },
+              "extension": {
+                "type": "string",
+                "default": ""
+              },
+              "mimeType": {
+                "type": "string",
+                "default": ""
+              },
+              "size": {
+                "type": "number",
+                "default": 0
+              },
+              "width": {
+                "type": "number",
+                "default": 0
+              },
+              "height": {
+                "type": "number",
+                "default": 0
+              }
+            }
+          },
+          "socialMedia": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "facebook",
+              "instagram",
+              "twitter"
+            ],
+            "properties": {
+              "twitter": {
+                "type": "string",
+                "default": ""
+              },
+              "facebook": {
+                "type": "string",
+                "default": ""
+              },
+              "instagram": {
+                "type": "string",
+                "default": ""
+              }
+            }
+          },
+          "features": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "enableComments",
+              "enableNewsletter",
+              "maintenanceMode"
+            ],
+            "properties": {
+              "enableComments": {
+                "type": "boolean",
+                "default": false
+              },
+              "enableNewsletter": {
+                "type": "boolean",
+                "default": false
+              },
+              "maintenanceMode": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          },
+          "limits": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "maxUploadSize",
+              "postsPerPage"
+            ],
+            "properties": {
+              "maxUploadSize": {
+                "type": "number",
+                "default": 0
+              },
+              "postsPerPage": {
+                "type": "number",
+                "default": 0
+              }
+            }
+          }
+        }
+      },
       "TestProjectTag": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "color",
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "color": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "TestProjectTagInput": {
         "type": "object",
         "additionalProperties": false,
         "required": [
