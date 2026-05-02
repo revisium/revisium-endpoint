@@ -29,7 +29,7 @@ describe('InternalCoreApiService', () => {
 
     beforeEach(() => {
       const configService = createMockConfigService({
-        INTERNAL_API_KEY_ENDPOINT: 'rev_test1234567890abcdef',
+        INTERNAL_API_KEY_ENDPOINT: 'rev_test1234567890abcdef12',
       });
       const prisma = createMockPrismaService();
       const options: AppOptions = { mode: 'monolith' };
@@ -53,7 +53,7 @@ describe('InternalCoreApiService', () => {
 
       expect(
         (params.headers as Record<string, string>)['X-Internal-Api-Key'],
-      ).toBe('rev_test1234567890abcdef');
+      ).toBe('rev_test1234567890abcdef12');
       expect(
         (params.headers as Record<string, string>)['Authorization'],
       ).toBeUndefined();

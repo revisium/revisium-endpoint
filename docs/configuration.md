@@ -14,8 +14,11 @@ The `@revisium/endpoint` service supports various environment variables for conf
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CORE_API_URL` | **Required** | URL to the revisium-core API service |
-| `CORE_API_URL_USERNAME` | **Required** | Username for core API authentication |
-| `CORE_API_URL_PASSWORD` | **Required** | Password for core API authentication |
+| `INTERNAL_API_KEY_ENDPOINT` | **Recommended (microservice mode)** | Preferred internal API key for endpoint-to-core authentication. Required for new deployments. Must match the value set on revisium-core and match `/^rev_[A-Za-z0-9_-]{22}$/` |
+| `CORE_API_URL_USERNAME` | - | Deprecated fallback username for core password authentication, used only when `INTERNAL_API_KEY_ENDPOINT` is absent |
+| `CORE_API_URL_PASSWORD` | - | Deprecated fallback password for core password authentication, used only when `INTERNAL_API_KEY_ENDPOINT` is absent |
+
+Authentication priority is `INTERNAL_API_KEY_ENDPOINT` first, then the deprecated `CORE_API_URL_USERNAME` / `CORE_API_URL_PASSWORD` fallback. New and upgraded microservice deployments should set `INTERNAL_API_KEY_ENDPOINT` and stop relying on password fallback credentials.
 
 ## Redis Microservice Configuration
 
