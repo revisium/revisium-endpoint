@@ -14,8 +14,9 @@ The `@revisium/endpoint` service supports various environment variables for conf
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CORE_API_URL` | **Required** | URL to the revisium-core API service |
-| `CORE_API_URL_USERNAME` | **Required** | Username for core API authentication |
-| `CORE_API_URL_PASSWORD` | **Required** | Password for core API authentication |
+| `INTERNAL_API_KEY_ENDPOINT` | **Required in microservice mode** | Internal API key for endpoint-to-core authentication. Must match the value set on revisium-core and match `/^rev_[A-Za-z0-9_-]{22}$/` |
+| `CORE_API_URL_USERNAME` | - | Deprecated fallback username for core password authentication |
+| `CORE_API_URL_PASSWORD` | - | Deprecated fallback password for core password authentication |
 
 ## Redis Microservice Configuration
 

@@ -14,24 +14,26 @@ Internal API Key is the recommended auth method. Stateless, no token refresh, no
 
 ### Setup
 
-1. Generate a key: `cd revisium-core && npm run generate:internal-key`
+1. Generate a key: `cd revisium-core && npm run generate:internal-key -- ENDPOINT`
 2. Set `INTERNAL_API_KEY_ENDPOINT` env var in both core and endpoint services (same value)
 3. Restart both services — core registers the key in DB, endpoint uses it as `X-Internal-Api-Key` header
+
+The key must match `/^rev_[A-Za-z0-9_-]{22}$/` (`rev_` plus 22 base64url/nanoid characters). Do not use plain `openssl rand -hex 32`; core rejects values that do not match this format.
 
 ### Multiple internal services
 
 Each internal service uses its own env var following the `INTERNAL_API_KEY_{SERVICE}` pattern:
 
 ```bash
-INTERNAL_API_KEY_ENDPOINT=rev_xxxxxxxxxxxxxxxxxxxx   # for endpoint service
-INTERNAL_API_KEY_WORKER=rev_yyyyyyyyyyyyyyyyyyyyyy   # for worker service
+INTERNAL_API_KEY_ENDPOINT=rev_ChangeMe0123456789abcd   # for endpoint service; example format only
+INTERNAL_API_KEY_WORKER=rev_ChangeMe0123456789abce     # for worker service; example format only
 ```
 
 Core registers each service as a separate DB record with `internalServiceName` derived from the suffix (lowercased). Keys are independent — rotating one does not affect others.
 
 ### Rotation
 
-1. Generate a new key: `npm run generate:internal-key`
+1. Generate a new key: `npm run generate:internal-key -- ENDPOINT`
 2. Update `INTERNAL_API_KEY_ENDPOINT` in both services
 3. Restart core first (registers new key, revokes old), then endpoint
 
