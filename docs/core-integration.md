@@ -33,7 +33,7 @@ Core registers each service as a separate DB record with `internalServiceName` d
 
 ### Rotation
 
-1. Generate a new key: `npm run generate:internal-key -- ENDPOINT`
+1. Generate a new key: `cd revisium-core && npm run generate:internal-key -- ENDPOINT`
 2. Update `INTERNAL_API_KEY_ENDPOINT` in both services
 3. Restart core first (registers new key, revokes old), then endpoint
 
