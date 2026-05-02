@@ -32,7 +32,7 @@ cp .env.example .env
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CORE_API_URL` | `http://0.0.0.0:{PORT}` | URL to revisium-core API |
-| `INTERNAL_API_KEY_ENDPOINT` | - | Internal API key for authenticating with revisium-core. Must match the value set in core. In monolith mode, auto-set by core |
+| `INTERNAL_API_KEY_ENDPOINT` | - | Internal API key for authenticating with revisium-core. Must match the value set in core. Format: `rev_` + 22 base64url chars (regex `/^rev_[A-Za-z0-9_-]{22}$/`); validated by core's `ApiKeyService.validateKeyFormat`. Generate with `node -e "console.log('rev_' + require('crypto').randomBytes(17).toString('base64url').slice(0,22))"`. A plain `openssl rand -hex 32` value will be rejected by core with `Invalid API key format` (401) and the endpoint will fail to register at runtime (all `/endpoint/*` URLs return 404). In monolith mode, auto-set by core (derived from `JWT_SECRET`); set this var explicitly only in microservice mode. |
 | `CORE_API_URL_USERNAME` | - | *(Deprecated)* Username for core API password authentication |
 | `CORE_API_URL_PASSWORD` | - | *(Deprecated)* Password for core API password authentication |
 
