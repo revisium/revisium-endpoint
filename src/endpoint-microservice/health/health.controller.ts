@@ -22,9 +22,12 @@ export class HealthController {
   liveness() {
     const indicators: HealthIndicatorFunction[] = [
       async () => this.prisma.check(),
-      async () => this.notifications.check(),
       async () => this.coreApi.check(),
     ];
+
+    if (this.notifications.available) {
+      indicators.push(async () => this.notifications.check());
+    }
 
     return this.health.check(indicators);
   }
