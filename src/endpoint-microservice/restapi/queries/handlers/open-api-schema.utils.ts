@@ -14,6 +14,7 @@ import {
 export interface TablePathInfo {
   rawTableId: string;
   schemaName: string;
+  inputSchemaName: string;
   tag: string;
 }
 
@@ -25,6 +26,70 @@ const getSchemaName = (tableId: string, projectName: string): string => {
   const name = capitalize(tableId);
   return `${prefix}${name}`;
 };
+
+const getInputSchemaName = (schemaName: string): string => `${schemaName}Input`;
+
+// Recursively returns a deep copy of the schema with `readOnly` markers
+// removed. Used to build separate write-side ("Input") schemas so Swagger UI
+// renders create/update example bodies with all fields present (e.g. the full
+// File metadata object the backend expects on row creation).
+export function stripReadOnly(schema: oas31.SchemaObject): oas31.SchemaObject;
+export function stripReadOnly(
+  schema: oas31.ReferenceObject,
+): oas31.ReferenceObject;
+export function stripReadOnly(
+  schema: oas31.SchemaObject | oas31.ReferenceObject,
+): oas31.SchemaObject | oas31.ReferenceObject;
+export function stripReadOnly(
+  schema: oas31.SchemaObject | oas31.ReferenceObject,
+): oas31.SchemaObject | oas31.ReferenceObject {
+  if ('$ref' in schema) {
+    return { ...schema };
+  }
+
+  const result: oas31.SchemaObject = {};
+
+  for (const [key, value] of Object.entries(schema)) {
+    if (key === 'readOnly') continue;
+
+    if (key === 'properties' && value && typeof value === 'object') {
+      const props: Record<string, oas31.SchemaObject | oas31.ReferenceObject> =
+        {};
+      for (const [propKey, propValue] of Object.entries(
+        value as Record<string, oas31.SchemaObject | oas31.ReferenceObject>,
+      )) {
+        props[propKey] = stripReadOnly(propValue);
+      }
+      result.properties = props;
+      continue;
+    }
+
+    if (
+      (key === 'items' || key === 'additionalProperties') &&
+      value &&
+      typeof value === 'object'
+    ) {
+      (result as Record<string, unknown>)[key] = stripReadOnly(
+        value as oas31.SchemaObject | oas31.ReferenceObject,
+      );
+      continue;
+    }
+
+    if (
+      (key === 'oneOf' || key === 'anyOf' || key === 'allOf') &&
+      Array.isArray(value)
+    ) {
+      (result as Record<string, unknown>)[key] = (
+        value as Array<oas31.SchemaObject | oas31.ReferenceObject>
+      ).map((entry) => stripReadOnly(entry));
+      continue;
+    }
+
+    (result as Record<string, unknown>)[key] = value;
+  }
+
+  return result;
+}
 
 const getCommonSchemaName = (name: string, projectName: string): string => {
   const prefix = capitalize(projectName);
@@ -464,6 +529,7 @@ export const createSingleRowPath = (
   isDraft: boolean,
 ): oas31.PathItemObject => {
   const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const inputSchemaRef = `#/components/schemas/${info.inputSchemaName}`;
   const rowResponseSchema = getSingleRowResponseSchema(schemaRef);
   const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
 
@@ -493,7 +559,7 @@ export const createSingleRowPath = (
             type: 'object',
             required: ['data'],
             properties: {
-              data: { $ref: schemaRef },
+              data: { $ref: inputSchemaRef },
             },
           },
         },
@@ -797,6 +863,7 @@ export const createBulkRowsPath = (
   projectName: string,
 ): oas31.PathItemObject => {
   const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const inputSchemaRef = `#/components/schemas/${info.inputSchemaName}`;
   const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
   const bulkResponseSchema = getBulkResponseSchema(schemaRef);
 
@@ -806,7 +873,7 @@ export const createBulkRowsPath = (
       verb: 'Creates',
       requestDescription: 'Array of rows to create',
       responseDescription: 'Created rows',
-      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getRequestSchema: () => getBulkRowsRequestSchema(inputSchemaRef),
       getResponseSchema: () => bulkResponseSchema,
     }),
     put: createBulkOperation(info, {
@@ -814,7 +881,7 @@ export const createBulkRowsPath = (
       verb: 'Updates',
       requestDescription: 'Array of rows to update',
       responseDescription: 'Updated rows',
-      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getRequestSchema: () => getBulkRowsRequestSchema(inputSchemaRef),
       getResponseSchema: () => bulkResponseSchema,
     }),
     patch: createBulkOperation(info, {
@@ -844,9 +911,11 @@ export const createTableInfoMap = (
   const map = new Map<string, TablePathInfo>();
 
   for (const rawTableId of tableIds) {
+    const schemaName = getSchemaName(rawTableId, projectName);
     map.set(rawTableId, {
       rawTableId,
-      schemaName: getSchemaName(rawTableId, projectName),
+      schemaName,
+      inputSchemaName: getInputSchemaName(schemaName),
       tag: rawTableId,
     });
   }
