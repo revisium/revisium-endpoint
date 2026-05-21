@@ -2,6 +2,17 @@ import { oas31 } from 'openapi3-ts';
 import { toWriteSchema } from '../open-api-schema.utils';
 
 describe('toWriteSchema', () => {
+  it('returns a shallow copy for reference schemas', () => {
+    const schema: oas31.ReferenceObject = {
+      $ref: '#/components/schemas/File',
+    };
+
+    const result = toWriteSchema(schema);
+
+    expect(result).toEqual(schema);
+    expect(result).not.toBe(schema);
+  });
+
   it('omits readOnly properties and removes them from required', () => {
     const schema: oas31.SchemaObject = {
       type: 'object',

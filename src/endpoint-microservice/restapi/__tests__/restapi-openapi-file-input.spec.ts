@@ -121,7 +121,7 @@ const getBulkDataRef = (schema: oas31.SchemaObject | undefined) => {
 
 describe('OpenAPI write schemas for File fields (qa#20)', () => {
   const originalNodeEnv = process.env.NODE_ENV;
-  let app: INestApplication;
+  let app: INestApplication | undefined;
   let queryBus: QueryBus;
   let openApiJson: OpenApiSchema;
 
@@ -153,7 +153,7 @@ describe('OpenAPI write schemas for File fields (qa#20)', () => {
 
   afterAll(async () => {
     process.env.NODE_ENV = originalNodeEnv;
-    await app.close();
+    await app?.close();
   }, 10000);
 
   it('creates output and write input schemas', () => {
