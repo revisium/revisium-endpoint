@@ -14,6 +14,7 @@ import {
   createSingleRowPath,
   createTableInfoMap,
   getFilterAndSortSchemas,
+  toWriteSchema,
   TablePathInfo,
 } from './open-api-schema.utils';
 
@@ -104,9 +105,10 @@ export class GetOpenApiSchemaHandler implements IQueryHandler<GetOpenApiSchemaQu
 
       openApiJson.components ??= { schemas: {} };
       openApiJson.components.schemas ??= {};
-      openApiJson.components.schemas[info.schemaName] = resolveRefs(
-        schemaRow.data as JsonSchema,
-      );
+      const resolvedSchema = resolveRefs(schemaRow.data as JsonSchema);
+      openApiJson.components.schemas[info.schemaName] = resolvedSchema;
+      openApiJson.components.schemas[info.writeSchemaName] =
+        toWriteSchema(resolvedSchema);
     }
 
     return openApiJson;

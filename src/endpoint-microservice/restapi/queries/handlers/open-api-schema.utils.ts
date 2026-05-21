@@ -14,6 +14,7 @@ import {
 export interface TablePathInfo {
   rawTableId: string;
   schemaName: string;
+  writeSchemaName: string;
   tag: string;
 }
 
@@ -25,6 +26,117 @@ const getSchemaName = (tableId: string, projectName: string): string => {
   const name = capitalize(tableId);
   return `${prefix}${name}`;
 };
+
+const getWriteSchemaName = (schemaName: string): string =>
+  `${schemaName}WriteInput`;
+
+const cloneValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(cloneValue);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        cloneValue(nestedValue),
+      ]),
+    );
+  }
+  return value;
+};
+
+const isSchemaObject = (
+  value: unknown,
+): value is oas31.SchemaObject | oas31.ReferenceObject =>
+  Boolean(value && typeof value === 'object');
+
+const isReadOnlySchema = (schema: oas31.SchemaObject | oas31.ReferenceObject) =>
+  !('$ref' in schema) && schema.readOnly === true;
+
+export function toWriteSchema(schema: oas31.SchemaObject): oas31.SchemaObject;
+export function toWriteSchema(
+  schema: oas31.ReferenceObject,
+): oas31.ReferenceObject;
+export function toWriteSchema(
+  schema: oas31.SchemaObject | oas31.ReferenceObject,
+): oas31.SchemaObject | oas31.ReferenceObject;
+export function toWriteSchema(
+  schema: oas31.SchemaObject | oas31.ReferenceObject,
+): oas31.SchemaObject | oas31.ReferenceObject {
+  if ('$ref' in schema) {
+    return { ...schema };
+  }
+
+  const result: oas31.SchemaObject = {};
+  const omittedProperties = new Set(
+    Object.entries(schema.properties ?? {})
+      .filter(([, propertySchema]) => isReadOnlySchema(propertySchema))
+      .map(([propertyName]) => propertyName),
+  );
+
+  for (const [key, value] of Object.entries(schema)) {
+    if (key === 'readOnly') {
+      continue;
+    }
+
+    if (key === 'properties' && isSchemaObject(value)) {
+      const properties: Record<
+        string,
+        oas31.SchemaObject | oas31.ReferenceObject
+      > = {};
+
+      for (const [propertyName, propertySchema] of Object.entries(
+        value as Record<string, oas31.SchemaObject | oas31.ReferenceObject>,
+      )) {
+        if (isReadOnlySchema(propertySchema)) {
+          omittedProperties.add(propertyName);
+          continue;
+        }
+
+        properties[propertyName] = toWriteSchema(propertySchema);
+      }
+
+      result.properties = properties;
+      continue;
+    }
+
+    if (key === 'required' && Array.isArray(value)) {
+      result.required = value.filter(
+        (field): field is string =>
+          typeof field === 'string' && !omittedProperties.has(field),
+      );
+      continue;
+    }
+
+    if (key === 'items' && isSchemaObject(value)) {
+      result.items = toWriteSchema(
+        value as oas31.SchemaObject | oas31.ReferenceObject,
+      );
+      continue;
+    }
+
+    if (key === 'additionalProperties' && isSchemaObject(value)) {
+      result.additionalProperties = toWriteSchema(
+        value as oas31.SchemaObject | oas31.ReferenceObject,
+      );
+      continue;
+    }
+
+    if (
+      (key === 'oneOf' || key === 'anyOf' || key === 'allOf') &&
+      Array.isArray(value)
+    ) {
+      (result as Record<string, unknown>)[key] = (
+        value as Array<oas31.SchemaObject | oas31.ReferenceObject>
+      ).map((entry) => toWriteSchema(entry));
+      continue;
+    }
+
+    (result as Record<string, unknown>)[key] = cloneValue(value);
+  }
+
+  return result;
+}
 
 const getCommonSchemaName = (name: string, projectName: string): string => {
   const prefix = capitalize(projectName);
@@ -464,6 +576,7 @@ export const createSingleRowPath = (
   isDraft: boolean,
 ): oas31.PathItemObject => {
   const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const writeSchemaRef = `#/components/schemas/${info.writeSchemaName}`;
   const rowResponseSchema = getSingleRowResponseSchema(schemaRef);
   const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
 
@@ -493,7 +606,7 @@ export const createSingleRowPath = (
             type: 'object',
             required: ['data'],
             properties: {
-              data: { $ref: schemaRef },
+              data: { $ref: writeSchemaRef },
             },
           },
         },
@@ -797,6 +910,7 @@ export const createBulkRowsPath = (
   projectName: string,
 ): oas31.PathItemObject => {
   const schemaRef = `#/components/schemas/${info.schemaName}`;
+  const writeSchemaRef = `#/components/schemas/${info.writeSchemaName}`;
   const patchOperationRef = `#/components/schemas/${getCommonSchemaName('PatchOperation', projectName)}`;
   const bulkResponseSchema = getBulkResponseSchema(schemaRef);
 
@@ -806,7 +920,7 @@ export const createBulkRowsPath = (
       verb: 'Creates',
       requestDescription: 'Array of rows to create',
       responseDescription: 'Created rows',
-      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getRequestSchema: () => getBulkRowsRequestSchema(writeSchemaRef),
       getResponseSchema: () => bulkResponseSchema,
     }),
     put: createBulkOperation(info, {
@@ -814,7 +928,7 @@ export const createBulkRowsPath = (
       verb: 'Updates',
       requestDescription: 'Array of rows to update',
       responseDescription: 'Updated rows',
-      getRequestSchema: () => getBulkRowsRequestSchema(schemaRef),
+      getRequestSchema: () => getBulkRowsRequestSchema(writeSchemaRef),
       getResponseSchema: () => bulkResponseSchema,
     }),
     patch: createBulkOperation(info, {
@@ -844,9 +958,11 @@ export const createTableInfoMap = (
   const map = new Map<string, TablePathInfo>();
 
   for (const rawTableId of tableIds) {
+    const schemaName = getSchemaName(rawTableId, projectName);
     map.set(rawTableId, {
       rawTableId,
-      schemaName: getSchemaName(rawTableId, projectName),
+      schemaName,
+      writeSchemaName: getWriteSchemaName(schemaName),
       tag: rawTableId,
     });
   }
