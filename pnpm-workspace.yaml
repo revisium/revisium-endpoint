@@ -12,8 +12,8 @@ allowBuilds:
   # @scarf/scarf is intentionally excluded: analytics postinstall — leave blocked.
   '@scarf/scarf': false
 
-# Overrides moved here from package.json (pnpm 11 ignores top-level package.json overrides field
-# for nested forms; pnpm-workspace.yaml is the single source of truth).
+# Overrides moved here from package.json: pnpm 11 ignores the package.json `pnpm` settings field
+# (e.g. pnpm.overrides); pnpm-workspace.yaml is the single source of truth.
 overrides:
   hono: ^4.12.18
   '@hono/node-server': ^1.19.13
