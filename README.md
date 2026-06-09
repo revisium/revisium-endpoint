@@ -99,7 +99,7 @@ pnpm run build            # build
 Node version: see `.nvmrc` (24.11.1).
 
 > The Prisma client is committed to `src/__generated__/client` — no `prisma generate` is needed
-> for local dev or CI. To regenerate: `pnpm exec prisma generate`.
+> for local dev or CI. To regenerate: `pnpm run prisma:generate`.
 
 ### E2E tests (requires Docker + PostgreSQL)
 
