@@ -7,7 +7,7 @@ const CORE_PRISMA_SCHEMA = path.resolve(
 );
 
 export function runMigrations() {
-  execSync(`npx prisma migrate deploy --schema "${CORE_PRISMA_SCHEMA}"`, {
+  execSync(`pnpm exec prisma migrate deploy --schema "${CORE_PRISMA_SCHEMA}"`, {
     env: {
       ...process.env,
       DATABASE_URL: process.env.DATABASE_URL,

@@ -10,7 +10,7 @@ const config: Config = {
   },
 
   testRegex: '.*\\.spec\\.ts$',
-  transformIgnorePatterns: ['/node_modules/(?!uuid/)'],
+  transformIgnorePatterns: ['/node_modules/(?!\\.pnpm/uuid|uuid/)'],
 
   transform: {
     '^.+\\.(t|j)sx?$': [

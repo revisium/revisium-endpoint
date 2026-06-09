@@ -73,7 +73,7 @@ jobs:
             exit 0
           fi
 
-          ALLOWED_FILES=("package.json" "package-lock.json")
+          ALLOWED_FILES=("package.json")
           while IFS= read -r FILE; do
             [[ -z "$FILE" ]] && continue
             ALLOWED_FILES+=("$FILE")
@@ -127,7 +127,7 @@ jobs:
           export TARGET_BRANCH="$BRANCH"
           export REF_MODE="create"
           export COMMIT_MESSAGE="chore: sync stable version $VERSION"
-          COMMIT_FILES=$'package.json\npackage-lock.json'
+          COMMIT_FILES='package.json'
           while IFS= read -r FILE; do
             [[ -z "$FILE" ]] && continue
             COMMIT_FILES="$COMMIT_FILES"$'\n'"$FILE"
