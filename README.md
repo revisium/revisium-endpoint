@@ -82,6 +82,34 @@ See [ENV.md](./ENV.md) for all environment variables.
 | [@revisium/core](https://github.com/revisium/revisium-core) | Backend API — required data source |
 | [@revisium/schema-toolkit](https://github.com/revisium/schema-toolkit) | JSON Schema utilities for schema transformation |
 
+## Development
+
+This project uses [pnpm](https://pnpm.io) (pinned via the `packageManager` field in `package.json`).
+
+```bash
+corepack enable           # activates the pinned pnpm (11.5.2)
+pnpm install              # install dependencies (build scripts gated by pnpm-workspace.yaml allowBuilds)
+
+pnpm run lint:ci          # lint
+pnpm run tsc              # type-check
+pnpm run test:cov         # unit tests with coverage
+pnpm run build            # build
+```
+
+Node version: see `.nvmrc` (24.11.1).
+
+> The Prisma client is committed to `src/__generated__/client` — no `prisma generate` is needed
+> for local dev or CI. To regenerate: `pnpm exec prisma generate`.
+
+### E2E tests (requires Docker + PostgreSQL)
+
+```bash
+cp .env.example .env
+pnpm run test:e2e:up      # start postgres via docker-compose-e2e.yml
+pnpm run test:e2e         # run e2e suite
+pnpm run test:e2e:down    # stop and remove containers
+```
+
 ## License
 
 Apache 2.0 — See [Revisium](https://github.com/revisium/revisium) for full license.

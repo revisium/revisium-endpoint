@@ -36,11 +36,16 @@ function versionFromJson(path) {
 
 const version = requiredEnv('TARGET_VERSION');
 const pkg = readJson('package.json');
-const lock = readJson('package-lock.json');
 
 assertEqual('package.json version', pkg.version, version);
-assertEqual('package-lock.json version', lock.version, version);
-assertEqual('package-lock root version', lock.packages?.['']?.version, version);
+
+// package-lock.json is only present in npm repos; pnpm repos use pnpm-lock.yaml which
+// carries no root project version — skip lock assertions when the file is absent.
+if (fs.existsSync('package-lock.json')) {
+  const lock = readJson('package-lock.json');
+  assertEqual('package-lock.json version', lock.version, version);
+  assertEqual('package-lock root version', lock.packages?.['']?.version, version);
+}
 
 for (const file of versionFiles()) {
   assertEqual(`${file} version`, versionFromJson(file), version);
