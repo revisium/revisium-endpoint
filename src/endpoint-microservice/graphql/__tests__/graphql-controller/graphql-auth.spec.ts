@@ -111,6 +111,59 @@ describe('GraphQL endpoint auth (issue #5 reproduction matrix)', () => {
       expect(res.body.data).toEqual({ __typename: 'Query' });
     });
 
+    it('forwards a foreign JWT and returns 200 when core preflight allows it', async () => {
+      const foreignJwt =
+        'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb3JlaWduLXVzZXIifQ.invalid-signature';
+
+      const res = await request(app.getHttpServer())
+        .post(url)
+        .set('Authorization', `Bearer ${foreignJwt}`)
+        .send({ query: '{ __typename }' })
+        .expect(200);
+
+      expect(res.body.data).toEqual({ __typename: 'Query' });
+      expect(mockProxyCoreApiService.api.revision).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: { authorization: `Bearer ${foreignJwt}` } },
+      );
+    });
+
+    it('forwards an expired JWT and returns 200 when core preflight allows it', async () => {
+      const expiredJwt =
+        'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLWlkIiwiZXhwIjowfQ.expired-signature';
+
+      const res = await request(app.getHttpServer())
+        .post(url)
+        .set('Authorization', `Bearer ${expiredJwt}`)
+        .send({ query: '{ __typename }' })
+        .expect(200);
+
+      expect(res.body.data).toEqual({ __typename: 'Query' });
+      expect(mockProxyCoreApiService.api.revision).toHaveBeenCalledWith(
+        expect.any(String),
+        { headers: { authorization: `Bearer ${expiredJwt}` } },
+      );
+    });
+
+    it('forwards a foreign JWT and returns no data when core preflight denies it', async () => {
+      const foreignJwt =
+        'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb3JlaWduLXVzZXIifQ.invalid-signature';
+      mockProxyCoreApiService.api.revision.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Forbidden', statusCode: 403 },
+        status: 403,
+      });
+
+      const res = await request(app.getHttpServer())
+        .post(url)
+        .set('Authorization', `Bearer ${foreignJwt}`)
+        .send({ query: '{ __typename }' });
+
+      expect([401, 403]).toContain(res.status);
+      expect(res.status).not.toBe(200);
+      expect(res.body.data).toBeUndefined();
+    });
+
     it('returns 200 with __typename when valid auth cookies are present', async () => {
       const res = await request(app.getHttpServer())
         .post(url)
